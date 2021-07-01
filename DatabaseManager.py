@@ -1,4 +1,3 @@
-from logging import raiseExceptions
 import mysql.connector
 
 class DatabaseManager:
