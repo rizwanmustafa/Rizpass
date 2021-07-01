@@ -1,18 +1,27 @@
+from logging import raiseExceptions
 import mysql.connector
 
 class DatabaseManager:
 	def __init__(self, host:str, user:str, password: str, db:str):
 		# Exception handling
 
-		# Preventing empty values
-		if not host or not user or not password or not db:
-			 raise ValueError
-		# Preventing wrong type
-		if not isinstance(host, str) or not isinstance(user, str) or not isinstance(password, str) or not isinstance(db, str):
-			 raise TypeError("Parameters must be of type str");
+		# Make sure that the parameters are of correct type
+		if not isinstance(host, str):
+			raise TypeError("Parameter 'host' must be of type str")
+		elif not isinstance(user, str):
+			raise TypeError("Parameter 'user' must be of type str")
+		elif not isinstance(password, str):
+			raise TypeError("Parameter 'password' must be of type str")
+		elif not isinstance(db, str):
+			raise TypeError("Parameter 'db' must be of type str")
+
+		# Make sure that the parameters are not empty
+		if not host: raise ValueError("Invalid value provided for parameter 'host'")
+		if not user: raise ValueError("Invalid value provided for parameter 'user'")
+		if not password: raise ValueError("Invalid value provided for parameter 'password'")
+		if not db: raise ValueError("Invalid value provided for parameter 'db'")
 		
 		# Assign the objects
-		# Write code to deal with exceptions if the given credentials are incorrect or the database does not exist
 		self.mydb = mysql.connector.connect(
 			host=host,
 			user=user,
@@ -23,14 +32,6 @@ class DatabaseManager:
 	
 	def AddPassword(self, title:str, username: str, email:str, password:bytes, salt:bytes):
 		# Exception handling
-
-		# Make sure that required parameters are not empty
-		if not title:
-			raise ValueError("Paramter 'title' cannot be empty")
-		elif not password:
-			raise ValueError("Paramter 'password' cannot be empty")
-		elif not salt:
-			raise ValueError("Paramater 'salt' cannot be empty")
 
 		# Make sure that the parameters are of correct type
 		if not isinstance(title, str):
@@ -43,6 +44,14 @@ class DatabaseManager:
 			raise TypeError("Parameter 'password' must be of type bytes")
 		elif not isinstance(salt, bytes):
 			raise TypeError("Parameter 'salt' must be of type bytes")
+
+		# Make sure that required parameters are not empty
+		if not title:
+			raise ValueError("Paramter 'title' cannot be empty")
+		elif not password:
+			raise ValueError("Paramter 'password' cannot be empty")
+		elif not salt:
+			raise ValueError("Paramater 'salt' cannot be empty")
 
 		# Add the password to the database
 		self.dbCursor.execute("INSERT INTO Passwords(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
@@ -65,10 +74,10 @@ class DatabaseManager:
 		elif not isinstance(email, str):
 			raise TypeError("Parameter 'email' must be of type str")
 
-		# Return all passwords if not filter is given
+		# Return all passwords if no filter is given
 		if not title and not username and not email: return self.GetAllPasswords()
 
-		# Set filter
+		# Set filters
 		if title: title = "%" + title + "%"
 		else: title = "%"
 
@@ -78,6 +87,7 @@ class DatabaseManager:
 		if email: email = "%" + email + "%"
 		else: email = "%"
 
+		# Execute Query
 		self.dbCursor.execute("SELECT * FROM Passwords WHERE title LIKE %s AND username LIKE %s AND email LIKE %s",
 		(title, username , email))
 

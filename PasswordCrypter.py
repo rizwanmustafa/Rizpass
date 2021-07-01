@@ -5,8 +5,22 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class PasswordCrypter:
 	def __init__(self, masterPassword : str, salt: bytes) -> None:
-		# Sanitize input
-		masterPassword = bytes(str(masterPassword), "utf-8")
+		# Exception handling
+
+		# Make sure that the paremeters are of correct type
+		if not isinstance(masterPassword, str):
+			raise TypeError("Parameter 'masterPassword' must be of type str")
+		elif not isinstance(salt, bytes):
+			raise TypeError("Parameter 'salt' must be of type bytes")
+
+		# Make sure that parameters are not empty
+		if not masterPassword:
+			raise ValueError("Paramter 'masterPassword' cannot be empty")
+		elif not salt:
+			raise ValueError("Parameter 'salt' cannot be empty")
+
+		# Convert masterPassword to bytes for encryption
+		masterPassword = bytes(masterPassword, "utf-8")
 
 		# Get custom key for Fernet using user's masterpassword
 		kdf = PBKDF2HMAC(
@@ -21,8 +35,14 @@ class PasswordCrypter:
 		self.crypter = Fernet(key)
 
 	def EncryptPassword(self, password: str) -> bytes:
-		# Sanitize input
-		password = str(password)
+		# Exception handling
+
+		# Make sure that the parameters are of correct type
+		if not isinstance(password, str):
+			raise TypeError("Parameter 'password' must be of type str")
+
+		if not password:
+			raise ValueError("Inavlid value provided for parameter 'password'")
 
 		# Convert password into bytes for encryption
 		password = bytes(password, "utf-8")
@@ -30,7 +50,16 @@ class PasswordCrypter:
 		return self.crypter.encrypt(password)
 
 	def DecryptPassword(self, encryptedPassword : bytes) -> str:
-		# Hope it is good input	
+		# Exception handling
+
+		# Make sure that the parameters are of correct type
+		if not isinstance(encryptedPassword, bytes):
+			raise TypeError("Parameter 'encryptedPassword' must be of type bytes")
+		
+		if not encryptedPassword:
+			raise ValueError("Invalid value provided for parameter 'encryptedPassword'")
+
 		# Decrypt password 
-		decryptedPassword : bytes = self.crypter.decrypt(encryptedPassword)
-		return str(decryptedPassword, "utf-8")
+		decryptedPassword : str = str(self.crypter.decrypt(encryptedPassword), "utf-8")
+
+		return decryptedPassword
