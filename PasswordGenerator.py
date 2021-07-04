@@ -2,13 +2,17 @@ import string
 from random import choice, randint
 from ExceptionHandler import HandleParameterException
 
-def GeneratePassword(length:int, uppercase:bool, lowercase:bool, numbers:bool, specials:bool):
+def GeneratePassword(length:int, uppercase:bool, lowercase:bool, numbers:bool, specials:bool) -> str:
 	# Exception handling
 	HandleParameterException("length", length, int, "int")
 	HandleParameterException("uppercase", uppercase, bool, "bool")
 	HandleParameterException("lowercase", lowercase, bool, "bool")
 	HandleParameterException("numbers", numbers, bool, "bool")
 	HandleParameterException("specials", specials, bool, "bool")
+
+	if uppercase == lowercase == numbers == specials == False:
+		print("All options cannot be false!")
+		return None
 	
 	password : str = ""	
 

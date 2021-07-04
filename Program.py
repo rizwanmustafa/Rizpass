@@ -1,0 +1,289 @@
+# Requirements:
+
+# Encrypt and decrypt passwords
+# Store passwords in MySQL Database
+# Able to print stored passwords on the screen
+
+# Things to do:
+# Dump into userdata.json file a bool which tells if the user is registered
+# Change the username of the database manager and set the database password 
+# Implement login 
+# Later implement inputting passwords in terminal safely
+
+# Features:
+
+# Able to generate strong passwords
+# Able to copy selected password to the clipboard
+
+from os import urandom
+import json
+
+from PasswordCrypter import PasswordCrypter
+from DatabaseManager import DatabaseManager
+import PasswordGenerator 
+
+masterPassword:  str = None
+dbManager : DatabaseManager = None
+
+def PrintMenu():
+	if not masterPassword:
+		if GetUserRegistrationStatus(): Login()
+		else: SetupPasswordManager()
+
+	menuItms = [
+	"-------------------------------",
+	"1. Generate a strong password",
+	"2. Add a password",
+	"3. Retrieve password",
+	"4. List all passwords",
+	"5. Filter passwords",
+	"6. Modify password",
+	"7. Remove password",
+	"8. Remove all passwords", 
+	"9. Change master password",
+	"10. Exit",
+	"-------------------------------"
+	]
+
+	for menuItm in menuItms: print(menuItm)
+
+	userChoice = input("Please input your choice: ")
+	if not userChoice.isnumeric(): print("Invalid option chosen!")
+	else: userChoice = int(userChoice)
+
+	if userChoice == 1: GeneratePassword()
+	elif userChoice == 2: AddPassword()
+	elif userChoice == 3: GetPassword()
+	elif userChoice == 4: PrintAllPasswords()
+	elif userChoice == 5: FilterPasswords()
+	elif userChoice == 6: ModifyPassword()
+	elif userChoice == 7: RemovePassword()
+	elif userChoice == 8: RemoveAllPasswords()
+	elif userChoice == 9: ChangeMasterPassword()
+	elif userChoice == 10: Exit()
+	
+	# Run methods depending on the user choice
+
+def GetUserRegistrationStatus() -> bool:
+	settingsFile = open("userdata.json", "r+")
+	userSettings = json.load(settingsFile)
+
+	if userSettings["userRegistered"]: return True
+	else: return False
+
+def SetUserRegistrationStatus(status : bool) -> bool:
+	settingsFile = open("userdata.json", "w")
+	userSettings = {
+		"userRegistered": status
+	}
+
+	json.dump(userSettings, settingsFile)
+
+def SetupPasswordManager():
+	mysqlRootUserName = input("Input MySQL root username: ")
+	mysqlRootPassword = input("Input MySQL root password: ")
+	global dbManager
+	dbManager = DatabaseManager("localhost", mysqlRootUserName, mysqlRootPassword)
+	global masterPassword
+	masterPassword = input("Input new master password (Password should meet MySQL password requirements): ")
+
+	# Drop database if it exists to prevent problems
+	confirmChoice = input("Dropping database 'LocalPasswordManager' if it exists. Are you sure you want to continue? (Y/N)")
+	if confirmChoice == "Y" or confirmChoice == "y":
+		dbManager.ExecuteRawQuery("DROP DATABASE IF EXISTS LocalPasswordManager;")
+	else:
+		exit()
+
+	# Drop user if it exists to prevent problems
+	confirmChoice = input("Dropping user 'passMan'@'localhost' if it exists. Are you sure you want to continue? (Y/N)")
+	dbManager.ExecuteRawQuery("CREATE DATABASE LocalPasswordManager;")
+	dbManager.ExecuteRawQuery("CREATE USER 'passMan'@'localhost' IDENTIFIED BY '{0}';".format(masterPassword))
+	dbManager.ExecuteRawQuery("GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
+	dbManager.mydb.database = "LocalPasswordManager"
+	createTableQuery = "CREATE TABLE Passwords(id INT NOT NULL AUTO_INCREMENT, title VARCHAR(50) NOT NULL, username VARCHAR(50), email VARCHAR(50), password BLOB NOT NULL, salt BLOB NOT NULL, PRIMARY KEY( id ));"
+	dbManager.ExecuteRawQuery(createTableQuery)
+
+	dbManager.dbCursor.close()
+	dbManager.mydb.close()
+	dbManager = DatabaseManager("localhost", "passMan", masterPassword, "LocalPasswordManager")
+	SetUserRegistrationStatus(True)
+
+def Login():
+	global masterPassword
+	global dbManager
+	masterPassword = input("Input your masterpassword: ")
+	dbManager = DatabaseManager("localhost", "passMan", masterPassword, "LocalPasswordManager")
+
+def GeneratePassword():
+	passLength = input("Input password length (Min: 8): ")
+	if not passLength.isnumeric() or int(passLength) < 8: print("Invalid value entered for the length of password!")
+	else: passLength = int(passLength)
+
+	# uppercase, lowercase, numbers, specials	
+	uppercase = input("Should the password contain uppercase letters? (Y/N): ")
+	if uppercase == "Y" or uppercase == "y": uppercase = True
+	else : uppercase = False
+
+	lowercase = input("Should the password contain lowercase letters? (Y/N): ")
+	if lowercase == "Y" or lowercase == "y": lowercase= True
+	
+
+	numbers = input("Should the password contain numbers? (Y/N): ")
+	if numbers== "Y" or numbers== "y": numbers= True
+	else : numbers= False
+
+	specials = input("Should the password contain special characters? (Y/N): ")
+	if specials== "Y" or specials== "y": specials= True
+	else : specials = False
+
+	generatedPassword = PasswordGenerator.GeneratePassword(passLength,uppercase, lowercase, numbers, specials)
+
+	if generatedPassword:
+		print("Your generated password is: ", generatedPassword)
+		addPass = input("Do you want to add this password (Y/N): ")
+		if addPass == "Y" or addPass == "y":
+			AddPassword(generatedPassword)
+		# Later copy the password to clipboard using xclip or something
+
+def AddPassword(userPassword:str = None):
+	title = input("Input password title: ")
+	username = input("Input username (Optional): ")
+	email = input("Input email address (Optional): ")
+	password = ""
+	if userPassword: password = userPassword
+	else: password = input("Input your password: ") # Later import a package to add passwords securely
+
+	confirmation = input("Are you sure you want to add this password (Y/N): ")
+	if not confirmation == "Y" and not confirmation == "y":
+		return 
+
+	salt : bytes = urandom(16)
+	encryptedPassword = PasswordCrypter(masterPassword, salt).EncryptPassword(password)
+
+	global dbManager
+	dbManager.AddPassword(title, username, email, encryptedPassword, salt)
+	print("Password added successfully!")
+
+def PrintPassword(password):
+	# Get the data
+	id = password[0]
+	title = password[1]
+	username = password[2]
+	email = password[3]
+	password = PasswordCrypter(masterPassword, password[5]).DecryptPassword(password[4])
+
+	# Print the data
+	print("-------------------------------")
+	print("ID: {0}".format(id))
+	print("Title: {0}".format(title))
+	print("Username: {0}".format(username))
+	print("Email Address: {0}".format(email))
+	print("Password: {0}".format(password))
+	print("-------------------------------")
+
+def PrintAllPasswords():
+	global dbManager
+	passwords = dbManager.GetAllPasswords()
+
+	print("Printing all passwords:")
+	for password in passwords:
+		PrintPassword(password)
+
+def FilterPasswords():
+	titleFilter = input("Input title filter (Optional): ")
+	usernameFilter = input("Input username filter (Optional): ")
+	emailFilter = input("Input email filter (Optional): ")
+
+	global dbManager
+	passwords = dbManager.FilterPasswords(titleFilter, usernameFilter, emailFilter)
+
+	print("Following passwords meet your given filters:")
+	for password in passwords:
+		PrintPassword(password)
+
+def GetPassword():
+	id = input("Input password id: ")
+
+	if not id.isnumeric():
+		print("Invalid id provided!")
+		return
+	
+	global dbManager
+	password = 	dbManager.GetPassword(int(id))
+	if password:
+		PrintPassword(password)
+	else:
+		print("No password with given id found!")
+
+def RemovePassword():
+	id = input("Input password id: ")
+
+	if not id.isnumeric():
+		print("Invalid id provided!")
+		return
+	
+	global dbManager
+	dbManager.RemovePassword(int(id))
+	print("Removed password successfully!")
+
+def RemoveAllPasswords():
+	confirmChoice = input("Are you sure you want to remove all stored passwords (Y/N): ")
+	if confirmChoice == "Y" or confirmChoice == "y":
+		global dbManager
+		dbManager.RemoveAllPasswords()
+		print("Removed all passwords successfully!")
+
+def ModifyPassword():
+	# Later add functionality for changing the password itself
+	id = input("Input password id: ")
+	print("Leave any field empty if you do not wish to change it")
+	newTitle = input("Input new title: ")
+	newUsername = input("Input new username: ")
+	newEmail = input("Input new email: ")
+	newPassword = input("Input new password: ")
+
+	confirmChoice = input("Are you sure you want to modify this password (Y/N): ")
+	if not confirmChoice == "Y" and not confirmChoice == "y": return
+
+	salt = urandom(16)
+	encryptedPassword  = PasswordCrypter(masterPassword, salt).EncryptPassword(newPassword)
+
+	if newTitle == newUsername == newEmail == newPassword == "": return
+	else:
+		dbManager.ModifyPassword(int(id), newTitle, newUsername, newEmail, encryptedPassword if newPassword else None, salt if salt else None)
+
+	print("Modified password successfully!")
+	
+
+def ChangeMasterPassword():
+	newMasterPassword = input("Input new masterpassword (Should meet MySQL Password Requirements): ")
+
+	rootUsername = input("Input mysql root username: ")
+	rootPassword = input("Input mysql root password: ")
+	anotherDBManager = DatabaseManager("localhost", rootUsername, rootPassword)
+	anotherDBManager.dbCursor.execute("ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (newMasterPassword, ))
+
+	global dbManager, masterPassword
+	dbManager.dbCursor.close()
+	dbManager.mydb.close()
+	dbManager = DatabaseManager("localhost", "passMan", newMasterPassword, "LocalPasswordManager")
+	passwords =	dbManager.GetAllPasswords() 
+
+	# Decrypt passwords and encrypt them with new salt and masterpassword
+	for password in passwords:
+		salt = urandom(16)
+		unEncryptedPass = PasswordCrypter(masterPassword, password[5]).DecryptPassword(password[4])
+		newPassword = PasswordCrypter(newMasterPassword, salt).EncryptPassword(unEncryptedPass)
+
+		dbManager.ModifyPassword(password[0], "", "","", newPassword, salt)
+
+	masterPassword = newMasterPassword
+
+
+def Exit():
+	dbManager.dbCursor.close()
+	dbManager.mydb.close()
+	exit()
+
+while True:
+	PrintMenu()
