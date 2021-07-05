@@ -96,6 +96,10 @@ def SetupPasswordManager():
 
 	# Drop user if it exists to prevent problems
 	confirmChoice = input("Dropping user 'passMan'@'localhost' if it exists. Are you sure you want to continue? (Y/N)")
+	if confirmChoice == "Y" or confirmChoice == "y":
+		dbManager.ExecuteRawQuery("DROP USER IF EXISTS 'passMan'@'localhost';")
+	else:
+		exit()
 	dbManager.ExecuteRawQuery("CREATE DATABASE LocalPasswordManager;")
 	dbManager.ExecuteRawQuery("CREATE USER 'passMan'@'localhost' IDENTIFIED BY '{0}';".format(masterPassword))
 	dbManager.ExecuteRawQuery("GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
