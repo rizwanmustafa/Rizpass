@@ -53,7 +53,6 @@ class DatabaseManager:
 		self.dbCursor.execute("INSERT INTO Passwords(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
 		 (title, username, email, password, salt))
 		self.mydb.commit()
-		print("Password successfully added!")
 	
 	def GetAllPasswords(self):
 		self.dbCursor.execute("SELECT * FROM Passwords;")

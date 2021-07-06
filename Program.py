@@ -1,21 +1,9 @@
-# Requirements:
-
-# Encrypt and decrypt passwords
-# Store passwords in MySQL Database
-# Able to print stored passwords on the screen
-
 # Things to do:
-# Dump into userdata.json file a bool which tells if the user is registered
-# Change the username of the database manager and set the database password 
-# Implement login 
-# Later implement inputting passwords in terminal safely
-
-# Features:
-
-# Able to generate strong passwords
+# Implement inputting passwords in terminal safely
 # Able to copy selected password to the clipboard
 
-from os import urandom
+import os
+import pyperclip
 import json
 
 from PasswordCrypter import PasswordCrypter
@@ -29,6 +17,7 @@ def PrintMenu():
 	if not masterPassword:
 		if GetUserRegistrationStatus(): Login()
 		else: SetupPasswordManager()
+		ClearConsole()
 
 	menuItms = [
 	"-------------------------------",
@@ -61,8 +50,9 @@ def PrintMenu():
 	elif userChoice == 8: RemoveAllPasswords()
 	elif userChoice == 9: ChangeMasterPassword()
 	elif userChoice == 10: Exit()
-	
-	# Run methods depending on the user choice
+
+	input("Press Enter to continue...")
+	ClearConsole()
 
 def GetUserRegistrationStatus() -> bool:
 	settingsFile = open("userdata.json", "r+")
@@ -80,11 +70,11 @@ def SetUserRegistrationStatus(status : bool) -> bool:
 	json.dump(userSettings, settingsFile)
 
 def SetupPasswordManager():
+	global dbManager, masterPassword
+
 	mysqlRootUserName = input("Input MySQL root username: ")
 	mysqlRootPassword = input("Input MySQL root password: ")
-	global dbManager
 	dbManager = DatabaseManager("localhost", mysqlRootUserName, mysqlRootPassword)
-	global masterPassword
 	masterPassword = input("Input new master password (Password should meet MySQL password requirements): ")
 
 	# Drop database if it exists to prevent problems
@@ -100,21 +90,30 @@ def SetupPasswordManager():
 		dbManager.ExecuteRawQuery("DROP USER IF EXISTS 'passMan'@'localhost';")
 	else:
 		exit()
+
 	dbManager.ExecuteRawQuery("CREATE DATABASE LocalPasswordManager;")
 	dbManager.ExecuteRawQuery("CREATE USER 'passMan'@'localhost' IDENTIFIED BY '{0}';".format(masterPassword))
 	dbManager.ExecuteRawQuery("GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
 	dbManager.mydb.database = "LocalPasswordManager"
-	createTableQuery = "CREATE TABLE Passwords(id INT NOT NULL AUTO_INCREMENT, title VARCHAR(50) NOT NULL, username VARCHAR(50), email VARCHAR(50), password BLOB NOT NULL, salt BLOB NOT NULL, PRIMARY KEY( id ));"
+	createTableQuery = """CREATE TABLE Passwords(
+		id INT NOT NULL AUTO_INCREMENT,
+		title VARCHAR(50) NOT NULL,
+		username VARCHAR(50),
+		email VARCHAR(50),
+		password BLOB NOT NULL,
+		salt BLOB NOT NULL,
+		PRIMARY KEY( id ));"""
 	dbManager.ExecuteRawQuery(createTableQuery)
 
+	# Close the connection to database with root login
 	dbManager.dbCursor.close()
 	dbManager.mydb.close()
+
 	dbManager = DatabaseManager("localhost", "passMan", masterPassword, "LocalPasswordManager")
 	SetUserRegistrationStatus(True)
 
 def Login():
-	global masterPassword
-	global dbManager
+	global masterPassword, dbManager
 	masterPassword = input("Input your masterpassword: ")
 	dbManager = DatabaseManager("localhost", "passMan", masterPassword, "LocalPasswordManager")
 
@@ -144,6 +143,8 @@ def GeneratePassword():
 
 	if generatedPassword:
 		print("Your generated password is: ", generatedPassword)
+		pyperclip.copy(generatedPassword)
+		print("The generated password has been copied to your clipboard")
 		addPass = input("Do you want to add this password (Y/N): ")
 		if addPass == "Y" or addPass == "y":
 			AddPassword(generatedPassword)
@@ -161,10 +162,9 @@ def AddPassword(userPassword:str = None):
 	if not confirmation == "Y" and not confirmation == "y":
 		return 
 
-	salt : bytes = urandom(16)
+	salt : bytes = os.urandom(16)
 	encryptedPassword = PasswordCrypter(masterPassword, salt).EncryptPassword(password)
 
-	global dbManager
 	dbManager.AddPassword(title, username, email, encryptedPassword, salt)
 	print("Password added successfully!")
 
@@ -183,10 +183,12 @@ def PrintPassword(password):
 	print("Username: {0}".format(username))
 	print("Email Address: {0}".format(email))
 	print("Password: {0}".format(password))
+	print()
+	pyperclip.copy(password[4])
+	print("This password has been copied to your clipboard!")
 	print("-------------------------------")
 
 def PrintAllPasswords():
-	global dbManager
 	passwords = dbManager.GetAllPasswords()
 
 	print("Printing all passwords:")
@@ -198,7 +200,6 @@ def FilterPasswords():
 	usernameFilter = input("Input username filter (Optional): ")
 	emailFilter = input("Input email filter (Optional): ")
 
-	global dbManager
 	passwords = dbManager.FilterPasswords(titleFilter, usernameFilter, emailFilter)
 
 	print("Following passwords meet your given filters:")
@@ -212,7 +213,6 @@ def GetPassword():
 		print("Invalid id provided!")
 		return
 	
-	global dbManager
 	password = 	dbManager.GetPassword(int(id))
 	if password:
 		PrintPassword(password)
@@ -226,14 +226,12 @@ def RemovePassword():
 		print("Invalid id provided!")
 		return
 	
-	global dbManager
 	dbManager.RemovePassword(int(id))
 	print("Removed password successfully!")
 
 def RemoveAllPasswords():
 	confirmChoice = input("Are you sure you want to remove all stored passwords (Y/N): ")
 	if confirmChoice == "Y" or confirmChoice == "y":
-		global dbManager
 		dbManager.RemoveAllPasswords()
 		print("Removed all passwords successfully!")
 
@@ -249,7 +247,7 @@ def ModifyPassword():
 	confirmChoice = input("Are you sure you want to modify this password (Y/N): ")
 	if not confirmChoice == "Y" and not confirmChoice == "y": return
 
-	salt = urandom(16)
+	salt = os.urandom(16)
 	encryptedPassword  = PasswordCrypter(masterPassword, salt).EncryptPassword(newPassword)
 
 	if newTitle == newUsername == newEmail == newPassword == "": return
@@ -275,7 +273,7 @@ def ChangeMasterPassword():
 
 	# Decrypt passwords and encrypt them with new salt and masterpassword
 	for password in passwords:
-		salt = urandom(16)
+		salt = os.urandom(16)
 		unEncryptedPass = PasswordCrypter(masterPassword, password[5]).DecryptPassword(password[4])
 		newPassword = PasswordCrypter(newMasterPassword, salt).EncryptPassword(unEncryptedPass)
 
@@ -283,6 +281,11 @@ def ChangeMasterPassword():
 
 	masterPassword = newMasterPassword
 
+def ClearConsole():
+	command = 'clear'
+	if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
+		command = 'cls'
+	os.system(command)
 
 def Exit():
 	dbManager.dbCursor.close()
