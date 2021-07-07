@@ -30,7 +30,9 @@ def PrintMenu():
 	"7. Remove password",
 	"8. Remove all passwords", 
 	"9. Change master password",
-	"10. Exit",
+	"10. Export passwords as a JSON file",
+	"11. Import passwords from a JSON file",
+	"12. Exit",
 	"-------------------------------"
 	]
 
@@ -49,7 +51,9 @@ def PrintMenu():
 	elif userChoice == 7: RemovePassword()
 	elif userChoice == 8: RemoveAllPasswords()
 	elif userChoice == 9: ChangeMasterPassword()
-	elif userChoice == 10: Exit()
+	elif userChoice == 10: dbManager.ExportPasswordsToJSONFile("passwords.json")
+	elif userChoice == 11: dbManager.ImportPasswordsFromJSONFile("passwords.json")
+	elif userChoice == 12: Exit()
 
 	input("Press Enter to continue...")
 	ClearConsole()
