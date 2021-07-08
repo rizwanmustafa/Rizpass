@@ -6,7 +6,7 @@ import os
 import pyperclip
 import json
 
-from PasswordCrypter import PasswordCrypter
+from PasswordCrypter import encrypt_password, decrypt_password
 from DatabaseManager import DatabaseManager
 import PasswordGenerator 
 
@@ -23,9 +23,9 @@ def PrintMenu():
 	"-------------------------------",
 	"1. Generate a strong password",
 	"2. Add a password",
-	"3. Retrieve password",
-	"4. List all passwords",
-	"5. Filter passwords",
+	"3. Retrieve password using id",
+	"4. Filter passwords",
+	"5. List all passwords",
 	"6. Modify password",
 	"7. Remove password",
 	"8. Remove all passwords", 
@@ -45,8 +45,8 @@ def PrintMenu():
 	if userChoice == 1: GeneratePassword()
 	elif userChoice == 2: AddPassword()
 	elif userChoice == 3: GetPassword()
-	elif userChoice == 4: PrintAllPasswords()
-	elif userChoice == 5: FilterPasswords()
+	elif userChoice == 4: FilterPasswords()
+	elif userChoice == 5: PrintAllPasswords()
 	elif userChoice == 6: ModifyPassword()
 	elif userChoice == 7: RemovePassword()
 	elif userChoice == 8: RemoveAllPasswords()
@@ -152,7 +152,6 @@ def GeneratePassword():
 		addPass = input("Do you want to add this password (Y/N): ")
 		if addPass == "Y" or addPass == "y":
 			AddPassword(generatedPassword)
-		# Later copy the password to clipboard using xclip or something
 
 def AddPassword(userPassword:str = None):
 	title = input("Input password title: ")
@@ -167,7 +166,7 @@ def AddPassword(userPassword:str = None):
 		return 
 
 	salt : bytes = os.urandom(16)
-	encryptedPassword = PasswordCrypter(masterPassword, salt).EncryptPassword(password)
+	encryptedPassword = encrypt_password(masterPassword, password, salt)
 
 	dbManager.AddPassword(title, username, email, encryptedPassword, salt)
 	print("Password added successfully!")
@@ -178,7 +177,7 @@ def PrintPassword(password):
 	title = password[1]
 	username = password[2]
 	email = password[3]
-	password = PasswordCrypter(masterPassword, password[5]).DecryptPassword(password[4])
+	password = decrypt_password(masterPassword, password[4], password[5])
 
 	# Print the data
 	print("-------------------------------")
@@ -188,7 +187,7 @@ def PrintPassword(password):
 	print("Email Address: {0}".format(email))
 	print("Password: {0}".format(password))
 	print()
-	pyperclip.copy(password[4])
+	pyperclip.copy(password)
 	print("This password has been copied to your clipboard!")
 	print("-------------------------------")
 
@@ -252,7 +251,7 @@ def ModifyPassword():
 	if not confirmChoice == "Y" and not confirmChoice == "y": return
 
 	salt = os.urandom(16)
-	encryptedPassword  = PasswordCrypter(masterPassword, salt).EncryptPassword(newPassword)
+	encryptedPassword  = encrypt_password(masterPassword,newPassword, salt)
 
 	if newTitle == newUsername == newEmail == newPassword == "": return
 	else:
@@ -278,8 +277,8 @@ def ChangeMasterPassword():
 	# Decrypt passwords and encrypt them with new salt and masterpassword
 	for password in passwords:
 		salt = os.urandom(16)
-		unEncryptedPass = PasswordCrypter(masterPassword, password[5]).DecryptPassword(password[4])
-		newPassword = PasswordCrypter(newMasterPassword, salt).EncryptPassword(unEncryptedPass)
+		unEncryptedPass = decrypt_password(masterPassword, password[4], password[5])
+		newPassword = encrypt_password(newMasterPassword,unEncryptedPass,  salt)
 
 		dbManager.ModifyPassword(password[0], "", "","", newPassword, salt)
 

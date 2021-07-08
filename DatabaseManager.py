@@ -1,4 +1,3 @@
-from PasswordCrypter import PasswordCrypter
 from json import dump, load
 from base64 import b64decode, b64encode
 import mysql.connector
@@ -194,6 +193,7 @@ class DatabaseManager:
 						raise ValueError("Invalid value provided for parameter 'filename'")
 
 				passwords = []
+				master_password: str = input("Input master password for file: ")
 				passwordObjects = load(open(filename, "r"))
 
 				for passwordObj in passwordObjects:
@@ -205,13 +205,10 @@ class DatabaseManager:
 						password[3] = passwordObj["email"]
 						password[4] = b64decode(passwordObj["password"])
 						password[5] = b64decode(passwordObj["salt"])
-						print("password: ", PasswordCrypter("f4d27d47bbdb4a94", password[5]).DecryptPassword(password[4]))
 
-						print(password)
 						passwords.append(password)
 
 				for password in passwords:
-					print(password)
 					self.AddPassword(password[1], password[2], password[3], password[4],password[5])
 
 				print("All passwords successfully added!")
