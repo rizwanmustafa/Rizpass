@@ -52,7 +52,7 @@ def PrintMenu():
 	elif userChoice == 8: RemoveAllPasswords()
 	elif userChoice == 9: ChangeMasterPassword()
 	elif userChoice == 10: dbManager.ExportPasswordsToJSONFile("passwords.json")
-	elif userChoice == 11: dbManager.ImportPasswordsFromJSONFile("passwords.json")
+	elif userChoice == 11: dbManager.ImportPasswordsFromJSONFile(masterPassword,"passwords.json")
 	elif userChoice == 12: Exit()
 
 	input("Press Enter to continue...")

@@ -1,4 +1,5 @@
 from json import dump, load
+from PasswordCrypter import decrypt_password, encrypt_password
 from base64 import b64decode, b64encode
 import mysql.connector
 
@@ -183,7 +184,7 @@ class DatabaseManager:
 
 				dump(passwordObjects, open(filename, "w"))
 
-		def ImportPasswordsFromJSONFile(self, filename: str):
+		def ImportPasswordsFromJSONFile(self, new_master_password, filename: str):
 			# Later ask for master password for the file
 			# Later add the id 
 				if not isinstance(filename, str):
@@ -205,6 +206,10 @@ class DatabaseManager:
 						password[3] = passwordObj["email"]
 						password[4] = b64decode(passwordObj["password"])
 						password[5] = b64decode(passwordObj["salt"])
+
+						decryptedPassword = decrypt_password(master_password, password[4], password[5])
+						encryptedPassword = encrypt_password(new_master_password, decryptedPassword, password[5])
+						password[4] = encryptedPassword
 
 						passwords.append(password)
 
