@@ -1,5 +1,5 @@
 import string
-from random import choice, randint
+from secrets import choice, randbelow
 from ExceptionHandler import HandleParameterException
 
 def GeneratePassword(length:int, uppercase:bool, lowercase:bool, numbers:bool, specials:bool) -> str:
@@ -35,7 +35,7 @@ def GeneratePassword(length:int, uppercase:bool, lowercase:bool, numbers:bool, s
 				password = ""
 
 		# Add random character to password string
-		charType : int = randint(0, 3)
+		charType : int = randbelow(0, 3)
 
 		randomChar = choice(string.ascii_uppercase) if charType == 0 and uppercase else choice(string.ascii_lowercase) if charType == 1  and lowercase else choice(string.digits) if charType == 2 and numbers else choice(string.punctuation) if specials else None
 
