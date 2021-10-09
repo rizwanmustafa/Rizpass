@@ -1,3 +1,5 @@
+from getpass import getpass
+from os import path
 from json import dump, load
 from PasswordCrypter import decrypt_password, encrypt_password
 from base64 import b64decode, b64encode
@@ -193,8 +195,12 @@ class DatabaseManager:
 				if not filename:
 						raise ValueError("Invalid value provided for parameter 'filename'")
 
+				if not path.isfile(filename):
+					print(f"{filename} does not exist!")
+					raise Exception
+
 				passwords = []
-				master_password: str = input("Input master password for file: ")
+				master_password: str = getpass("Input master password for file: ")
 				passwordObjects = load(open(filename, "r"))
 
 				for passwordObj in passwordObjects:
