@@ -5,6 +5,7 @@
 import os
 import pyperclip
 import json
+from getpass import getpass
 
 from PasswordCrypter import encrypt_password, decrypt_password
 from DatabaseManager import DatabaseManager
@@ -53,7 +54,7 @@ def PrintMenu():
 	elif userChoice == 9: ChangeMasterPassword()
 	elif userChoice == 10: dbManager.ExportPasswordsToJSONFile("passwords.json")
 	elif userChoice == 11: dbManager.ImportPasswordsFromJSONFile(masterPassword,"passwords.json")
-	elif userChoice == 12: Exit()
+	elif userChoice == 12: exit()
 
 	input("Press Enter to continue...")
 	ClearConsole()
@@ -77,9 +78,9 @@ def SetupPasswordManager():
 	global dbManager, masterPassword
 
 	mysqlRootUserName = input("Input MySQL root username: ")
-	mysqlRootPassword = input("Input MySQL root password: ")
+	mysqlRootPassword = getpass("Input MySQL root password: ")
 	dbManager = DatabaseManager("localhost", mysqlRootUserName, mysqlRootPassword)
-	masterPassword = input("Input new master password (Password should meet MySQL password requirements): ")
+	masterPassword = getpass("Input new master password (Password should meet MySQL password requirements): ")
 
 	# Drop database if it exists to prevent problems
 	confirmChoice = input("Dropping database 'LocalPasswordManager' if it exists. Are you sure you want to continue? (Y/N)")
@@ -118,7 +119,7 @@ def SetupPasswordManager():
 
 def Login():
 	global masterPassword, dbManager
-	masterPassword = input("Input your masterpassword: ")
+	masterPassword = getpass("Input your masterpassword: ")
 	dbManager = DatabaseManager("localhost", "passMan", masterPassword, "LocalPasswordManager")
 
 def GeneratePassword():
@@ -159,7 +160,7 @@ def AddPassword(userPassword:str = None):
 	email = input("Input email address (Optional): ")
 	password = ""
 	if userPassword: password = userPassword
-	else: password = input("Input your password: ") # Later import a package to add passwords securely
+	else: password = getpass("Input your password: ") 
 
 	confirmation = input("Are you sure you want to add this password (Y/N): ")
 	if not confirmation == "Y" and not confirmation == "y":
@@ -245,7 +246,7 @@ def ModifyPassword():
 	newTitle = input("Input new title: ")
 	newUsername = input("Input new username: ")
 	newEmail = input("Input new email: ")
-	newPassword = input("Input new password: ")
+	newPassword = getpass("Input new password: ")
 
 	confirmChoice = input("Are you sure you want to modify this password (Y/N): ")
 	if not confirmChoice == "Y" and not confirmChoice == "y": return
@@ -261,10 +262,10 @@ def ModifyPassword():
 	
 
 def ChangeMasterPassword():
-	newMasterPassword = input("Input new masterpassword (Should meet MySQL Password Requirements): ")
+	newMasterPassword = getpass("Input new masterpassword (Should meet MySQL Password Requirements): ")
 
 	rootUsername = input("Input mysql root username: ")
-	rootPassword = input("Input mysql root password: ")
+	rootPassword = getpass("Input mysql root password: ")
 	anotherDBManager = DatabaseManager("localhost", rootUsername, rootPassword)
 	anotherDBManager.dbCursor.execute("ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (newMasterPassword, ))
 
@@ -290,10 +291,10 @@ def ClearConsole():
 		command = 'cls'
 	os.system(command)
 
-def Exit():
+def exit():
 	dbManager.dbCursor.close()
 	dbManager.mydb.close()
-	exit()
+	quit()
 
 while True:
 	PrintMenu()
