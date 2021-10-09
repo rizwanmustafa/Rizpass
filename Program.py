@@ -52,8 +52,14 @@ def PrintMenu():
 	elif userChoice == 7: RemovePassword()
 	elif userChoice == 8: RemoveAllPasswords()
 	elif userChoice == 9: ChangeMasterPassword()
-	elif userChoice == 10: dbManager.ExportPasswordsToJSONFile("passwords.json")
-	elif userChoice == 11: dbManager.ImportPasswordsFromJSONFile(masterPassword,"passwords.json")
+	elif userChoice == 10: 
+		filename = input("Filename: ")
+		if filename.strip() == "": print("Filename cannot be empty or whitespace")
+		else: dbManager.ExportPasswordsToJSONFile(filename)
+	elif userChoice == 11:
+		filename = input("Filename: ")
+		if filename.strip() == "": print("Filename cannot be empty or whitespace")
+		else: dbManager.ImportPasswordsFromJSONFile(masterPassword,filename)
 	elif userChoice == 12: exit()
 
 	input("Press Enter to continue...")
