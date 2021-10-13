@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import pyperclip
 import json
@@ -195,8 +196,12 @@ def GeneratePassword():
 
     if generatedPassword:
         print("Your generated password is: ", generatedPassword)
-        pyperclip.copy(generatedPassword)
-        print("The generated password has been copied to your clipboard")
+        try:
+            pyperclip.copy(generatedPassword)
+            print("The generated password has been copied to your clipboard")
+        except Exception as e:
+            print("The generated password could not be copied to your clipboard due to the following error:")
+            print(e)
         addPass = input("Do you want to add this password (Y/N): ")
         if addPass == "Y" or addPass == "y":
             AddPassword(generatedPassword)
@@ -239,8 +244,12 @@ def PrintPassword(password):
     print("Email Address: {0}".format(email))
     print("Password: {0}".format(password))
     print()
-    pyperclip.copy(password)
-    print("This password has been copied to your clipboard!")
+    try:
+        pyperclip.copy(password)
+        print("This password has been copied to your clipboard!")
+    except Exception as e:
+        print("This password could not be copied to your clipboard due to the following error: ")
+        print(e)
     print("-------------------------------")
 
 
@@ -367,5 +376,23 @@ def exit():
     quit()
 
 
-while True:
-    PrintMenu()
+def get_input_from_user(title: str = None,  id: str = None, username: str = None, email: str = None, password: str = None):
+    # Set a parameter to True if you want to get its input from user and want the default prompt. Other wise set the parameter to your custom prompt
+
+    if title != None:
+        title = input("Password Title: " if title == True else title)
+    if id != None:
+        id = input("Password ID: " if id == True else id)
+    if username != None:
+        username = input("Password Username: " if username == True else username)
+    if email != None:
+        email = input("Password Email: " if email == True else email)
+    if password != None:
+        password = getpass("Password: " if password == True else password)
+
+    return (title, id, username, email, password)
+
+
+if __name__ == "__main__":
+    while True:
+        PrintMenu()
