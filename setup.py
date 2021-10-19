@@ -2,8 +2,24 @@
 from getpass import getpass
 from DatabaseManager import DatabaseManager
 
-#TODO:
-#1. Split the big method into smaller methods
+# TODO:
+# 1. Split the big method into smaller methods
+
+
+def prevent_empty_input(input_prompt: str) -> str:
+    input_value = None
+    for i in range(3):
+        input_value = input(input_prompt)
+
+        if input_value.strip() == "":
+            print("Value cannot be empty or whitespace!")
+            continue
+
+        return input_value
+
+    print("Exiting!")
+    exit(1)
+
 
 def setup_password_manager():
 
@@ -69,4 +85,5 @@ def setup_password_manager():
 
 
 if __name__ == "__main__":
+    prevent_empty_input("Password: ")
     setup_password_manager()

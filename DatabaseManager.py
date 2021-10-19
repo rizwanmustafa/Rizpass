@@ -172,7 +172,7 @@ class DatabaseManager:
 					print("Query: ", query)
 					print("Error: ", e)
 					print("Exiting!")
-					exit(2)
+					exit(1)
 
 		def ExportPasswordsToJSONFile(self, filename: str):
 				if not isinstance(filename, str):
