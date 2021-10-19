@@ -136,13 +136,13 @@ def SetupPasswordManager():
         "GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
     dbManager.mydb.database = "LocalPasswordManager"
     createTableQuery = """CREATE TABLE Passwords(
-		id INT NOT NULL AUTO_INCREMENT,
-		title VARCHAR(50) NOT NULL,
-		username VARCHAR(50),
-		email VARCHAR(50),
-		password BLOB NOT NULL,
-		salt BLOB NOT NULL,
-		PRIMARY KEY( id ));"""
+        id INT NOT NULL AUTO_INCREMENT,
+        title VARCHAR(50) NOT NULL,
+        username VARCHAR(50),
+        email VARCHAR(50),
+        password BLOB NOT NULL,
+        salt BLOB NOT NULL,
+        PRIMARY KEY( id ));"""
     dbManager.ExecuteRawQuery(createTableQuery)
 
     # Close the connection to database with root login

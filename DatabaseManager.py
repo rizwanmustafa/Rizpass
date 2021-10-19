@@ -27,13 +27,19 @@ class DatabaseManager:
 						raise ValueError("Invalid value provided for parameter 'password'")
 
 				# Assign the objects
-				self.mydb = mysql.connector.connect(
-						host=host,
-						user=user,
-						password=password,
-						db=db
-				)
-				self.dbCursor = self.mydb.cursor()
+				try:
+					self.mydb = mysql.connector.connect(
+							host=host,
+							user=user,
+							password=password,
+							db=db
+					)
+					self.dbCursor = self.mydb.cursor()
+				except Exception as e:
+					print("There was an error while connecting with MySQL: ")
+					print(e)
+					print("Exiting!")
+					exit(1)
 
 		def AddPassword(self, title: str, username: str, email: str, password: bytes, salt: bytes):
 				# Exception handling
@@ -157,9 +163,16 @@ class DatabaseManager:
 				if not query:
 						raise ValueError("Parameter 'query' cannot be empty")
 
-				self.dbCursor.execute(query)
-				self.mydb.commit()
-				return self.dbCursor.fetchall()
+				try:
+					self.dbCursor.execute(query)
+					self.mydb.commit()
+					return self.dbCursor.fetchall()
+				except Exception as e:
+					print("There was an error while executing a query: ")
+					print("Query: ", query)
+					print("Error: ", e)
+					print("Exiting!")
+					exit(2)
 
 		def ExportPasswordsToJSONFile(self, filename: str):
 				if not isinstance(filename, str):

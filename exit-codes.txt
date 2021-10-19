@@ -1,0 +1,2 @@
+1 - Establishing connection with MySQL
+2 - Executing a query in MySQL
