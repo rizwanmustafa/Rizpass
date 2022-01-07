@@ -3,24 +3,19 @@ import os
 import pyperclip
 import json
 from getpass import getpass
+from sys import exit
 
 from PasswordCrypter import encrypt_password, decrypt_password
 from DatabaseManager import DatabaseManager
+from setup import setup_password_manager
 import PasswordGenerator
 
 masterPassword:  str = None
 dbManager: DatabaseManager = None
 
 
-def PrintMenu():
-    if not masterPassword:
-        if GetUserRegistrationStatus():
-            Login()
-        else:
-            SetupPasswordManager()
-        ClearConsole()
-
-    menuItms = [
+def print_menu():
+    menu_itms = [
         "-------------------------------",
         "1. Generate a strong password",
         "2. Add a password",
@@ -37,131 +32,90 @@ def PrintMenu():
         "-------------------------------"
     ]
 
-    for menuItm in menuItms:
+    for menuItm in menu_itms:
         print(menuItm)
 
-    userChoice = input("Please input your choice: ")
-    if not userChoice.isnumeric():
+
+def perform_tasks():
+    user_choice = input("Please input your choice: ")
+    max_limit = 12
+
+    if not user_choice.isnumeric():
         print("Invalid option chosen!")
-    else:
-        userChoice = int(userChoice)
+        return
 
-    if userChoice == 1:
-        GeneratePassword()
-    elif userChoice == 2:
-        AddPassword()
-    elif userChoice == 3:
-        GetPassword()
-    elif userChoice == 4:
-        FilterPasswords()
-    elif userChoice == 5:
-        PrintAllPasswords()
-    elif userChoice == 6:
-        ModifyPassword()
-    elif userChoice == 7:
-        RemovePassword()
-    elif userChoice == 8:
-        RemoveAllPasswords()
-    elif userChoice == 9:
-        ChangeMasterPassword()
-    elif userChoice == 10:
-        filename = input("Filename: ")
-        if filename.strip() == "":
-            print("Filename cannot be empty or whitespace")
-        else:
-            dbManager.ExportPasswordsToJSONFile(filename)
-    elif userChoice == 11:
-        filename = input("Filename: ")
-        if filename.strip() == "":
-            print("Filename cannot be empty or whitespace")
-        else:
-            dbManager.ImportPasswordsFromJSONFile(masterPassword, filename)
-    elif userChoice == 12:
-        exit()
+    user_choice = int(user_choice)
 
-    input("Press Enter to continue...")
-    ClearConsole()
+    if user_choice > max_limit and user_choice <= 0:
+        print("Invalid option chosen!")
+        return
+
+    if user_choice == 1:
+        generate_password()
+    elif user_choice == 2:
+        add_password()
+    elif user_choice == 3:
+        get_password()
+    elif user_choice == 4:
+        filter_passwords()
+    elif user_choice == 5:
+        print_all_passwords()
+    elif user_choice == 6:
+        modify_password()
+    elif user_choice == 7:
+        remove_password()
+    elif user_choice == 8:
+        remove_all_passwords()
+    elif user_choice == 9:
+        change_masterpassword()
+    elif user_choice == 10:
+        export_passwords()
+    elif user_choice == 11:
+        import_passwords()
+    elif user_choice == 12:
+        exit_app()
 
 
-def GetUserRegistrationStatus() -> bool:
-    settingsFile = open("userdata.json", "r+")
-    userSettings = json.load(settingsFile)
-
-    if userSettings["userRegistered"]:
-        return True
-    else:
+def get_user_registration_status() -> bool:
+    if not os.path.isfile(os.path.expanduser("~/.localpassman.json")):
         return False
 
+    settingsFile = open(os.path.expanduser("~/.localpassman.json"), "r+")
+    userSettings = json.load(settingsFile)
 
-def SetUserRegistrationStatus(status: bool) -> bool:
-    settingsFile = open("userdata.json", "w")
-    userSettings = {
-        "userRegistered": status
-    }
+    if userSettings["user_registered"]:
+        return True
 
-    json.dump(userSettings, settingsFile)
+    return False
 
 
-def SetupPasswordManager():
-    global dbManager, masterPassword
-
-    mysqlRootUserName = input("Input MySQL root username: ")
-    mysqlRootPassword = getpass("Input MySQL root password: ")
-    dbManager = DatabaseManager(
-        "localhost", mysqlRootUserName, mysqlRootPassword)
-    masterPassword = getpass(
-        "Input new master password (Password should meet MySQL password requirements): ")
-
-    # Drop database if it exists to prevent problems
-    confirmChoice = input(
-        "Dropping database 'LocalPasswordManager' if it exists. Are you sure you want to continue? (Y/N)")
-    if confirmChoice == "Y" or confirmChoice == "y":
-        dbManager.ExecuteRawQuery(
-            "DROP DATABASE IF EXISTS LocalPasswordManager;")
+def export_passwords():
+    filename = input("Filename: ")
+    if filename.strip() == "":
+        print("Filename cannot be empty or whitespace")
     else:
-        exit()
+        dbManager.ExportPasswordsToJSONFile(filename)
 
-    # Drop user if it exists to prevent problems
-    confirmChoice = input(
-        "Dropping user 'passMan'@'localhost' if it exists. Are you sure you want to continue? (Y/N)")
-    if confirmChoice == "Y" or confirmChoice == "y":
-        dbManager.ExecuteRawQuery("DROP USER IF EXISTS 'passMan'@'localhost';")
+
+def import_passwords():
+    """
+    Imports passwords from a JSON file
+    """
+    filename = input("Filename: ")
+    if filename.strip() == "":
+        print("Filename cannot be empty or whitespace")
     else:
-        exit()
-
-    dbManager.ExecuteRawQuery("CREATE DATABASE LocalPasswordManager;")
-    dbManager.ExecuteRawQuery(
-        "CREATE USER 'passMan'@'localhost' IDENTIFIED BY '{0}';".format(masterPassword))
-    dbManager.ExecuteRawQuery(
-        "GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
-    dbManager.mydb.database = "LocalPasswordManager"
-    createTableQuery = """CREATE TABLE Passwords(
-        id INT NOT NULL AUTO_INCREMENT,
-        title VARCHAR(50) NOT NULL,
-        username VARCHAR(50),
-        email VARCHAR(50),
-        password BLOB NOT NULL,
-        salt BLOB NOT NULL,
-        PRIMARY KEY( id ));"""
-    dbManager.ExecuteRawQuery(createTableQuery)
-
-    # Close the connection to database with root login
-    dbManager.dbCursor.close()
-    dbManager.mydb.close()
-
-    dbManager = DatabaseManager(
-        "localhost", "passMan", masterPassword, "LocalPasswordManager")
-    SetUserRegistrationStatus(True)
+        dbManager.ImportPasswordsFromJSONFile(masterPassword, filename)
 
 
-def Login():
+def login():
     global masterPassword, dbManager
     masterPassword = getpass("Input your masterpassword: ")
     dbManager = DatabaseManager(
         "localhost", "passMan", masterPassword, "LocalPasswordManager")
 
 
-def GeneratePassword():
+def generate_password():
     passLength = input("Input password length (Min: 8): ")
     if not passLength.isnumeric() or int(passLength) < 8:
         print("Invalid value entered for the length of password!")
@@ -191,7 +145,7 @@ def GeneratePassword():
     else:
         specials = False
 
-    generatedPassword = PasswordGenerator.GeneratePassword(
+    generatedPassword = PasswordGenerator.generate_password(
         passLength, uppercase, lowercase, numbers, specials)
 
     if generatedPassword:
@@ -200,14 +154,15 @@ def GeneratePassword():
             pyperclip.copy(generatedPassword)
             print("The generated password has been copied to your clipboard")
         except Exception as e:
-            print("The generated password could not be copied to your clipboard due to the following error:")
+            print(
+                "The generated password could not be copied to your clipboard due to the following error:")
             print(e)
         addPass = input("Do you want to add this password (Y/N): ")
         if addPass == "Y" or addPass == "y":
-            AddPassword(generatedPassword)
+            add_password(generatedPassword)
 
 
-def AddPassword(userPassword: str = None):
+def add_password(userPassword: str = None):
     title = input("Input password title: ")
     username = input("Input username (Optional): ")
     email = input("Input email address (Optional): ")
@@ -224,11 +179,11 @@ def AddPassword(userPassword: str = None):
     salt: bytes = os.urandom(16)
     encryptedPassword = encrypt_password(masterPassword, password, salt)
 
-    dbManager.AddPassword(title, username, email, encryptedPassword, salt)
+    dbManager.add_password(title, username, email, encryptedPassword, salt)
     print("Password added successfully!")
 
 
-def PrintPassword(password):
+def print_password(password):
     # Get the data
     id = password[0]
     title = password[1]
@@ -253,87 +208,98 @@ def PrintPassword(password):
     print("-------------------------------")
 
 
-def PrintAllPasswords():
-    passwords = dbManager.GetAllPasswords()
+def print_all_passwords():
+    passwords = dbManager.get_all_passwords()
 
     print("Printing all passwords:")
     for password in passwords:
-        PrintPassword(password)
+        print_password(password)
 
 
-def FilterPasswords():
+def filter_passwords():
     titleFilter = input("Input title filter (Optional): ")
     usernameFilter = input("Input username filter (Optional): ")
     emailFilter = input("Input email filter (Optional): ")
 
-    passwords = dbManager.FilterPasswords(
+    passwords = dbManager.filter_passwords(
         titleFilter, usernameFilter, emailFilter)
 
     print("Following passwords meet your given filters:")
     for password in passwords:
-        PrintPassword(password)
+        print_password(password)
 
 
-def GetPassword():
+def get_password():
     id = input("Input password id: ")
 
     if not id.isnumeric():
         print("Invalid id provided!")
         return
 
-    password = dbManager.GetPassword(int(id))
+    password = dbManager.get_password(int(id))
     if password:
-        PrintPassword(password)
+        print_password(password)
     else:
         print("No password with given id found!")
 
 
-def RemovePassword():
+def remove_password():
     id = input("Input password id: ")
 
     if not id.isnumeric():
         print("Invalid id provided!")
         return
 
-    dbManager.RemovePassword(int(id))
+    id = int(id)
+
+    if id < 0:
+        print("Invalid id provided!")
+        return
+
+    dbManager.remove_password(int(id))
     print("Removed password successfully!")
 
 
-def RemoveAllPasswords():
+def remove_all_passwords():
     confirmChoice = input(
         "Are you sure you want to remove all stored passwords (Y/N): ")
     if confirmChoice == "Y" or confirmChoice == "y":
-        dbManager.RemoveAllPasswords()
+        dbManager.remove_all_passwords()
         print("Removed all passwords successfully!")
 
 
-def ModifyPassword():
+def modify_password():
     # Later add functionality for changing the password itself
     id = input("Input password id: ")
     print("Leave any field empty if you do not wish to change it")
-    newTitle = input("Input new title: ")
-    newUsername = input("Input new username: ")
-    newEmail = input("Input new email: ")
-    newPassword = getpass("Input new password: ")
+    new_title = input("Input new title: ")
+    new_username = input("Input new username: ")
+    new_email = input("Input new email: ")
+    new_password = getpass("Input new password: ")
 
-    confirmChoice = input(
+    confirm_choice = input(
         "Are you sure you want to modify this password (Y/N): ")
-    if not confirmChoice == "Y" and not confirmChoice == "y":
+    if not confirm_choice == "Y" and not confirm_choice == "y":
         return
 
     salt = os.urandom(16)
-    encryptedPassword = encrypt_password(masterPassword, newPassword, salt)
+    encryptedPassword = encrypt_password(
+        masterPassword, new_password, salt) if new_password else None
 
-    if newTitle == newUsername == newEmail == newPassword == "":
+    if new_title == new_username == new_email == new_password == "":
         return
     else:
-        dbManager.ModifyPassword(int(id), newTitle, newUsername, newEmail,
-                                 encryptedPassword if newPassword else None, salt if salt else None)
+        dbManager.modify_password(int(id),
+                                  new_title,
+                                  new_username,
+                                  new_email,
+                                  encryptedPassword if new_password else None,
+                                  salt if new_password else None)
 
     print("Modified password successfully!")
 
 
-def ChangeMasterPassword():
+def change_masterpassword():
     newMasterPassword = getpass(
         "Input new masterpassword (Should meet MySQL Password Requirements): ")
 
@@ -348,7 +314,7 @@ def ChangeMasterPassword():
     dbManager.mydb.close()
     dbManager = DatabaseManager(
         "localhost", "passMan", newMasterPassword, "LocalPasswordManager")
-    passwords = dbManager.GetAllPasswords()
+    passwords = dbManager.get_all_passwords()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for password in passwords:
@@ -358,22 +324,19 @@ def ChangeMasterPassword():
         newPassword = encrypt_password(
             newMasterPassword, unEncryptedPass,  salt)
 
-        dbManager.ModifyPassword(password[0], "", "", "", newPassword, salt)
+        dbManager.modify_password(password[0], "", "", "", newPassword, salt)
 
     masterPassword = newMasterPassword
 
 
-def ClearConsole():
-    command = 'clear'
-    if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
-        command = 'cls'
-    os.system(command)
+def clear_console():
+    os.system('clear')
 
 
-def exit():
+def exit_app():
     dbManager.dbCursor.close()
     dbManager.mydb.close()
-    quit()
+    exit()
 
 
 def get_input_from_user(title: str = None,  id: str = None, username: str = None, email: str = None, password: str = None):
@@ -384,7 +347,8 @@ def get_input_from_user(title: str = None,  id: str = None, username: str = None
     if id != None:
         id = input("Password ID: " if id == True else id)
     if username != None:
-        username = input("Password Username: " if username == True else username)
+        username = input("Password Username: " if username ==
+                         True else username)
     if email != None:
         email = input("Password Email: " if email == True else email)
     if password != None:
@@ -394,5 +358,17 @@ def get_input_from_user(title: str = None,  id: str = None, username: str = None
 
 
 if __name__ == "__main__":
+
     while True:
-        PrintMenu()
+        if not masterPassword:
+            if get_user_registration_status():
+                login()
+                continue
+            print("It seems like you haven't set localpassman up!")
+            setup_password_manager()
+            clear_console()
+
+        print_menu()
+        perform_tasks()
+        input("\nPress Enter to continue...")
+        clear_console()
