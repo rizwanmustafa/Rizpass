@@ -1,2 +1,9 @@
 /__pycache__
+
+# Project specific stuff
 passwords.json
+
+# Pyinstaller stuff
+/build
+/dist
+*.spec
