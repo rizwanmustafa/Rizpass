@@ -9,7 +9,7 @@ from sys import exit
 from password_crypter import encrypt_password, decrypt_password
 from database_manager import DatabaseManager
 from setup_localpassman import setup_password_manager
-import password_generator
+from password_generator import generate_password
 
 master_password:  str = None
 db_manager: DatabaseManager = None
@@ -52,7 +52,7 @@ def perform_tasks():
         return
 
     if user_choice == 1:
-        generate_password()
+        generate_password_user()
     elif user_choice == 2:
         add_password()
     elif user_choice == 3:
@@ -116,12 +116,12 @@ def login():
         "localhost", "passMan", master_password, "LocalPasswordManager")
 
 
-def generate_password():
-    passLength = input("Input password length (Min: 8): ")
-    if not passLength.isnumeric() or int(passLength) < 8:
-        print("Invalid value entered for the length of password!")
-    else:
-        passLength = int(passLength)
+def generate_password_user():
+    pass_len = input("Password length (Recommended Min: 8): ")
+    if not pass_len.isnumeric():
+        raise InvalidInput("Length must be numeric")
+
+    pass_len = int(pass_len)
 
     # uppercase, lowercase, numbers, specials
     uppercase = confirm_user_choice(
@@ -133,8 +133,8 @@ def generate_password():
     specials = confirm_user_choice(
         "Should the password contain special characters? (Y/N): ")
 
-    generated_pass = password_generator.generate_password(
-        passLength, uppercase, lowercase, numbers, specials)
+    generated_pass = generate_password(
+        pass_len, uppercase, lowercase, numbers, specials)
 
     if not generated_pass:
         return
@@ -154,13 +154,16 @@ def generate_password():
 
 
 def add_password(user_password: str = None):
-    title, _, username, email, _ = get_credential_input(
-        "Title: ", False, "(Optional) Username: ", "(Optional) Email: ", False)
+    title, _, username, email, password = get_credential_input(
+        title="Title: ",
+        id=False,
+        username="(Optional) Username: ",
+        email="(Optional) Email: ",
+        password=user_password == None,
+        allow_empty=False)
 
     if user_password:
         password = user_password
-    else:
-        password = getpass("Password: ")
 
     if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
         return
@@ -223,7 +226,7 @@ def filter_passwords():
 
 
 def get_password():
-    id = get_id_input_from_user()
+    id = get_id_input()
 
     password = db_manager.get_password(id)
     if password:
@@ -233,7 +236,7 @@ def get_password():
 
 
 def remove_password():
-    id: int = get_id_input_from_user()
+    id: int = get_id_input()
 
     db_manager.remove_password(id)
     print("Removed password successfully!")
@@ -250,7 +253,7 @@ def remove_all_passwords():
 
 def modify_password():
     # Later add functionality for changing the password itself
-    id = get_id_input_from_user()
+    id = get_id_input()
 
     print("Leave any field empty if you do not wish to change it")
     new_title, _, new_username, new_email, new_password = get_credential_input(
@@ -319,7 +322,7 @@ def exit_app():
     exit()
 
 
-def get_id_input_from_user(prompt: None | str = None) -> int:
+def get_id_input(prompt: None | str = None) -> int:
     id = input("ID: " if prompt == None else prompt)
 
     if not id.isnumeric() or int(id) <= 0:
@@ -333,23 +336,20 @@ def get_credential_input(title: bool | str = True,
                          username: bool | str = True,
                          email: bool | str = True,
                          password: bool | str = True,
-                         no_validation: bool = True) -> dict:
+                         allow_empty: bool = True) -> dict:
     """
     Set a parameter to True if you want to get its input from user and want the default prompt.
     If you want a custom prompt, set the parameter to a string of custom prompt
     """
-    # TODO: Validate input from user
-    # TODO: Raise an exception when recieve invalid input from the user
 
     if id != None and id != False:
         id = input("ID: " if id == True else id)
 
-        if id.strip() == "" and no_validation == False:
-            return  # Raise an exception later
+        if id.strip() == "" and allow_empty == False:
+            raise InvalidInput("ID cannot be empty or whitespace!")
 
         if not id.isnumeric() or int(id) <= 0:
-            print("Invalid id provided!")
-            return  # Raise exception later
+            raise InvalidInput("ID must be numeric and <= 0")
 
     else:
         id = None
@@ -357,36 +357,35 @@ def get_credential_input(title: bool | str = True,
     if title != None and title != False:
         title = input("Title: " if title == True else title)
 
-        if title.strip() == "" and no_validation == False:
-            return  # Raise an exception later
+        if title.strip() == "" and allow_empty == False:
+            raise InvalidInput("Title cannot be empty or whitespace!")
 
     else:
         title = None
 
     if username != None and username != False:
         username = input("Username: " if username == True else username)
-
-        if title.strip() == "" and no_validation == False:
-            return  # Raise an exception later
     else:
         username = None
 
     if email != None and email != False:
         email = input("Email: " if email == True else email)
-
-        if title.strip() == "" and no_validation == False:
-            return  # Raise an exception later
     else:
         email = None
 
     if password != None and password != False:
         password = getpass("Password: " if password == True else password)
-        if password.strip() == "" and no_validation == False:
-            return  # Raise an exception later
+        if password.strip() == "" and allow_empty == False:
+            raise InvalidInput("Password cannot be empty or whitespace!")
     else:
         password = None
 
     return (title, id, username, email, password)
+
+
+class InvalidInput(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 def confirm_user_choice(prompt: str):
@@ -409,13 +408,15 @@ class Credential:
         self.password = pass_object[4]
 
     def __str__(self):
-        print("-------------------------------")
-        print("ID: {0}".format(self.id))
-        print("Title: {0}".format(self.title))
-        print("Username: {0}".format(self.username))
-        print("Email Address: {0}".format(self.email))
-        print("Password: {0}".format(self.password))
-        print("-------------------------------")
+        string = "\n"
+        string += "-------------------------------\n"
+        string += "ID: {0}\n".format(self.id)
+        string += "Title: {0}\n".format(self.title)
+        string += "Username: {0}\n".format(self.username)
+        string += "Email Address: {0}\n".format(self.email)
+        string += "Password: {0}\n".format(self.password)
+        string += "-------------------------------"
+        return string
 
     def copy_pass(self):
         try:
@@ -430,7 +431,6 @@ class Credential:
 if __name__ == "__main__":
 
     while True:
-        print(Credential(12, "Title", "Username", "Email", "password"))
         clear_console()
         if not master_password:
             if get_user_registration_status():
