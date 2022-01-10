@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from typing import List
 import pyperclip
 import json
 from getpass import getpass
@@ -10,8 +11,8 @@ from DatabaseManager import DatabaseManager
 from setup import setup_password_manager
 import PasswordGenerator
 
-masterPassword:  str = None
-dbManager: DatabaseManager = None
+master_password:  str = None
+db_manager: DatabaseManager = None
 
 
 def print_menu():
@@ -94,7 +95,7 @@ def export_passwords():
     if filename.strip() == "":
         print("Filename cannot be empty or whitespace")
     else:
-        dbManager.ExportPasswordsToJSONFile(filename)
+        db_manager.export_pass_to_json_file(filename)
 
 
 def import_passwords():
@@ -105,14 +106,14 @@ def import_passwords():
     if filename.strip() == "":
         print("Filename cannot be empty or whitespace")
     else:
-        dbManager.ImportPasswordsFromJSONFile(masterPassword, filename)
+        db_manager.import_pass_from_json_file(master_password, filename)
 
 
 def login():
-    global masterPassword, dbManager
-    masterPassword = getpass("Input your masterpassword: ")
-    dbManager = DatabaseManager(
-        "localhost", "passMan", masterPassword, "LocalPasswordManager")
+    global master_password, db_manager
+    master_password = getpass("Input your masterpassword: ")
+    db_manager = DatabaseManager(
+        "localhost", "passMan", master_password, "LocalPasswordManager")
 
 
 def generate_password():
@@ -123,73 +124,61 @@ def generate_password():
         passLength = int(passLength)
 
     # uppercase, lowercase, numbers, specials
-    uppercase = input("Should the password contain uppercase letters? (Y/N): ")
-    if uppercase == "Y" or uppercase == "y":
-        uppercase = True
-    else:
-        uppercase = False
+    uppercase = confirm_user_choice(
+        "Should the password contain uppercase letters? (Y/N): ")
+    lowercase = confirm_user_choice(
+        "Should the password contain lowercase letters? (Y/N): ")
+    numbers = confirm_user_choice(
+        "Should the password contain numbers? (Y/N): ")
+    specials = confirm_user_choice(
+        "Should the password contain special characters? (Y/N): ")
 
-    lowercase = input("Should the password contain lowercase letters? (Y/N): ")
-    if lowercase == "Y" or lowercase == "y":
-        lowercase = True
-
-    numbers = input("Should the password contain numbers? (Y/N): ")
-    if numbers == "Y" or numbers == "y":
-        numbers = True
-    else:
-        numbers = False
-
-    specials = input("Should the password contain special characters? (Y/N): ")
-    if specials == "Y" or specials == "y":
-        specials = True
-    else:
-        specials = False
-
-    generatedPassword = PasswordGenerator.generate_password(
+    generated_pass = PasswordGenerator.generate_password(
         passLength, uppercase, lowercase, numbers, specials)
 
-    if generatedPassword:
-        print("Your generated password is: ", generatedPassword)
-        try:
-            pyperclip.copy(generatedPassword)
-            print("The generated password has been copied to your clipboard")
-        except Exception as e:
-            print(
-                "The generated password could not be copied to your clipboard due to the following error:")
-            print(e)
-        addPass = input("Do you want to add this password (Y/N): ")
-        if addPass == "Y" or addPass == "y":
-            add_password(generatedPassword)
+    if not generated_pass:
+        return
+
+    print("Generated Password: ", generated_pass)
+
+    try:
+        pyperclip.copy(generated_pass)
+        print("The generated password has been copied to your clipboard.")
+    except Exception as e:
+        print("The generated password could not be copied to your clipboard due to the following error:")
+        print(e)
+
+    if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
+        return
+    add_password(generated_pass)
 
 
-def add_password(userPassword: str = None):
-    title = input("Input password title: ")
-    username = input("Input username (Optional): ")
-    email = input("Input email address (Optional): ")
-    password = ""
-    if userPassword:
-        password = userPassword
+def add_password(user_password: str = None):
+    title, _, username, email, _ = get_input_from_user(
+        "Title: ", False, "(Optional) Username: ", "(Optional) Email: ", False)
+
+    if user_password:
+        password = user_password
     else:
-        password = getpass("Input your password: ")
+        password = getpass("Password: ")
 
-    confirmation = input("Are you sure you want to add this password (Y/N): ")
-    if not confirmation == "Y" and not confirmation == "y":
+    if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
         return
 
     salt: bytes = os.urandom(16)
-    encryptedPassword = encrypt_password(masterPassword, password, salt)
+    encrypted_password = encrypt_password(master_password, password, salt)
 
-    dbManager.add_password(title, username, email, encryptedPassword, salt)
-    print("Password added successfully!")
+    db_manager.add_password(title, username, email, encrypted_password, salt)
+    print("\nPassword added successfully!")
 
 
-def print_password(password):
+def print_password(password: List, copy_password=False):
     # Get the data
     id = password[0]
     title = password[1]
     username = password[2]
     email = password[3]
-    password = decrypt_password(masterPassword, password[4], password[5])
+    password = decrypt_password(master_password, password[4], password[5])
 
     # Print the data
     print("-------------------------------")
@@ -199,17 +188,20 @@ def print_password(password):
     print("Email Address: {0}".format(email))
     print("Password: {0}".format(password))
     print()
+    print("-------------------------------")
+    if not copy_password:
+        return
+
     try:
         pyperclip.copy(password)
         print("This password has been copied to your clipboard!")
     except Exception as e:
         print("This password could not be copied to your clipboard due to the following error: ")
         print(e)
-    print("-------------------------------")
 
 
 def print_all_passwords():
-    passwords = dbManager.get_all_passwords()
+    passwords = db_manager.get_all_passwords()
 
     print("Printing all passwords:")
     for password in passwords:
@@ -217,12 +209,13 @@ def print_all_passwords():
 
 
 def filter_passwords():
-    titleFilter = input("Input title filter (Optional): ")
-    usernameFilter = input("Input username filter (Optional): ")
-    emailFilter = input("Input email filter (Optional): ")
-
-    passwords = dbManager.filter_passwords(
-        titleFilter, usernameFilter, emailFilter)
+    title_filter, _, username_filter, email_filter, _ = get_input_from_user(
+        "(Optional) Title should contain: ",
+        False,
+        "(Optional) Username should contain: ",
+        "(Optional) Email should contain: ", False)
+    passwords = db_manager.filter_passwords(
+        title_filter, username_filter, email_filter)
 
     print("Following passwords meet your given filters:")
     for password in passwords:
@@ -230,13 +223,9 @@ def filter_passwords():
 
 
 def get_password():
-    id = input("Input password id: ")
+    id = get_id_input_from_user()
 
-    if not id.isnumeric():
-        print("Invalid id provided!")
-        return
-
-    password = dbManager.get_password(int(id))
+    password = db_manager.get_password(id)
     if password:
         print_password(password)
     else:
@@ -244,62 +233,53 @@ def get_password():
 
 
 def remove_password():
-    id = input("Input password id: ")
+    id: int = get_id_input_from_user()
 
-    if not id.isnumeric():
-        print("Invalid id provided!")
-        return
-
-    id = int(id)
-
-    if id < 0:
-        print("Invalid id provided!")
-        return
-
-    dbManager.remove_password(int(id))
+    db_manager.remove_password(id)
     print("Removed password successfully!")
 
 
 def remove_all_passwords():
-    confirmChoice = input(
-        "Are you sure you want to remove all stored passwords (Y/N): ")
-    if confirmChoice == "Y" or confirmChoice == "y":
-        dbManager.remove_all_passwords()
-        print("Removed all passwords successfully!")
+    for _ in range(2):
+        if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
+            return
+
+    db_manager.remove_all_passwords()
+    print("Removed all passwords successfully!")
 
 
 def modify_password():
     # Later add functionality for changing the password itself
-    id = input("Input password id: ")
-    print("Leave any field empty if you do not wish to change it")
-    new_title = input("Input new title: ")
-    new_username = input("Input new username: ")
-    new_email = input("Input new email: ")
-    new_password = getpass("Input new password: ")
+    id = get_id_input_from_user()
 
-    confirm_choice = input(
-        "Are you sure you want to modify this password (Y/N): ")
-    if not confirm_choice == "Y" and not confirm_choice == "y":
+    print("Leave any field empty if you do not wish to change it")
+    new_title, _, new_username, new_email, new_password = get_input_from_user(
+        id=False)
+
+    if not confirm_user_choice("Are you sure you want to modify this password (Y/N): "):
         return
 
-    salt = os.urandom(16)
+    salt = os.urandom(16) if new_password else None
     encryptedPassword = encrypt_password(
-        masterPassword, new_password, salt) if new_password else None
+        master_password, new_password, salt) if new_password else None
 
     if new_title == new_username == new_email == new_password == "":
         return
     else:
-        dbManager.modify_password(int(id),
-                                  new_title,
-                                  new_username,
-                                  new_email,
-                                  encryptedPassword if new_password else None,
-                                  salt if new_password else None)
+        db_manager.modify_password(id,
+                                   new_title,
+                                   new_username,
+                                   new_email,
+                                   encryptedPassword,
+                                   salt)
 
     print("Modified password successfully!")
 
 
 def change_masterpassword():
+    if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
+        return
+
     newMasterPassword = getpass(
         "Input new masterpassword (Should meet MySQL Password Requirements): ")
 
@@ -309,24 +289,24 @@ def change_masterpassword():
     temp_db_manager.dbCursor.execute(
         "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (newMasterPassword, ))
 
-    global dbManager, masterPassword
-    dbManager.dbCursor.close()
-    dbManager.mydb.close()
-    dbManager = DatabaseManager(
+    global db_manager, master_password
+    db_manager.dbCursor.close()
+    db_manager.mydb.close()
+    db_manager = DatabaseManager(
         "localhost", "passMan", newMasterPassword, "LocalPasswordManager")
-    passwords = dbManager.get_all_passwords()
+    passwords = db_manager.get_all_passwords()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for password in passwords:
         salt = os.urandom(16)
         unEncryptedPass = decrypt_password(
-            masterPassword, password[4], password[5])
+            master_password, password[4], password[5])
         newPassword = encrypt_password(
             newMasterPassword, unEncryptedPass,  salt)
 
-        dbManager.modify_password(password[0], "", "", "", newPassword, salt)
+        db_manager.modify_password(password[0], "", "", "", newPassword, salt)
 
-    masterPassword = newMasterPassword
+    master_password = newMasterPassword
 
 
 def clear_console():
@@ -334,33 +314,125 @@ def clear_console():
 
 
 def exit_app():
-    dbManager.dbCursor.close()
-    dbManager.mydb.close()
+    db_manager.dbCursor.close()
+    db_manager.mydb.close()
     exit()
 
 
-def get_input_from_user(title: str = None,  id: str = None, username: str = None, email: str = None, password: str = None):
-    # Set a parameter to True if you want to get its input from user and want the default prompt. Other wise set the parameter to your custom prompt
+def get_id_input_from_user(prompt: None | str = None) -> int:
+    id = input("ID: " if prompt == None else prompt)
 
-    if title != None:
-        title = input("Password Title: " if title == True else title)
-    if id != None:
-        id = input("Password ID: " if id == True else id)
-    if username != None:
-        username = input("Password Username: " if username ==
-                         True else username)
-    if email != None:
-        email = input("Password Email: " if email == True else email)
-    if password != None:
+    if not id.isnumeric() or int(id) <= 0:
+        print("Invalid id provided!")
+
+    return int(id)
+
+
+def get_input_from_user(title: bool | str = True,
+                        id: bool | str = True,
+                        username: bool | str = True,
+                        email: bool | str = True,
+                        password: bool | str = True,
+                        allow_empty: bool = True) -> dict:
+    """
+    Set a parameter to True if you want to get its input from user and want the default prompt.
+    If you want a custom prompt, set the parameter to a string of custom prompt
+    """
+    # TODO: Validate input from user
+    # TODO: Raise an exception when recieve invalid input from the user
+
+    if id != None and id != False:
+        id = input("ID: " if id == True else id)
+
+        if id.strip() == "" and allow_empty == False:
+            return  # Raise an exception later
+
+        if not id.isnumeric() or int(id) <= 0:
+            print("Invalid id provided!")
+            return  # Raise exception later
+
+    else:
+        id = None
+
+    if title != None and title != False:
+        title = input("Title: " if title == True else title)
+
+        if title.strip() == "" and allow_empty == False:
+            return  # Raise an exception later
+
+    else:
+        title = None
+
+    if username != None and username != False:
+        username = input("Username: " if username == True else username)
+
+        if title.strip() == "" and allow_empty == False:
+            return  # Raise an exception later
+    else:
+        username = None
+
+    if email != None and email != False:
+        email = input("Email: " if email == True else email)
+
+        if title.strip() == "" and allow_empty == False:
+            return  # Raise an exception later
+    else:
+        email = None
+
+    if password != None and password != False:
         password = getpass("Password: " if password == True else password)
+        if password.strip() == "" and allow_empty == False:
+            return  # Raise an exception later
+    else:
+        password = None
 
     return (title, id, username, email, password)
+
+
+def confirm_user_choice(prompt: str):
+    """
+    Returns true if user input 'y' or 'Y' after the prompt
+    """
+    confirm_choice = input(prompt)
+    return confirm_choice.upper() == "Y"
+
+
+class Credential:
+    def __init__(self, *args) -> None:
+        # If we are given an array, process it. Else process the separate parameters
+        pass_object = args[0] if len(args) == 1 else args
+
+        self.id = pass_object[0]
+        self.title = pass_object[1]
+        self.username = pass_object[2]
+        self.email = pass_object[3]
+        self.password = pass_object[4]
+
+    def print(self):
+        print("-------------------------------")
+        print("ID: {0}".format(self.id))
+        print("Title: {0}".format(self.title))
+        print("Username: {0}".format(self.username))
+        print("Email Address: {0}".format(self.email))
+        print("Password: {0}".format(self.password))
+        print()
+        print("-------------------------------")
+
+    def copy_password(self):
+        try:
+            pyperclip.copy(self.password)
+            print("This password has been copied to your clipboard!")
+        except Exception as e:
+            print(
+                "This password could not be copied to your clipboard due to the following error: ")
+            print(e)
 
 
 if __name__ == "__main__":
 
     while True:
-        if not masterPassword:
+        clear_console()
+        if not master_password:
             if get_user_registration_status():
                 login()
                 continue
@@ -371,4 +443,3 @@ if __name__ == "__main__":
         print_menu()
         perform_tasks()
         input("\nPress Enter to continue...")
-        clear_console()

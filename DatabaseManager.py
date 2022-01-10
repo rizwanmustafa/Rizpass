@@ -167,7 +167,7 @@ class DatabaseManager:
 			print("Exiting!")
 			exit(1)
 
-	def ExportPasswordsToJSONFile(self, filename: str):
+	def export_pass_to_json_file(self, filename: str):
 		if not isinstance(filename, str):
 			raise TypeError("Parameter 'filename' must be of type str")
 
@@ -192,7 +192,7 @@ class DatabaseManager:
 
 		dump(passwordObjects, open(filename, "w"))
 
-	def ImportPasswordsFromJSONFile(self, new_master_password, filename: str):
+	def import_pass_from_json_file(self, new_master_password, filename: str):
 		# Later ask for master password for the file
 		# Later add the id
 		if not isinstance(filename, str):
