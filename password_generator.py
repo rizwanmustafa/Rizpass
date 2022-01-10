@@ -1,6 +1,6 @@
 import string
 from secrets import choice, randbelow
-from ExceptionHandler import handle_parameter_exception
+from exception_handler import handle_parameter_exception
 
 
 def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str:

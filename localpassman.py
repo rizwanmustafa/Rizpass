@@ -6,10 +6,10 @@ import json
 from getpass import getpass
 from sys import exit
 
-from PasswordCrypter import encrypt_password, decrypt_password
-from DatabaseManager import DatabaseManager
-from setup import setup_password_manager
-import PasswordGenerator
+from password_crypter import encrypt_password, decrypt_password
+from database_manager import DatabaseManager
+from setup_localpassman import setup_password_manager
+import password_generator
 
 master_password:  str = None
 db_manager: DatabaseManager = None
@@ -133,7 +133,7 @@ def generate_password():
     specials = confirm_user_choice(
         "Should the password contain special characters? (Y/N): ")
 
-    generated_pass = PasswordGenerator.generate_password(
+    generated_pass = password_generator.generate_password(
         passLength, uppercase, lowercase, numbers, specials)
 
     if not generated_pass:
@@ -154,7 +154,7 @@ def generate_password():
 
 
 def add_password(user_password: str = None):
-    title, _, username, email, _ = get_input_from_user(
+    title, _, username, email, _ = get_credential_input(
         "Title: ", False, "(Optional) Username: ", "(Optional) Email: ", False)
 
     if user_password:
@@ -209,7 +209,7 @@ def print_all_passwords():
 
 
 def filter_passwords():
-    title_filter, _, username_filter, email_filter, _ = get_input_from_user(
+    title_filter, _, username_filter, email_filter, _ = get_credential_input(
         "(Optional) Title should contain: ",
         False,
         "(Optional) Username should contain: ",
@@ -253,7 +253,7 @@ def modify_password():
     id = get_id_input_from_user()
 
     print("Leave any field empty if you do not wish to change it")
-    new_title, _, new_username, new_email, new_password = get_input_from_user(
+    new_title, _, new_username, new_email, new_password = get_credential_input(
         id=False)
 
     if not confirm_user_choice("Are you sure you want to modify this password (Y/N): "):
@@ -328,12 +328,12 @@ def get_id_input_from_user(prompt: None | str = None) -> int:
     return int(id)
 
 
-def get_input_from_user(title: bool | str = True,
-                        id: bool | str = True,
-                        username: bool | str = True,
-                        email: bool | str = True,
-                        password: bool | str = True,
-                        allow_empty: bool = True) -> dict:
+def get_credential_input(title: bool | str = True,
+                         id: bool | str = True,
+                         username: bool | str = True,
+                         email: bool | str = True,
+                         password: bool | str = True,
+                         no_validation: bool = True) -> dict:
     """
     Set a parameter to True if you want to get its input from user and want the default prompt.
     If you want a custom prompt, set the parameter to a string of custom prompt
@@ -344,7 +344,7 @@ def get_input_from_user(title: bool | str = True,
     if id != None and id != False:
         id = input("ID: " if id == True else id)
 
-        if id.strip() == "" and allow_empty == False:
+        if id.strip() == "" and no_validation == False:
             return  # Raise an exception later
 
         if not id.isnumeric() or int(id) <= 0:
@@ -357,7 +357,7 @@ def get_input_from_user(title: bool | str = True,
     if title != None and title != False:
         title = input("Title: " if title == True else title)
 
-        if title.strip() == "" and allow_empty == False:
+        if title.strip() == "" and no_validation == False:
             return  # Raise an exception later
 
     else:
@@ -366,7 +366,7 @@ def get_input_from_user(title: bool | str = True,
     if username != None and username != False:
         username = input("Username: " if username == True else username)
 
-        if title.strip() == "" and allow_empty == False:
+        if title.strip() == "" and no_validation == False:
             return  # Raise an exception later
     else:
         username = None
@@ -374,14 +374,14 @@ def get_input_from_user(title: bool | str = True,
     if email != None and email != False:
         email = input("Email: " if email == True else email)
 
-        if title.strip() == "" and allow_empty == False:
+        if title.strip() == "" and no_validation == False:
             return  # Raise an exception later
     else:
         email = None
 
     if password != None and password != False:
         password = getpass("Password: " if password == True else password)
-        if password.strip() == "" and allow_empty == False:
+        if password.strip() == "" and no_validation == False:
             return  # Raise an exception later
     else:
         password = None
@@ -408,17 +408,16 @@ class Credential:
         self.email = pass_object[3]
         self.password = pass_object[4]
 
-    def print(self):
+    def __str__(self):
         print("-------------------------------")
         print("ID: {0}".format(self.id))
         print("Title: {0}".format(self.title))
         print("Username: {0}".format(self.username))
         print("Email Address: {0}".format(self.email))
         print("Password: {0}".format(self.password))
-        print()
         print("-------------------------------")
 
-    def copy_password(self):
+    def copy_pass(self):
         try:
             pyperclip.copy(self.password)
             print("This password has been copied to your clipboard!")
@@ -431,6 +430,7 @@ class Credential:
 if __name__ == "__main__":
 
     while True:
+        print(Credential(12, "Title", "Username", "Email", "password"))
         clear_console()
         if not master_password:
             if get_user_registration_status():

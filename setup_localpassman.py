@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from getpass import getpass
-from DatabaseManager import DatabaseManager
+from database_manager import DatabaseManager
 from os import path
 from json import dump as dump_json
 
