@@ -3,13 +3,13 @@ from os import path
 from json import dump, load
 from password_crypter import decrypt_password, encrypt_password
 from base64 import b64decode, b64encode
+from typing import List
 import mysql.connector
 
 
 class DatabaseManager:
 
     def __init__(self, host: str, user: str, password: str, db: str = ""):
-        # Exception handling
 
         # Make sure that the parameters are of correct type
         if not isinstance(host, str):
@@ -71,8 +71,7 @@ class DatabaseManager:
         self.mydb.commit()
 
     def get_all_passwords(self):
-        self.dbCursor.execute("SELECT * FROM Passwords;")
-        return self.dbCursor.fetchall()
+        return self.filter_passwords("", "", "")
 
     def get_password(self, id: int):
         if not isinstance(id, int):
@@ -80,8 +79,10 @@ class DatabaseManager:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
+        from localpassman import RawCredential
+
         self.dbCursor.execute("SELECT * FROM Passwords WHERE id = %s", (id, ))
-        return self.dbCursor.fetchone()
+        return RawCredential(self.dbCursor.fetchone())
 
     def remove_password(self, id: int):
         if not isinstance(id, int):
@@ -130,9 +131,7 @@ class DatabaseManager:
         elif not isinstance(email, str):
             raise TypeError("Parameter 'email' must be of type str")
 
-        # Return all passwords if no filter is given
-        if not title and not username and not email:
-            return self.get_all_passwords()
+        from localpassman import RawCredential
 
         # Set filters
         title = "%" + title + "%"
@@ -145,7 +144,10 @@ class DatabaseManager:
         self.dbCursor.execute("SELECT * FROM Passwords WHERE title LIKE %s AND username LIKE %s AND email LIKE %s",
                               (title, username, email))
 
-        return self.dbCursor.fetchall()
+        raw_creds: List[RawCredential] = []
+        for raw_cred in self.dbCursor.fetchall():
+            raw_creds.append(RawCredential(raw_cred))
+        return raw_creds
 
     def execute_raw_query(self, query: str):
         # Exception Handling
@@ -230,4 +232,3 @@ class DatabaseManager:
                               password[3], password[4], password[5])
 
         print("All passwords successfully added!")
-

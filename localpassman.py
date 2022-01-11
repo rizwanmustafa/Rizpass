@@ -15,6 +15,67 @@ master_password:  str = None
 db_manager: DatabaseManager = None
 
 
+class RawCredential:
+    def __init__(self, *args) -> None:
+        # If we are given an array, process it. Else process the separate parameters
+        pass_object = args[0] if len(args) == 1 else args
+
+        self.id = pass_object[0]
+        self.title = pass_object[1]
+        self.username = pass_object[2]
+        self.email = pass_object[3]
+        self.encrypted_password = pass_object[4]
+        self.salt = pass_object[5]
+
+    def __str__(self):
+        string = "\n"
+        string += "-------------------------------\n"
+        string += "ID: {0}\n".format(self.id)
+        string += "Title: {0}\n".format(self.title)
+        string += "Username: {0}\n".format(self.username)
+        string += "Email Address: {0}\n".format(self.email)
+        string += "Encrypted Password: {0}\n".format(self.encrypted_password)
+        string += "Salt: {0}\n".format(self.salt)
+        string += "-------------------------------"
+        return string
+
+    def get_credential(self, master_password: str):
+        password = decrypt_password(
+            master_password, self.encrypted_password, self.salt)
+        return Credential(self.id, self.title, self.username, self.email, password)
+
+
+class Credential:
+    def __init__(self, *args) -> None:
+        # If we are given an array, process it. Else process the separate parameters
+        pass_object = args[0] if len(args) == 1 else args
+
+        self.id = pass_object[0]
+        self.title = pass_object[1]
+        self.username = pass_object[2]
+        self.email = pass_object[3]
+        self.password = pass_object[4]
+
+    def __str__(self):
+        string = "\n"
+        string += "-------------------------------\n"
+        string += "ID: {0}\n".format(self.id)
+        string += "Title: {0}\n".format(self.title)
+        string += "Username: {0}\n".format(self.username)
+        string += "Email Address: {0}\n".format(self.email)
+        string += "Password: {0}\n".format(self.password)
+        string += "-------------------------------"
+        return string
+
+    def copy_pass(self):
+        try:
+            pyperclip.copy(self.password)
+            print("This password has been copied to your clipboard!")
+        except Exception as e:
+            print("This password could not be copied to your clipboard due to the following error: ")
+            print(e)
+
+
 def print_menu():
     menu_itms = [
         "-------------------------------",
@@ -175,40 +236,18 @@ def add_password(user_password: str = None):
     print("\nPassword added successfully!")
 
 
-def print_password(password: List, copy_password=False):
-    # Get the data
-    id = password[0]
-    title = password[1]
-    username = password[2]
-    email = password[3]
-    password = decrypt_password(master_password, password[4], password[5])
-
-    # Print the data
-    print("-------------------------------")
-    print("ID: {0}".format(id))
-    print("Title: {0}".format(title))
-    print("Username: {0}".format(username))
-    print("Email Address: {0}".format(email))
-    print("Password: {0}".format(password))
-    print()
-    print("-------------------------------")
-    if not copy_password:
-        return
-
-    try:
-        pyperclip.copy(password)
-        print("This password has been copied to your clipboard!")
-    except Exception as e:
-        print("This password could not be copied to your clipboard due to the following error: ")
-        print(e)
-
-
 def print_all_passwords():
-    passwords = db_manager.get_all_passwords()
+    raw_creds: List[RawCredential] = db_manager.get_all_passwords()
+    creds: List[Credential] = []
+    for raw_cred in raw_creds:
+        creds.append(raw_cred.get_credential(master_password))
+    del raw_creds
 
     print("Printing all passwords:")
-    for password in passwords:
-        print_password(password)
+    for cred in creds:
+        print(cred)
+
+    creds[-1::1][0].copy_pass()
 
 
 def filter_passwords():
@@ -217,20 +256,27 @@ def filter_passwords():
         False,
         "(Optional) Username should contain: ",
         "(Optional) Email should contain: ", False)
-    passwords = db_manager.filter_passwords(
-        title_filter, username_filter, email_filter)
+
+    raw_creds: List[RawCredential] = db_manager.filter_passwords(title_filter, username_filter, email_filter)
+    creds: List[Credential] = []
+    for raw_cred in raw_creds:
+        creds.append(raw_cred.get_credential(master_password))
+    del raw_creds
 
     print("Following passwords meet your given filters:")
-    for password in passwords:
-        print_password(password)
+    for credential in creds:
+        print(credential)
+
+    creds[-1::1][0].copy_pass()
 
 
 def get_password():
     id = get_id_input()
 
-    password = db_manager.get_password(id)
-    if password:
-        print_password(password)
+    cred: Credential = db_manager.get_password(id).get_credential()
+    if cred:
+        print(cred)
+        cred.copy_pass()
     else:
         print("No password with given id found!")
 
@@ -394,38 +440,6 @@ def confirm_user_choice(prompt: str):
     """
     confirm_choice = input(prompt)
     return confirm_choice.upper() == "Y"
-
-
-class Credential:
-    def __init__(self, *args) -> None:
-        # If we are given an array, process it. Else process the separate parameters
-        pass_object = args[0] if len(args) == 1 else args
-
-        self.id = pass_object[0]
-        self.title = pass_object[1]
-        self.username = pass_object[2]
-        self.email = pass_object[3]
-        self.password = pass_object[4]
-
-    def __str__(self):
-        string = "\n"
-        string += "-------------------------------\n"
-        string += "ID: {0}\n".format(self.id)
-        string += "Title: {0}\n".format(self.title)
-        string += "Username: {0}\n".format(self.username)
-        string += "Email Address: {0}\n".format(self.email)
-        string += "Password: {0}\n".format(self.password)
-        string += "-------------------------------"
-        return string
-
-    def copy_pass(self):
-        try:
-            pyperclip.copy(self.password)
-            print("This password has been copied to your clipboard!")
-        except Exception as e:
-            print(
-                "This password could not be copied to your clipboard due to the following error: ")
-            print(e)
 
 
 if __name__ == "__main__":
