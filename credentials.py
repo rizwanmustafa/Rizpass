@@ -1,4 +1,5 @@
-
+import pyperclip
+from passwords import decrypt_password
 class RawCredential:
     def __init__(self, *args) -> None:
         # If we are given an array, process it. Else process the separate parameters
