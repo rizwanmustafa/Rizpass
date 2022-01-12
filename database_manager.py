@@ -2,6 +2,7 @@ from getpass import getpass
 from os import path
 from json import dump, load
 from passwords import decrypt_password, encrypt_password
+from credentials import RawCredential, Credential
 from base64 import b64decode, b64encode
 from typing import List
 import mysql.connector
@@ -43,8 +44,6 @@ class DatabaseManager:
             exit(1)
 
     def add_password(self, title: str, username: str, email: str, password: bytes, salt: bytes):
-        # Exception handling
-
         # Make sure that the parameters are of correct type
         if not isinstance(title, str):
             raise TypeError("Paramter 'title' must be of type str")
@@ -78,8 +77,6 @@ class DatabaseManager:
             raise TypeError("Parameter 'id' must be of type int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
-
-        from localpassman import RawCredential
 
         self.dbCursor.execute("SELECT * FROM Passwords WHERE id = %s", (id, ))
         return RawCredential(self.dbCursor.fetchone())
@@ -130,8 +127,6 @@ class DatabaseManager:
             raise TypeError("Paramter 'username' must be of type str")
         elif not isinstance(email, str):
             raise TypeError("Parameter 'email' must be of type str")
-
-        from localpassman import RawCredential
 
         # Set filters
         title = "%" + title + "%"
