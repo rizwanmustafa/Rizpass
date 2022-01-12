@@ -76,6 +76,11 @@ class Credential:
             print(e)
 
 
+class InvalidInput(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 def print_menu():
     menu_itms = [
         "-------------------------------",
@@ -151,25 +156,6 @@ def get_user_registration_status() -> bool:
     return False
 
 
-def export_passwords():
-    filename = input("Filename: ")
-    if filename.strip() == "":
-        print("Filename cannot be empty or whitespace")
-    else:
-        db_manager.export_pass_to_json_file(filename)
-
-
-def import_passwords():
-    """
-    Imports passwords from a JSON file
-    """
-    filename = input("Filename: ")
-    if filename.strip() == "":
-        print("Filename cannot be empty or whitespace")
-    else:
-        db_manager.import_pass_from_json_file(master_password, filename)
-
-
 def login():
     global master_password, db_manager
     master_password = getpass("Input your masterpassword: ")
@@ -236,18 +222,15 @@ def add_password(user_password: str = None):
     print("\nPassword added successfully!")
 
 
-def print_all_passwords():
-    raw_creds: List[RawCredential] = db_manager.get_all_passwords()
-    creds: List[Credential] = []
-    for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_password))
-    del raw_creds
+def get_password():
+    id = get_id_input()
 
-    print("Printing all passwords:")
-    for cred in creds:
+    cred: Credential = db_manager.get_password(id).get_credential()
+    if cred:
         print(cred)
-
-    creds[-1::1][0].copy_pass()
+        cred.copy_pass()
+    else:
+        print("No password with given id found!")
 
 
 def filter_passwords():
@@ -270,31 +253,18 @@ def filter_passwords():
     creds[-1::1][0].copy_pass()
 
 
-def get_password():
-    id = get_id_input()
+def print_all_passwords():
+    raw_creds: List[RawCredential] = db_manager.get_all_passwords()
+    creds: List[Credential] = []
+    for raw_cred in raw_creds:
+        creds.append(raw_cred.get_credential(master_password))
+    del raw_creds
 
-    cred: Credential = db_manager.get_password(id).get_credential()
-    if cred:
+    print("Printing all passwords:")
+    for cred in creds:
         print(cred)
-        cred.copy_pass()
-    else:
-        print("No password with given id found!")
 
-
-def remove_password():
-    id: int = get_id_input()
-
-    db_manager.remove_password(id)
-    print("Removed password successfully!")
-
-
-def remove_all_passwords():
-    for _ in range(2):
-        if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
-            return
-
-    db_manager.remove_all_passwords()
-    print("Removed all passwords successfully!")
+    creds[-1::1][0].copy_pass()
 
 
 def modify_password():
@@ -323,6 +293,22 @@ def modify_password():
                                    salt)
 
     print("Modified password successfully!")
+
+
+def remove_password():
+    id: int = get_id_input()
+
+    db_manager.remove_password(id)
+    print("Removed password successfully!")
+
+
+def remove_all_passwords():
+    for _ in range(2):
+        if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
+            return
+
+    db_manager.remove_all_passwords()
+    print("Removed all passwords successfully!")
 
 
 def change_masterpassword():
@@ -358,14 +344,35 @@ def change_masterpassword():
     master_password = newMasterPassword
 
 
+def import_passwords():
+    """
+    Imports passwords from a JSON file
+    """
+    filename = input("Filename: ")
+    if filename.strip() == "":
+        print("Filename cannot be empty or whitespace")
+    else:
+        db_manager.import_pass_from_json_file(master_password, filename)
+
+
+def export_passwords():
+    filename = input("Filename: ")
+    if filename.strip() == "":
+        print("Filename cannot be empty or whitespace")
+    else:
+        db_manager.export_pass_to_json_file(filename)
+
+
 def clear_console():
     os.system('clear')
 
 
-def exit_app():
-    db_manager.dbCursor.close()
-    db_manager.mydb.close()
-    exit()
+def confirm_user_choice(prompt: str):
+    """
+    Returns true if user input 'y' or 'Y' after the prompt
+    """
+    confirm_choice = input(prompt)
+    return confirm_choice.upper() == "Y"
 
 
 def get_id_input(prompt: None | str = None) -> int:
@@ -429,31 +436,23 @@ def get_credential_input(title: bool | str = True,
     return (title, id, username, email, password)
 
 
-class InvalidInput(Exception):
-    def __init__(self, message: str):
-        super().__init__(message)
-
-
-def confirm_user_choice(prompt: str):
-    """
-    Returns true if user input 'y' or 'Y' after the prompt
-    """
-    confirm_choice = input(prompt)
-    return confirm_choice.upper() == "Y"
+def exit_app():
+    db_manager.dbCursor.close()
+    db_manager.mydb.close()
+    exit()
 
 
 if __name__ == "__main__":
-
     while True:
         clear_console()
-        if not master_password:
-            if get_user_registration_status():
-                login()
-                continue
-            print("It seems like you haven't set localpassman up!")
-            setup_password_manager()
-            clear_console()
+        if master_password:
+            print_menu()
+            perform_tasks()
+            input("\nPress Enter to continue...")
+            continue
 
-        print_menu()
-        perform_tasks()
-        input("\nPress Enter to continue...")
+        if get_user_registration_status():
+            login()
+            continue
+        print("It seems like you haven't set localpassman up!")
+        setup_password_manager()

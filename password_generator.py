@@ -1,15 +1,20 @@
 import string
 from secrets import choice, randbelow
-from exception_handler import handle_parameter_exception
 
 
 def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str:
     # Exception handling
-    handle_parameter_exception("length", length, int, "int")
-    handle_parameter_exception("uppercase", uppercase, bool, "bool")
-    handle_parameter_exception("lowercase", lowercase, bool, "bool")
-    handle_parameter_exception("numbers", numbers, bool, "bool")
-    handle_parameter_exception("specials", specials, bool, "bool")
+    if not isinstance(length, int) or length <= 0:
+        raise ValueError("Invalid value for 'length'")
+
+    if uppercase != False and uppercase != True:
+        raise ValueError("Invalid value for 'uppercase'")
+    if lowercase != False and lowercase != True:
+        raise ValueError("Invalid value for 'lowercase'")
+    if numbers != False and lowercase != True:
+        raise ValueError("Invalid value for 'numbers'")
+    if numbers != False and numbers != True:
+        raise ValueError("Invalid value for 'specials'")
 
     if uppercase == lowercase == numbers == specials == False:
         print("All options cannot be false!")
