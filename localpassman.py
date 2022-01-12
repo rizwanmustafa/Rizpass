@@ -6,10 +6,9 @@ import json
 from getpass import getpass
 from sys import exit
 
-from password_crypter import encrypt_password, decrypt_password
+from passwords import encrypt_password, decrypt_password, generate_password
 from database_manager import DatabaseManager
 from setup_localpassman import setup_password_manager
-from password_generator import generate_password
 
 master_password:  str = None
 db_manager: DatabaseManager = None

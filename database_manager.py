@@ -1,7 +1,7 @@
 from getpass import getpass
 from os import path
 from json import dump, load
-from password_crypter import decrypt_password, encrypt_password
+from passwords import decrypt_password, encrypt_password
 from base64 import b64decode, b64encode
 from typing import List
 import mysql.connector
