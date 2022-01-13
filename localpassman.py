@@ -378,9 +378,44 @@ def get_credential_input(title: bool | str = True,
 
 
 def exit_app():
-    db_manager.dbCursor.close()
-    db_manager.mydb.close()
+    if db_manager:
+        db_manager.dbCursor.close()
+        db_manager.mydb.close()
     exit()
+
+
+def better_input(prompt: str, allow_empty: bool, validator, expected_type: type):
+    for i in range(3):
+        user_input = input(prompt)
+
+        if not allow_empty and user_input.strip() == "":
+            print("Empty or whitestring input is not allowed!")
+            if i != 2:
+                print("Try again!")
+            print()
+            continue
+
+        user_input = expected_type(user_input)
+        if not validator(user_input):
+            print("Invalid value entered!")
+            if i != 2:
+                print("Try again!")
+            print()
+            continue
+
+        return user_input
+
+    print("Failed 3 inputs.")
+    print("Exiting...")
+    exit_app()
+
+# Test better input
+
+
+better_input_answer = better_input("Input ID: ", False, lambda x: int(x) > 0, int)
+print("Better input answer: ", better_input_answer)
+print("Better input answer's type: ", type(better_input_answer))
+input()
 
 
 if __name__ == "__main__":
