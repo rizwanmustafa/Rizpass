@@ -23,15 +23,15 @@ class InvalidInput(Exception):
 def print_menu():
     menu_itms = [
         "-------------------------------",
-        "1. Generate a strong password",
-        "2. Add a password",
-        "3. Retrieve password using id",
-        "4. Filter passwords",
-        "5. List all passwords",
-        "6. Modify password",
-        "7. Remove password",
-        "8. Remove all passwords",
-        "9. Change master password",
+        "1.  Generate a strong password",
+        "2.  Add a password",
+        "3.  Retrieve password using id",
+        "4.  Filter passwords",
+        "5.  List all passwords",
+        "6.  Modify password",
+        "7.  Remove password",
+        "8.  Remove all passwords",
+        "9.  Change master password",
         "10. Export passwords as a JSON file",
         "11. Import passwords from a JSON file",
         "12. Exit",
@@ -164,12 +164,14 @@ def add_password(user_password: str = None):
 def get_password():
     id = get_id_input()
 
-    cred: Credential = db_manager.get_password(id).get_credential()
-    if cred:
-        print(cred)
-        cred.copy_pass()
-    else:
+    raw_cred = db_manager.get_password(id)
+    if raw_cred == None:
         print("No password with given id found!")
+        return
+
+    cred: Credential = raw_cred.get_credential()
+    print(cred)
+    cred.copy_pass()
 
 
 def filter_passwords():

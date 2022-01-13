@@ -43,7 +43,7 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def add_password(self, title: str, username: str, email: str, password: bytes, salt: bytes):
+    def add_password(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
         # Make sure that the parameters are of correct type
         if not isinstance(title, str):
             raise TypeError("Paramter 'title' must be of type str")
@@ -69,19 +69,22 @@ class DatabaseManager:
                               (title, username, email, password, salt))
         self.mydb.commit()
 
-    def get_all_passwords(self):
+    def get_all_passwords(self) -> List[RawCredential]:
         return self.filter_passwords("", "", "")
 
-    def get_password(self, id: int):
+    def get_password(self, id: int) -> RawCredential | None:
         if not isinstance(id, int):
             raise TypeError("Parameter 'id' must be of type int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
         self.dbCursor.execute("SELECT * FROM Passwords WHERE id = %s", (id, ))
-        return RawCredential(self.dbCursor.fetchone())
+        query_result = self.dbCursor.fetchone()
+        if query_result:
+            return RawCredential(query_result)
+        return None
 
-    def remove_password(self, id: int):
+    def remove_password(self, id: int) -> None:
         if not isinstance(id, int):
             raise TypeError("Parameter 'id' must be of type int")
         if not id:
@@ -90,12 +93,12 @@ class DatabaseManager:
         self.dbCursor.execute("DELETE FROM Passwords WHERE id=%s", (id, ))
         self.mydb.commit()
 
-    def remove_all_passwords(self):
+    def remove_all_passwords(self) -> None:
         self.dbCursor.execute("DELETE FROM Passwords")
         self.mydb.commit()
         pass
 
-    def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes):
+    def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
         if not isinstance(id, int):
             raise TypeError("Parameter 'id' must be of type int")
         if not id:
@@ -108,18 +111,20 @@ class DatabaseManager:
             raise TypeError("Parameter 'email' must be of type str")
 
         originalPassword = self.get_password(id)
-        if originalPassword:
-            title = title if title else originalPassword[1]
-            username = username if username else originalPassword[2]
-            email = email if email else originalPassword[3]
-            password = password if password else originalPassword[4]
-            salt = salt if salt else originalPassword[5]
+        if not originalPassword:
+            return
 
-            self.dbCursor.execute("UPDATE Passwords SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
-                title, username, email, password, salt, id))
-            self.mydb.commit()
+        title = title if title else originalPassword[1]
+        username = username if username else originalPassword[2]
+        email = email if email else originalPassword[3]
+        password = password if password else originalPassword[4]
+        salt = salt if salt else originalPassword[5]
 
-    def filter_passwords(self, title: str, username: str, email: str):
+        self.dbCursor.execute("UPDATE Passwords SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
+            title, username, email, password, salt, id))
+        self.mydb.commit()
+
+    def filter_passwords(self, title: str, username: str, email: str) -> List[RawCredential]:
         # Make sure that the parameters are of correct type
         if not isinstance(title, str):
             raise TypeError("Paramter 'title' must be of type str")
@@ -144,7 +149,7 @@ class DatabaseManager:
             raw_creds.append(RawCredential(raw_cred))
         return raw_creds
 
-    def execute_raw_query(self, query: str):
+    def execute_raw_query(self, query: str) -> None:
         # Exception Handling
         if not isinstance(query, str):
             raise TypeError("Parameter 'query' must be of type str")
@@ -162,7 +167,7 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def export_pass_to_json_file(self, filename: str):
+    def export_pass_to_json_file(self, filename: str) -> None:
         if not isinstance(filename, str):
             raise TypeError("Parameter 'filename' must be of type str")
 
@@ -187,7 +192,7 @@ class DatabaseManager:
 
         dump(passwordObjects, open(filename, "w"))
 
-    def import_pass_from_json_file(self, new_master_password, filename: str):
+    def import_pass_from_json_file(self, new_master_password, filename: str) -> None:
         # Later ask for master password for the file
         # Later add the id
         if not isinstance(filename, str):
@@ -226,4 +231,4 @@ class DatabaseManager:
             self.add_password(password[1], password[2],
                               password[3], password[4], password[5])
 
-        print("All passwords successfully added!")
+        print("All passwords have been successfully added!")
