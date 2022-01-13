@@ -80,9 +80,9 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bo
         raise ValueError("Invalid value for 'uppercase'")
     if lowercase != False and lowercase != True:
         raise ValueError("Invalid value for 'lowercase'")
-    if numbers != False and lowercase != True:
-        raise ValueError("Invalid value for 'numbers'")
     if numbers != False and numbers != True:
+        raise ValueError("Invalid value for 'numbers'")
+    if specials != False and specials != True:
         raise ValueError("Invalid value for 'specials'")
 
     if uppercase == lowercase == numbers == specials == False:

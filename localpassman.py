@@ -14,6 +14,7 @@ from setup_localpassman import setup_password_manager
 master_password:  str = None
 db_manager: DatabaseManager = None
 
+
 class InvalidInput(Exception):
     def __init__(self, message: str):
         super().__init__(message)
@@ -102,9 +103,9 @@ def login():
 
 
 def generate_password_user():
-    pass_len = input("Password length (Recommended Min: 8): ")
-    if not pass_len.isnumeric():
-        raise InvalidInput("Length must be numeric")
+    pass_len = input("Password length (Min: 4): ")
+    if not pass_len.isnumeric() or int(pass_len) < 4:
+        raise InvalidInput("Length must be numeric and >= 4")
 
     pass_len = int(pass_len)
 

@@ -1,5 +1,7 @@
 import pyperclip
 from passwords import decrypt_password
+
+
 class RawCredential:
     def __init__(self, *args) -> None:
         # If we are given an array, process it. Else process the separate parameters
@@ -59,4 +61,3 @@ class Credential:
         except Exception as e:
             print("This password could not be copied to your clipboard due to the following error: ")
             print(e)
-
