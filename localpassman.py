@@ -378,8 +378,9 @@ def get_credential_input(title: bool | str = True,
 
 
 def exit_app():
-    db_manager.dbCursor.close()
-    db_manager.mydb.close()
+    if not db_manager:
+        db_manager.dbCursor.close()
+        db_manager.mydb.close()
     exit()
 
 
