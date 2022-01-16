@@ -169,7 +169,7 @@ def get_credential():
         print("No password with given id found!")
         return
 
-    cred: Credential = raw_cred.get_credential()
+    cred: Credential = raw_cred.get_credential(master_password)
     print(cred)
     cred.copy_pass()
 

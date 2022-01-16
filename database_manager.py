@@ -174,23 +174,25 @@ class DatabaseManager:
         if not filename:
             raise ValueError("Invalid value provided for parameter 'filename'")
 
-        passwords = list(self.get_all_credentials())
-        passwordObjects = []
+        raw_creds = list(self.get_all_credentials())
+        if not raw_creds:
+            print("No passwords to export.")
+            return
+        cred_objs = []
 
-        for password in passwords:
-            encodedPassword: str = b64encode(password[4]).decode('ascii')
-            encodedSalt: str = b64encode(password[5]).decode('ascii')
+        for cred in raw_creds:
+            encodedPassword: str = b64encode(cred.encrypted_password).decode('ascii')
+            encodedSalt: str = b64encode(cred.salt).decode('ascii')
 
-            passwordObjects.append({
-                "id": password[0],
-                "title": password[1],
-                "username": password[2],
-                "email": password[3],
+            cred_objs.append({
+                "title": cred.title,
+                "username": cred.username,
+                "email": cred.email,
                 "password": encodedPassword,
                 "salt": encodedSalt
             })
 
-        dump(passwordObjects, open(filename, "w"))
+        dump(cred_objs, open(filename, "w"))
 
     def import_pass_from_json_file(self, new_master_password, filename: str) -> None:
         # Later ask for master password for the file
@@ -205,30 +207,33 @@ class DatabaseManager:
             print(f"{filename} does not exist!")
             raise Exception
 
-        passwords = []
+        raw_creds = []
         master_password: str = getpass("Input master password for file: ")
-        passwordObjects = load(open(filename, "r"))
+        import_creds = load(open(filename, "r"))
 
-        for passwordObj in passwordObjects:
-            password = [None] * 6
+        if not import_creds:
+            print("There are no credentials in the file.")
 
-            password[0] = passwordObj["id"]
-            password[1] = passwordObj["title"]
-            password[2] = passwordObj["username"]
-            password[3] = passwordObj["email"]
-            password[4] = b64decode(passwordObj["password"])
-            password[5] = b64decode(passwordObj["salt"])
+        for import_cred in import_creds:
+            raw_cred = [None] * 6
+
+            raw_cred[0] = import_cred["id"]
+            raw_cred[1] = import_cred["title"]
+            raw_cred[2] = import_cred["username"]
+            raw_cred[3] = import_cred["email"]
+            raw_cred[4] = b64decode(import_cred["password"])
+            raw_cred[5] = b64decode(import_cred["salt"])
 
             decryptedPassword = decrypt_password(
-                master_password, password[4], password[5])
+                master_password, raw_cred[4], raw_cred[5])
             encryptedPassword = encrypt_password(
-                new_master_password, decryptedPassword, password[5])
-            password[4] = encryptedPassword
+                new_master_password, decryptedPassword, raw_cred[5])
+            raw_cred[4] = encryptedPassword
 
-            passwords.append(password)
+            raw_creds.append(raw_cred)
 
-        for password in passwords:
-            self.add_credential(password[1], password[2],
-                              password[3], password[4], password[5])
+        for raw_cred in raw_creds:
+            self.add_credential(raw_cred[1], raw_cred[2],
+                                raw_cred[3], raw_cred[4], raw_cred[5])
 
-        print("All passwords have been successfully added!")
+        print("All credentials have been successfully added!")
