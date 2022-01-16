@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-from typing import List
+from typing import List, Callable
 import pyperclip
 import json
 from getpass import getpass
@@ -390,35 +390,36 @@ def exit_app():
     exit()
 
 
-def better_input(prompt: str, allow_empty: bool, validator, expected_type: type):
-    for i in range(3):
+def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_validator: Callable = None, type_converter: Callable = None, post_validator: Callable = None):
+    for i in range(repeat_times):
         user_input = input(prompt)
 
         if not allow_empty and user_input.strip() == "":
-            print("Empty or whitestring input is not allowed!")
+            print("Empty or whitespace input is not allowed!")
             if i != 2:
                 print("Try again!")
             print()
             continue
 
-        user_input = expected_type(user_input)
-        if not validator(user_input):
+        if ((pre_validator != None and not pre_validator(user_input))
+                or (post_validator and not post_validator(type_converter(user_input)))):
             print("Invalid value entered!")
             if i != 2:
                 print("Try again!")
             print()
             continue
 
-        return user_input
+        return type_converter(user_input)
 
-    print("Failed 3 inputs.")
+    print(f"Failed {repeat_times} inputs.")
     print("Exiting...")
     exit_app()
 
 # Test better input
 
 
-better_input_answer = better_input("Input ID: ", False, lambda x: int(x) > 0, int)
+better_input_answer = better_input("Input ID: ", False, repeat_times=10, pre_validator=lambda x: x.isnumeric(),
+                                   type_converter=int, post_validator=lambda x: x > 0)
 print("Better input answer: ", better_input_answer)
 print("Better input answer's type: ", type(better_input_answer))
 input()
