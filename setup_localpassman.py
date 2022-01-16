@@ -35,7 +35,7 @@ def setup_db():
     # Obtain master password and double check it with user
     for i in range(3):
         masterPassword = getpass(
-            "Input new master password (Password should meet MySQL password requirements): ")
+            "Input new master password (Strong & Memorable): ")
 
         if masterPassword.strip() == "":
             print("Master password cannot be empty or whitespace!")
@@ -79,7 +79,7 @@ def setup_db():
         "GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
     dbManager.execute_raw_query("FLUSH PRIVILEGES;")
     dbManager.mydb.database = "LocalPasswordManager"
-    createTableQuery = """CREATE TABLE Passwords(
+    createTableQuery = """CREATE TABLE Credentials(
         id INT NOT NULL AUTO_INCREMENT,
         title VARCHAR(50) NOT NULL,
         username VARCHAR(50),

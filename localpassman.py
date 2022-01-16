@@ -23,17 +23,17 @@ class InvalidInput(Exception):
 def print_menu():
     menu_itms = [
         "-------------------------------",
-        "1.  Generate a strong password",
-        "2.  Add a password",
-        "3.  Retrieve password using id",
-        "4.  Filter passwords",
-        "5.  List all passwords",
-        "6.  Modify password",
-        "7.  Remove password",
-        "8.  Remove all passwords",
+        "1.  Generate a password",
+        "2.  Add a credential",
+        "3.  Retrieve credential using id",
+        "4.  Filter credentials",
+        "5.  List all credentials",
+        "6.  Modify credential",
+        "7.  Remove credential",
+        "8.  Remove all credentials",
         "9.  Change master password",
-        "10. Export passwords as a JSON file",
-        "11. Import passwords from a JSON file",
+        "10. Export credentials to a JSON file",
+        "11. Import credntials from a JSON file",
         "12. Exit",
         "-------------------------------"
     ]
@@ -59,25 +59,25 @@ def perform_tasks():
     if user_choice == 1:
         generate_password_user()
     elif user_choice == 2:
-        add_password()
+        add_credential()
     elif user_choice == 3:
-        get_password()
+        get_credential()
     elif user_choice == 4:
-        filter_passwords()
+        filter_credentials()
     elif user_choice == 5:
-        print_all_passwords()
+        get_all_credentials()
     elif user_choice == 6:
-        modify_password()
+        modify_credential()
     elif user_choice == 7:
-        remove_password()
+        remove_credential()
     elif user_choice == 8:
-        remove_all_passwords()
+        remove_all_credentials()
     elif user_choice == 9:
         change_masterpassword()
     elif user_choice == 10:
-        export_passwords()
+        export_credentials()
     elif user_choice == 11:
-        import_passwords()
+        import_credentials()
     elif user_choice == 12:
         exit_app()
 
@@ -136,10 +136,10 @@ def generate_password_user():
 
     if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
         return
-    add_password(generated_pass)
+    add_credential(generated_pass)
 
 
-def add_password(user_password: str = None):
+def add_credential(user_password: str = None):
     title, _, username, email, password = get_credential_input(
         title="Title: ",
         id=False,
@@ -157,11 +157,11 @@ def add_password(user_password: str = None):
     salt: bytes = os.urandom(16)
     encrypted_password = encrypt_password(master_password, password, salt)
 
-    db_manager.add_password(title, username, email, encrypted_password, salt)
+    db_manager.add_credential(title, username, email, encrypted_password, salt)
     print("\nPassword added successfully!")
 
 
-def get_password():
+def get_credential():
     id = get_id_input()
 
     raw_cred = db_manager.get_password(id)
@@ -169,12 +169,12 @@ def get_password():
         print("No password with given id found!")
         return
 
-    cred: Credential = raw_cred.get_credential()
+    cred: Credential = raw_cred.get_credential(master_password)
     print(cred)
     cred.copy_pass()
 
 
-def filter_passwords():
+def filter_credentials():
     title_filter, _, username_filter, email_filter, _ = get_credential_input(
         "(Optional) Title should contain: ",
         False,
@@ -182,33 +182,39 @@ def filter_passwords():
         "(Optional) Email should contain: ", False)
 
     raw_creds: List[RawCredential] = db_manager.filter_passwords(title_filter, username_filter, email_filter)
+    if not raw_creds:
+        print("No credentials meet your given filter.")
+        return
     creds: List[Credential] = []
     for raw_cred in raw_creds:
         creds.append(raw_cred.get_credential(master_password))
     del raw_creds
 
-    print("Following passwords meet your given filters:")
+    print("Following credentials meet your given filters:")
     for credential in creds:
         print(credential)
 
     creds[-1::1][0].copy_pass()
 
 
-def print_all_passwords():
-    raw_creds: List[RawCredential] = db_manager.get_all_passwords()
+def get_all_credentials():
+    raw_creds: List[RawCredential] = db_manager.get_all_credentials()
+    if not raw_creds:
+        print("No credentials stored yet.")
+        return
     creds: List[Credential] = []
     for raw_cred in raw_creds:
         creds.append(raw_cred.get_credential(master_password))
     del raw_creds
 
-    print("Printing all passwords:")
+    print("Printing all credentials:")
     for cred in creds:
         print(cred)
 
     creds[-1::1][0].copy_pass()
 
 
-def modify_password():
+def modify_credential():
     # Later add functionality for changing the password itself
     id = get_id_input()
 
@@ -236,14 +242,14 @@ def modify_password():
     print("Modified password successfully!")
 
 
-def remove_password():
+def remove_credential():
     id: int = get_id_input()
 
     db_manager.remove_password(id)
     print("Removed password successfully!")
 
 
-def remove_all_passwords():
+def remove_all_credentials():
     for _ in range(2):
         if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
             return
@@ -270,7 +276,7 @@ def change_masterpassword():
     db_manager.mydb.close()
     db_manager = DatabaseManager(
         "localhost", "passMan", newMasterPassword, "LocalPasswordManager")
-    passwords = db_manager.get_all_passwords()
+    passwords = db_manager.get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for password in passwords:
@@ -285,7 +291,7 @@ def change_masterpassword():
     master_password = newMasterPassword
 
 
-def import_passwords():
+def import_credentials():
     """
     Imports passwords from a JSON file
     """
@@ -296,7 +302,7 @@ def import_passwords():
         db_manager.import_pass_from_json_file(master_password, filename)
 
 
-def export_passwords():
+def export_credentials():
     filename = input("Filename: ")
     if filename.strip() == "":
         print("Filename cannot be empty or whitespace")

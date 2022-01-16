@@ -43,7 +43,7 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def add_password(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
         # Make sure that the parameters are of correct type
         if not isinstance(title, str):
             raise TypeError("Paramter 'title' must be of type str")
@@ -58,18 +58,18 @@ class DatabaseManager:
 
         # Make sure that required parameters are not empty
         if not title:
-            raise ValueError("Paramter 'title' cannot be empty")
+            raise ValueError("Parameter 'title' cannot be empty")
         elif not password:
-            raise ValueError("Paramter 'password' cannot be empty")
+            raise ValueError("Parameter 'password' cannot be empty")
         elif not salt:
-            raise ValueError("Paramater 'salt' cannot be empty")
+            raise ValueError("Parameter 'salt' cannot be empty")
 
         # Add the password to the database
-        self.dbCursor.execute("INSERT INTO Passwords(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
+        self.dbCursor.execute("INSERT INTO Credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
                               (title, username, email, password, salt))
         self.mydb.commit()
 
-    def get_all_passwords(self) -> List[RawCredential]:
+    def get_all_credentials(self) -> List[RawCredential]:
         return self.filter_passwords("", "", "")
 
     def get_password(self, id: int) -> RawCredential | None:
@@ -78,7 +78,7 @@ class DatabaseManager:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        self.dbCursor.execute("SELECT * FROM Passwords WHERE id = %s", (id, ))
+        self.dbCursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
         query_result = self.dbCursor.fetchone()
         if query_result:
             return RawCredential(query_result)
@@ -90,11 +90,11 @@ class DatabaseManager:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        self.dbCursor.execute("DELETE FROM Passwords WHERE id=%s", (id, ))
+        self.dbCursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
         self.mydb.commit()
 
     def remove_all_passwords(self) -> None:
-        self.dbCursor.execute("DELETE FROM Passwords")
+        self.dbCursor.execute("DELETE FROM Credentials")
         self.mydb.commit()
         pass
 
@@ -120,7 +120,7 @@ class DatabaseManager:
         password = password if password else originalPassword[4]
         salt = salt if salt else originalPassword[5]
 
-        self.dbCursor.execute("UPDATE Passwords SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
+        self.dbCursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
             title, username, email, password, salt, id))
         self.mydb.commit()
 
@@ -141,7 +141,7 @@ class DatabaseManager:
         email = "%" + email + "%"
 
         # Execute Query
-        self.dbCursor.execute("SELECT * FROM Passwords WHERE title LIKE %s AND username LIKE %s AND email LIKE %s",
+        self.dbCursor.execute("SELECT * FROM Credentials WHERE title LIKE %s AND username LIKE %s AND email LIKE %s",
                               (title, username, email))
 
         raw_creds: List[RawCredential] = []
@@ -174,23 +174,25 @@ class DatabaseManager:
         if not filename:
             raise ValueError("Invalid value provided for parameter 'filename'")
 
-        passwords = list(self.get_all_passwords())
-        passwordObjects = []
+        raw_creds = list(self.get_all_credentials())
+        if not raw_creds:
+            print("No passwords to export.")
+            return
+        cred_objs = []
 
-        for password in passwords:
-            encodedPassword: str = b64encode(password[4]).decode('ascii')
-            encodedSalt: str = b64encode(password[5]).decode('ascii')
+        for cred in raw_creds:
+            encodedPassword: str = b64encode(cred.encrypted_password).decode('ascii')
+            encodedSalt: str = b64encode(cred.salt).decode('ascii')
 
-            passwordObjects.append({
-                "id": password[0],
-                "title": password[1],
-                "username": password[2],
-                "email": password[3],
+            cred_objs.append({
+                "title": cred.title,
+                "username": cred.username,
+                "email": cred.email,
                 "password": encodedPassword,
                 "salt": encodedSalt
             })
 
-        dump(passwordObjects, open(filename, "w"))
+        dump(cred_objs, open(filename, "w"))
 
     def import_pass_from_json_file(self, new_master_password, filename: str) -> None:
         # Later ask for master password for the file
@@ -205,30 +207,33 @@ class DatabaseManager:
             print(f"{filename} does not exist!")
             raise Exception
 
-        passwords = []
+        raw_creds = []
         master_password: str = getpass("Input master password for file: ")
-        passwordObjects = load(open(filename, "r"))
+        import_creds = load(open(filename, "r"))
 
-        for passwordObj in passwordObjects:
-            password = [None] * 6
+        if not import_creds:
+            print("There are no credentials in the file.")
 
-            password[0] = passwordObj["id"]
-            password[1] = passwordObj["title"]
-            password[2] = passwordObj["username"]
-            password[3] = passwordObj["email"]
-            password[4] = b64decode(passwordObj["password"])
-            password[5] = b64decode(passwordObj["salt"])
+        for import_cred in import_creds:
+            raw_cred = [None] * 6
+
+            raw_cred[0] = import_cred["id"]
+            raw_cred[1] = import_cred["title"]
+            raw_cred[2] = import_cred["username"]
+            raw_cred[3] = import_cred["email"]
+            raw_cred[4] = b64decode(import_cred["password"])
+            raw_cred[5] = b64decode(import_cred["salt"])
 
             decryptedPassword = decrypt_password(
-                master_password, password[4], password[5])
+                master_password, raw_cred[4], raw_cred[5])
             encryptedPassword = encrypt_password(
-                new_master_password, decryptedPassword, password[5])
-            password[4] = encryptedPassword
+                new_master_password, decryptedPassword, raw_cred[5])
+            raw_cred[4] = encryptedPassword
 
-            passwords.append(password)
+            raw_creds.append(raw_cred)
 
-        for password in passwords:
-            self.add_password(password[1], password[2],
-                              password[3], password[4], password[5])
+        for raw_cred in raw_creds:
+            self.add_credential(raw_cred[1], raw_cred[2],
+                                raw_cred[3], raw_cred[4], raw_cred[5])
 
-        print("All passwords have been successfully added!")
+        print("All credentials have been successfully added!")
