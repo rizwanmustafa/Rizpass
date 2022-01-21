@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import os
-from typing import List, Callable
 import pyperclip
 import json
 from getpass import getpass
 from sys import exit
+from typing import List
 
+from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
 from passwords import encrypt_password, decrypt_password, generate_password
 from credentials import RawCredential, Credential
 from database_manager import DatabaseManager
@@ -13,11 +14,6 @@ from setup_localpassman import setup_password_manager
 
 master_password:  str = None
 db_manager: DatabaseManager = None
-
-
-class InvalidInput(Exception):
-    def __init__(self, message: str):
-        super().__init__(message)
 
 
 def print_menu():
@@ -43,17 +39,15 @@ def print_menu():
 
 
 def perform_tasks():
-    user_choice = input("Please input your choice: ")
+    # Integrating new method, delete this comment later
     max_limit = 12
+    user_choice = better_input(prompt="Please input your choice: ",
+                               allow_empty=False,
+                               type_converter=int,
+                               pre_validator=lambda x: x.isnumeric(),
+                               post_validator=lambda x: x <= max_limit and x > 0)
 
-    if not user_choice.isnumeric():
-        print("Invalid option chosen!")
-        return
-
-    user_choice = int(user_choice)
-
-    if user_choice > max_limit and user_choice <= 0:
-        print("Invalid option chosen!")
+    if user_choice == None:
         return
 
     if user_choice == 1:
@@ -103,26 +97,25 @@ def login():
 
 
 def generate_password_user():
-    pass_len = input("Password length (Min: 4): ")
-    if not pass_len.isnumeric() or int(pass_len) < 4:
-        raise InvalidInput("Length must be numeric and >= 4")
-
-    pass_len = int(pass_len)
+    # Integrating new method. Delete this comment later
+    pass_len = better_input(prompt="Password length (Min: 4): ",
+                            allow_empty=False,
+                            type_converter=int,
+                            pre_validator=lambda x: x.isnumeric(),
+                            post_validator=lambda x: x >= 4)
+    if pass_len == None:
+        return
 
     # uppercase, lowercase, numbers, specials
-    uppercase = confirm_user_choice(
-        "Should the password contain uppercase letters? (Y/N): ")
-    lowercase = confirm_user_choice(
-        "Should the password contain lowercase letters? (Y/N): ")
-    numbers = confirm_user_choice(
-        "Should the password contain numbers? (Y/N): ")
-    specials = confirm_user_choice(
-        "Should the password contain special characters? (Y/N): ")
+    uppercase = confirm_user_choice("Uppercase letters? (Y/N): ")
+    lowercase = confirm_user_choice("Lowercase letters? (Y/N): ")
+    numbers = confirm_user_choice("Numbers? (Y/N): ")
+    specials = confirm_user_choice("Special characters? (Y/N): ")
 
-    generated_pass = generate_password(
-        pass_len, uppercase, lowercase, numbers, specials)
+    generated_pass = generate_password(pass_len, uppercase, lowercase, numbers, specials)
 
     if not generated_pass:
+        print("Could not generate a password! Try again later!")
         return
 
     print("Generated Password: ", generated_pass)
@@ -265,8 +258,10 @@ def change_masterpassword():
     newMasterPassword = getpass(
         "Input new masterpassword (Should meet MySQL Password Requirements): ")
 
-    rootUsername = input("Input mysql root username: ")
-    rootPassword = getpass("Input mysql root password: ")
+    rootUsername = better_input(prompt="Input mysql root username: ", allow_empty=False)
+    if rootUsername == None:
+        return
+    rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
     temp_db_manager = DatabaseManager("localhost", rootUsername, rootPassword)
     temp_db_manager.dbCursor.execute(
         "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (newMasterPassword, ))
@@ -293,94 +288,26 @@ def change_masterpassword():
 
 def import_credentials():
     """
-    Imports passwords from a JSON file
+    Imports credentials from a JSON file
     """
-    filename = input("Filename: ")
-    if filename.strip() == "":
-        print("Filename cannot be empty or whitespace")
-    else:
-        db_manager.import_pass_from_json_file(master_password, filename)
+    filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
+    if filename == None:
+        return
+    db_manager.import_pass_from_json_file(master_password, filename)
 
 
 def export_credentials():
-    filename = input("Filename: ")
-    if filename.strip() == "":
-        print("Filename cannot be empty or whitespace")
-    else:
-        db_manager.export_pass_to_json_file(filename)
+    """
+    Export credentials to a JSON file
+    """
+    filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
+    if filename == None:
+        return
+    db_manager.export_pass_to_json_file(filename)
 
 
 def clear_console():
     os.system('clear')
-
-
-def confirm_user_choice(prompt: str):
-    """
-    Returns true if user input 'y' or 'Y' after the prompt
-    """
-    confirm_choice = input(prompt)
-    return confirm_choice.upper() == "Y"
-
-
-def get_id_input(prompt: None | str = None) -> int:
-    id = input("ID: " if prompt == None else prompt)
-
-    if not id.isnumeric() or int(id) <= 0:
-        print("Invalid id provided!")
-
-    return int(id)
-
-
-def get_credential_input(title: bool | str = True,
-                         id: bool | str = True,
-                         username: bool | str = True,
-                         email: bool | str = True,
-                         password: bool | str = True,
-                         allow_empty: bool = True) -> dict:
-    """
-    Set a parameter to True if you want to get its input from user and want the default prompt.
-    If you want a custom prompt, set the parameter to a string of custom prompt
-    """
-
-    if id != None and id != False:
-        id = input("ID: " if id == True else id)
-
-        if id.strip() == "" and allow_empty == False:
-            raise InvalidInput("ID cannot be empty or whitespace!")
-
-        if not id.isnumeric() or int(id) <= 0:
-            raise InvalidInput("ID must be numeric and <= 0")
-
-    else:
-        id = None
-
-    if title != None and title != False:
-        title = input("Title: " if title == True else title)
-
-        if title.strip() == "" and allow_empty == False:
-            raise InvalidInput("Title cannot be empty or whitespace!")
-
-    else:
-        title = None
-
-    if username != None and username != False:
-        username = input("Username: " if username == True else username)
-    else:
-        username = None
-
-    if email != None and email != False:
-        email = input("Email: " if email == True else email)
-    else:
-        email = None
-
-    if password != None and password != False:
-        password = getpass("Password: " if password == True else password)
-        if password.strip() == "" and allow_empty == False:
-            raise InvalidInput("Password cannot be empty or whitespace!")
-    else:
-        password = None
-
-    return (title, id, username, email, password)
 
 
 def exit_app():
@@ -388,41 +315,6 @@ def exit_app():
         db_manager.dbCursor.close()
         db_manager.mydb.close()
     exit()
-
-
-def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_validator: Callable = None, type_converter: Callable = None, post_validator: Callable = None):
-    for i in range(repeat_times):
-        user_input = input(prompt)
-
-        if not allow_empty and user_input.strip() == "":
-            print("Empty or whitespace input is not allowed!")
-            if i != 2:
-                print("Try again!")
-            print()
-            continue
-
-        if ((pre_validator != None and not pre_validator(user_input))
-                or (post_validator and not post_validator(type_converter(user_input)))):
-            print("Invalid value entered!")
-            if i != 2:
-                print("Try again!")
-            print()
-            continue
-
-        return type_converter(user_input)
-
-    print(f"Failed {repeat_times} inputs.")
-    print("Exiting...")
-    exit_app()
-
-# Test better input
-
-
-better_input_answer = better_input("Input ID: ", False, repeat_times=10, pre_validator=lambda x: x.isnumeric(),
-                                   type_converter=int, post_validator=lambda x: x > 0)
-print("Better input answer: ", better_input_answer)
-print("Better input answer's type: ", type(better_input_answer))
-input()
 
 
 if __name__ == "__main__":
