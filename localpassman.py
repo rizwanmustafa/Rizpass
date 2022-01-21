@@ -305,7 +305,7 @@ def export_credentials():
     """
     Export credentials to a JSON file
     """
-    filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
+    filename = better_input(prompt="Filename: ", allow_empty=False)
     if filename == None:
         return
     db_manager.export_pass_to_json_file(filename)
