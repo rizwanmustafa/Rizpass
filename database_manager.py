@@ -114,11 +114,11 @@ class DatabaseManager:
         if not originalPassword:
             return
 
-        title = title if title else originalPassword[1]
-        username = username if username else originalPassword[2]
-        email = email if email else originalPassword[3]
-        password = password if password else originalPassword[4]
-        salt = salt if salt else originalPassword[5]
+        title = title if title else originalPassword.title
+        username = username if username else originalPassword.username
+        email = email if email else originalPassword.email
+        password = password if password else originalPassword.encrypted_password
+        salt = salt if salt else originalPassword.salt
 
         self.dbCursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
             title, username, email, password, salt, id))

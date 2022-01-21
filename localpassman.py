@@ -247,6 +247,11 @@ def remove_all_credentials():
         if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
             return
 
+    if getpass("Re-enter master password: ") != master_password:
+        print("Incorrect password!")
+        print("Exiting...")
+        exit_app()
+
     db_manager.remove_all_passwords()
     print("Removed all passwords successfully!")
 
@@ -320,6 +325,7 @@ def exit_app():
 if __name__ == "__main__":
     while True:
         clear_console()
+
         if master_password:
             print_menu()
             perform_tasks()
@@ -329,5 +335,6 @@ if __name__ == "__main__":
         if get_user_registration_status():
             login()
             continue
+
         print("It seems like you haven't set localpassman up!")
         setup_password_manager()
