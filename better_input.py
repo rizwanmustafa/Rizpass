@@ -1,5 +1,6 @@
 from typing import Callable
 from getpass import getpass
+from sys import exit
 
 
 def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_validator: Callable = None, type_converter: Callable = None, post_validator: Callable = None, exit_on_fail: bool = False):

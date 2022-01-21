@@ -1,4 +1,5 @@
 from getpass import getpass
+from sys import exit
 from os import path
 from json import dump, load
 from passwords import decrypt_password, encrypt_password
