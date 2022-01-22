@@ -1,5 +1,6 @@
 import pyperclip
 from passwords import decrypt_password
+from base64 import b64decode
 
 
 class RawCredential:
@@ -7,12 +8,14 @@ class RawCredential:
         # If we are given an array, process it. Else process the separate parameters
         pass_object = args[0] if len(args) == 1 else args
 
+        # Later don't decode title and other text fields
+        # Decode them while getting a credential
         self.id = pass_object[0]
-        self.title = pass_object[1]
-        self.username = pass_object[2]
-        self.email = pass_object[3]
-        self.encrypted_password = pass_object[4]
-        self.salt = pass_object[5]
+        self.title = b64decode(pass_object[1]).decode("utf-8")
+        self.username = b64decode(pass_object[2]).decode("utf-8")
+        self.email = b64decode(pass_object[3]).decode('utf-8')
+        self.encrypted_password = b64decode(pass_object[4])
+        self.salt = b64decode(pass_object[5])
 
     def __str__(self):
         string = "\n"

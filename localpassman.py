@@ -12,7 +12,7 @@ from credentials import RawCredential, Credential
 from database_manager import DatabaseManager
 from setup_localpassman import setup_password_manager
 
-master_password:  str = None
+master_pass:  str = None
 db_manager: DatabaseManager = None
 
 
@@ -90,10 +90,10 @@ def get_user_registration_status() -> bool:
 
 
 def login():
-    global master_password, db_manager
-    master_password = getpass("Input your masterpassword: ")
+    global master_pass, db_manager
+    master_pass = getpass("Input your masterpassword: ")
     db_manager = DatabaseManager(
-        "localhost", "passMan", master_password, "LocalPasswordManager")
+        "localhost", "passMan", master_pass, "LocalPasswordManager")
 
 
 def generate_password_user():
@@ -148,7 +148,7 @@ def add_credential(user_password: str = None):
         return
 
     salt: bytes = os.urandom(16)
-    encrypted_password = encrypt_password(master_password, password, salt)
+    encrypted_password = encrypt_password(master_pass, password, salt)
 
     db_manager.add_credential(title, username, email, encrypted_password, salt)
     print("\nPassword added successfully!")
@@ -162,7 +162,7 @@ def get_credential():
         print("No password with given id found!")
         return
 
-    cred: Credential = raw_cred.get_credential(master_password)
+    cred: Credential = raw_cred.get_credential(master_pass)
     print(cred)
     cred.copy_pass()
 
@@ -180,7 +180,7 @@ def filter_credentials():
         return
     creds: List[Credential] = []
     for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_password))
+        creds.append(raw_cred.get_credential(master_pass))
     del raw_creds
 
     print("Following credentials meet your given filters:")
@@ -196,8 +196,9 @@ def get_all_credentials():
         print("No credentials stored yet.")
         return
     creds: List[Credential] = []
+    print("Processing credentials")
     for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_password))
+        creds.append(raw_cred.get_credential(master_pass))
     del raw_creds
 
     print("Printing all credentials:")
@@ -211,6 +212,10 @@ def modify_credential():
     # Later add functionality for changing the password itself
     id = get_id_input()
 
+    if db_manager.get_password(id) == None:
+        print("No credential with given id exists!")
+        return
+
     print("Leave any field empty if you do not wish to change it")
     new_title, _, new_username, new_email, new_password = get_credential_input(
         id=False)
@@ -220,7 +225,7 @@ def modify_credential():
 
     salt = os.urandom(16) if new_password else None
     encryptedPassword = encrypt_password(
-        master_password, new_password, salt) if new_password else None
+        master_pass, new_password, salt) if new_password else None
 
     if new_title == new_username == new_email == new_password == "":
         return
@@ -238,6 +243,10 @@ def modify_credential():
 def remove_credential():
     id: int = get_id_input()
 
+    if db_manager.get_password(id) == None:
+        print("No credential with given id exists!")
+        return
+
     db_manager.remove_password(id)
     print("Removed password successfully!")
 
@@ -247,7 +256,7 @@ def remove_all_credentials():
         if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
             return
 
-    if getpass("Re-enter master password: ") != master_password:
+    if getpass("Re-enter master password: ") != master_pass:
         print("Incorrect password!")
         print("Exiting...")
         exit_app()
@@ -260,7 +269,7 @@ def change_masterpassword():
     if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
         return
 
-    newMasterPassword = getpass(
+    new_masterpass = getpass(
         "Input new masterpassword (Should meet MySQL Password Requirements): ")
 
     rootUsername = better_input(prompt="Input mysql root username: ", allow_empty=False)
@@ -269,26 +278,24 @@ def change_masterpassword():
     rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
     temp_db_manager = DatabaseManager("localhost", rootUsername, rootPassword)
     temp_db_manager.dbCursor.execute(
-        "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (newMasterPassword, ))
+        "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
-    global db_manager, master_password
+    global db_manager, master_pass
     db_manager.dbCursor.close()
     db_manager.mydb.close()
     db_manager = DatabaseManager(
-        "localhost", "passMan", newMasterPassword, "LocalPasswordManager")
-    passwords = db_manager.get_all_credentials()
+        "localhost", "passMan", new_masterpass, "LocalPasswordManager")
+    raw_creds = db_manager.get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
-    for password in passwords:
+    for raw_cred in raw_creds:
         salt = os.urandom(16)
-        unEncryptedPass = decrypt_password(
-            master_password, password[4], password[5])
-        newPassword = encrypt_password(
-            newMasterPassword, unEncryptedPass,  salt)
+        decrypted_pass = decrypt_password(master_pass, raw_cred.encrypted_password, raw_cred.salt)
+        encrypted_pass = encrypt_password(new_masterpass, decrypted_pass,  salt)
 
-        db_manager.modify_password(password[0], "", "", "", newPassword, salt)
+        db_manager.modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
 
-    master_password = newMasterPassword
+    master_pass = new_masterpass
 
 
 def import_credentials():
@@ -298,14 +305,14 @@ def import_credentials():
     filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
     if filename == None:
         return
-    db_manager.import_pass_from_json_file(master_password, filename)
+    db_manager.import_pass_from_json_file(master_pass, filename)
 
 
 def export_credentials():
     """
     Export credentials to a JSON file
     """
-    filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
+    filename = better_input(prompt="Filename: ", allow_empty=False)
     if filename == None:
         return
     db_manager.export_pass_to_json_file(filename)
@@ -326,7 +333,7 @@ if __name__ == "__main__":
     while True:
         clear_console()
 
-        if master_password:
+        if master_pass:
             print_menu()
             perform_tasks()
             input("\nPress Enter to continue...")
