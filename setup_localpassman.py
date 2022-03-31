@@ -81,11 +81,11 @@ def setup_db():
     dbManager.mydb.database = "LocalPasswordManager"
     createTableQuery = """CREATE TABLE Credentials(
         id INT NOT NULL AUTO_INCREMENT,
-        title VARCHAR(50) NOT NULL,
-        username VARCHAR(50),
-        email VARCHAR(50),
-        password BLOB NOT NULL,
-        salt BLOB NOT NULL,
+        title VARCHAR(75) NOT NULL,
+        username VARCHAR(75),
+        email VARCHAR(75),
+        password VARCHAR(300) NOT NULL,
+        salt VARCHAR(25) NOT NULL,
         PRIMARY KEY( id ));"""
     dbManager.execute_raw_query(createTableQuery)
 
