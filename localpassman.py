@@ -29,7 +29,7 @@ def print_menu():
         "8.  Remove all credentials",
         "9.  Change master password",
         "10. Export credentials to a JSON file",
-        "11. Import credntials from a JSON file",
+        "11. Import credentials from a JSON file",
         "12. Exit",
         "-------------------------------"
     ]
