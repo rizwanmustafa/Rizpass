@@ -3,6 +3,8 @@
 # Project specific stuff
 passwords.json
 
+venv/
+
 # Pyinstaller stuff
 /build
 /dist
