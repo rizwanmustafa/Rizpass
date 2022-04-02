@@ -20,7 +20,7 @@ pip install -r requirements.txt
 python3 -m PyInstaller --onefile ./localpassman.py
 ```
 
-5. Once the compilation has finished, the binary file will be located in `./dist/localpassman`
+5. Once the compilation has finished, the binary file will be located at `./dist/localpassman`
 ```bash
 ./dist/localpassman
 ```
