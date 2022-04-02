@@ -1,3 +1,5 @@
+# Preview
+![Localpassman Preview](./screenshot.png)
 # Build instructions
 
 1. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
