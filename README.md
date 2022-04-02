@@ -24,3 +24,12 @@ python3 -m PyInstaller --onefile ./localpassman.py
 ```bash
 ./dist/localpassman
 ```
+
+Bonus - If you want to do it all in one step:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 -m PyInstaller --onefile ./localpassman.py
+./dist/localpassman
+```
