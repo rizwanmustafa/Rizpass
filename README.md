@@ -1,5 +1,10 @@
 # Preview
 ![Localpassman Preview](./screenshot.png)
+
+# Requirements
+- Python3 (For running the code)
+- Mariadb / MySQL (For storing the credentials)
+
 # Build instructions
 
 1. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
