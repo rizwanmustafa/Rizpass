@@ -1,5 +1,5 @@
 # Preview
-![Localpassman Preview](./screenshot.png)
+![LPass Preview](./screenshot.png)
 
 # Requirements
 - Python3 (For running the code)
@@ -24,12 +24,12 @@ pip install -r requirements.txt
 
 4. Build the project into a single binary file suitable for your OS:
 ```bash
-python3 -m PyInstaller --onefile ./localpassman.py
+python3 -m PyInstaller --onefile ./lpass.py
 ```
 
-5. Once the compilation has finished, the binary file will be located at `./dist/localpassman`
+5. Once the compilation has finished, the binary file will be located at `./dist/lpass`
 ```bash
-./dist/localpassman
+./dist/lpass
 ```
 
 Bonus - If you want to do it all in one step:
@@ -37,6 +37,6 @@ Bonus - If you want to do it all in one step:
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python3 -m PyInstaller --onefile ./localpassman.py
-./dist/localpassman
+python3 -m PyInstaller --onefile ./lpass.py
+./dist/lpass
 ```

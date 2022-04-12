@@ -95,7 +95,7 @@ def setup_db():
 
 
 def write_settings_to_file():
-    file_path = path.expanduser("~/.localpassman.json")
+    file_path = path.expanduser("~/.lpass.json")
 
     if path.isfile(file_path):
         print(f"Overwriting existing file: {file_path}")
@@ -115,5 +115,5 @@ def setup_password_manager():
 
 
 if __name__ == "__main__":
-    print("Setting up localpassman...")
+    print("Setting up lpass...")
     setup_password_manager()

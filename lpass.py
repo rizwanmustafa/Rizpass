@@ -10,7 +10,7 @@ from better_input import better_input, get_credential_input, get_id_input, confi
 from passwords import encrypt_password, decrypt_password, generate_password
 from credentials import RawCredential, Credential
 from database_manager import DatabaseManager
-from setup_localpassman import setup_password_manager
+from setup_lpass import setup_password_manager
 
 master_pass:  str = None
 db_manager: DatabaseManager = None
@@ -41,11 +41,13 @@ def print_menu():
 def perform_tasks():
     # Integrating new method, delete this comment later
     max_limit = 12
-    user_choice = better_input(prompt="Please input your choice: ",
-                               allow_empty=False,
-                               type_converter=int,
-                               pre_validator=lambda x: x.isnumeric(),
-                               post_validator=lambda x: x <= max_limit and x > 0)
+    user_choice = better_input(
+        prompt="Please input your choice: ",
+        allow_empty=False,
+        type_converter=int,
+        pre_validator=lambda x: x.isnumeric(),
+        post_validator=lambda x: x <= max_limit and x > 0
+    )
 
     if user_choice == None:
         return
@@ -77,10 +79,10 @@ def perform_tasks():
 
 
 def get_user_registration_status() -> bool:
-    if not os.path.isfile(os.path.expanduser("~/.localpassman.json")):
+    if not os.path.isfile(os.path.expanduser("~/.lpass.json")):
         return False
 
-    settingsFile = open(os.path.expanduser("~/.localpassman.json"), "r+")
+    settingsFile = open(os.path.expanduser("~/.lpass.json"), "r+")
     userSettings = json.load(settingsFile)
 
     if userSettings["user_registered"]:
@@ -343,5 +345,5 @@ if __name__ == "__main__":
             login()
             continue
 
-        print("It seems like you haven't set localpassman up!")
+        print("It seems like you haven't set lpass up!")
         setup_password_manager()
