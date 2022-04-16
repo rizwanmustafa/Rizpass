@@ -1,5 +1,5 @@
 # Preview
-![LPass Preview](./screenshot.png)
+![LPass Preview](./demonstration.gif)
 
 # Requirements
 - Python3 (For running the code)
