@@ -113,6 +113,7 @@ def generate_password_user():
     lowercase = confirm_user_choice("Lowercase letters? (Y/N): ")
     numbers = confirm_user_choice("Numbers? (Y/N): ")
     specials = confirm_user_choice("Special characters? (Y/N): ")
+    print()
 
     generated_pass = generate_password(pass_len, uppercase, lowercase, numbers, specials)
 
