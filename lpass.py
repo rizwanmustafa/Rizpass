@@ -4,7 +4,7 @@ import pyperclip
 import json
 from getpass import getpass
 from sys import exit, argv
-from typing import List
+from typing import List, NoReturn
 
 from __version import __version__
 from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
@@ -18,7 +18,7 @@ db_manager: DatabaseManager = None
 
 
 def print_menu():
-    menu_itms = [
+    menu_items = [
         "-------------------------------",
         "1.  Generate a password",
         "2.  Add a credential",
@@ -34,13 +34,10 @@ def print_menu():
         "12. Exit",
         "-------------------------------"
     ]
-
-    for menuItm in menu_itms:
-        print(menuItm)
+    print_arr(menu_items)
 
 
-def perform_tasks():
-    # Integrating new method, delete this comment later
+def perform_tasks() -> None:
     max_limit = 12
     user_choice = better_input(
         prompt="Please input your choice: ",
@@ -92,20 +89,26 @@ def get_user_registration_status() -> bool:
     return False
 
 
-def login():
+def login() -> None:
     global master_pass, db_manager
     master_pass = getpass("Input your masterpassword: ")
     db_manager = DatabaseManager(
-        "localhost", "passMan", master_pass, "LocalPasswordManager")
+        "localhost",
+        "passMan",
+        master_pass,
+        "LPass"  # TODO: Change this to LPass
+    )
 
 
 def generate_password_user():
     # Integrating new method. Delete this comment later
-    pass_len = better_input(prompt="Password length (Min: 4): ",
-                            allow_empty=False,
-                            type_converter=int,
-                            pre_validator=lambda x: x.isnumeric(),
-                            post_validator=lambda x: x >= 4)
+    pass_len = better_input(
+        prompt="Password length (Min: 4): ",
+        allow_empty=False,
+        type_converter=int,
+        pre_validator=lambda x: x.isnumeric(),
+        post_validator=lambda x: x >= 4
+    )
     if pass_len == None:
         return
 
@@ -136,7 +139,7 @@ def generate_password_user():
     add_credential(generated_pass)
 
 
-def add_credential(user_password: str = None):
+def add_credential(user_password: str = None) -> None:
     title, _, username, email, password = get_credential_input(
         title="Title: ",
         id=False,
@@ -158,7 +161,7 @@ def add_credential(user_password: str = None):
     print("\nPassword added successfully!")
 
 
-def get_credential():
+def get_credential() -> None:
     id = get_id_input()
 
     raw_cred = db_manager.get_password(id)
@@ -171,7 +174,7 @@ def get_credential():
     cred.copy_pass()
 
 
-def filter_credentials():
+def filter_credentials() -> None:
     title_filter, _, username_filter, email_filter, _ = get_credential_input(
         "(Optional) Title should contain: ",
         False,
@@ -194,7 +197,7 @@ def filter_credentials():
     creds[-1::1][0].copy_pass()
 
 
-def get_all_credentials():
+def get_all_credentials() -> None:
     raw_creds: List[RawCredential] = db_manager.get_all_credentials()
     if not raw_creds:
         print("No credentials stored yet.")
@@ -212,7 +215,7 @@ def get_all_credentials():
     creds[-1::1][0].copy_pass()
 
 
-def modify_credential():
+def modify_credential() -> None:
     # Later add functionality for changing the password itself
     id = get_id_input()
 
@@ -234,17 +237,19 @@ def modify_credential():
     if new_title == new_username == new_email == new_password == "":
         return
     else:
-        db_manager.modify_password(id,
-                                   new_title,
-                                   new_username,
-                                   new_email,
-                                   encryptedPassword,
-                                   salt)
+        db_manager.modify_password(
+            id,
+            new_title,
+            new_username,
+            new_email,
+            encryptedPassword,
+            salt
+        )
 
     print("Modified password successfully!")
 
 
-def remove_credential():
+def remove_credential() -> None:
     id: int = get_id_input()
 
     if db_manager.get_password(id) == None:
@@ -255,7 +260,7 @@ def remove_credential():
     print("Removed password successfully!")
 
 
-def remove_all_credentials():
+def remove_all_credentials() -> None:
     for _ in range(2):
         if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
             return
@@ -269,7 +274,7 @@ def remove_all_credentials():
     print("Removed all passwords successfully!")
 
 
-def change_masterpassword():
+def change_masterpassword() -> None:
     if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
         return
 
@@ -288,7 +293,7 @@ def change_masterpassword():
     db_manager.dbCursor.close()
     db_manager.mydb.close()
     db_manager = DatabaseManager(
-        "localhost", "passMan", new_masterpass, "LocalPasswordManager")
+        "localhost", "passMan", new_masterpass, "LPass")
     raw_creds = db_manager.get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
@@ -302,7 +307,7 @@ def change_masterpassword():
     master_pass = new_masterpass
 
 
-def import_credentials():
+def import_credentials() -> None:
     """
     Imports credentials from a JSON file
     """
@@ -312,7 +317,7 @@ def import_credentials():
     db_manager.import_pass_from_json_file(master_pass, filename)
 
 
-def export_credentials():
+def export_credentials() -> None:
     """
     Export credentials to a JSON file
     """
@@ -322,11 +327,11 @@ def export_credentials():
     db_manager.export_pass_to_json_file(filename)
 
 
-def clear_console():
+def clear_console() -> None:
     os.system('clear')
 
 
-def exit_app():
+def exit_app() -> NoReturn:
     if db_manager:
         db_manager.dbCursor.close()
         db_manager.mydb.close()
@@ -334,30 +339,38 @@ def exit_app():
 
 
 def print_version():
-    print("Version: " + __version__)
-    print("Author: Rizwan Mustafa")
-    print("This is free software; see the source for copying conditions.  There is NO")
-    print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
-    exit()
+    print_items = [
+        "Version: " + __version__,
+        "Author: Rizwan Mustafa",
+        "This is free software; see the source for copying conditions.  There is NO",
+        "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+    ]
+
+    print_arr(print_items)
+
+print_arr = lambda x  : list(map(print, x))
 
 
 if __name__ == "__main__":
-    while True:
-
+    for arg in argv[1:]:
         if "--version" in argv or "-V" in argv:
             print_version()
+            exit_app()
+        else:
+            print("Unknown argument: " + arg)
+            exit_app()
 
-        clear_console()
+    while True:
+        if not master_pass:
+            login()
 
-        if master_pass:
+        elif not get_user_registration_status():
+            print("It seems like you haven't set lpass up!")
+            setup_password_manager()
+
+        else:
             print_menu()
             perform_tasks()
             input("\nPress Enter to continue...")
-            continue
 
-        if get_user_registration_status():
-            login()
-            continue
-
-        print("It seems like you haven't set lpass up!")
-        setup_password_manager()
+        clear_console()

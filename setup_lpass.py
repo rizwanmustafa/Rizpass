@@ -54,10 +54,10 @@ def setup_db():
     # TODO: Get name of custom database
     # Drop database if it exists to prevent problems
     confirmChoice = input(
-        "Dropping database 'LocalPasswordManager' if it exists. Are you sure you want to continue? (Y/N)")
+        "Dropping database 'LPass' if it exists. Are you sure you want to continue? (Y/N)")
     if confirmChoice == "Y" or confirmChoice == "y":
         dbManager.execute_raw_query(
-            "DROP DATABASE IF EXISTS LocalPasswordManager;")
+            "DROP DATABASE IF EXISTS LPass;")
     else:
         exit()
 
@@ -72,13 +72,13 @@ def setup_db():
         exit()
 
     # TODO: Replace names of database and user
-    dbManager.execute_raw_query("CREATE DATABASE LocalPasswordManager;")
+    dbManager.execute_raw_query("CREATE DATABASE LPass;")
     dbManager.execute_raw_query(
         "CREATE USER 'passMan'@'localhost' IDENTIFIED BY '{0}';".format(masterPassword))
     dbManager.execute_raw_query(
-        "GRANT ALL ON LocalPasswordManager.* TO 'passMan'@'localhost';")
+        "GRANT ALL ON LPass.* TO 'passMan'@'localhost';")
     dbManager.execute_raw_query("FLUSH PRIVILEGES;")
-    dbManager.mydb.database = "LocalPasswordManager"
+    dbManager.mydb.database = "LPass"
     createTableQuery = """CREATE TABLE Credentials(
         id INT NOT NULL AUTO_INCREMENT,
         title VARCHAR(75) NOT NULL,
