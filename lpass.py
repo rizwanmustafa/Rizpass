@@ -5,6 +5,7 @@ import json
 from getpass import getpass
 from sys import exit, argv
 from typing import List, NoReturn
+import signal
 
 from __version import __version__
 from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
@@ -18,7 +19,7 @@ db_manager: DatabaseManager = None
 
 
 def print_menu():
-    menu_items = [
+    print_arr([
         "-------------------------------",
         "1.  Generate a password",
         "2.  Add a credential",
@@ -33,8 +34,7 @@ def print_menu():
         "11. Import credentials from a JSON file",
         "12. Exit",
         "-------------------------------"
-    ]
-    print_arr(menu_items)
+    ])
 
 
 def perform_tasks() -> None:
@@ -96,7 +96,7 @@ def login() -> None:
         "localhost",
         "passMan",
         master_pass,
-        "LPass"  # TODO: Change this to LPass
+        "LPass"
     )
 
 
@@ -331,25 +331,34 @@ def clear_console() -> None:
     os.system('clear')
 
 
+def signal_handler(signal, frame):
+    print("\n\nExiting due to manual intervention...")
+    exit_app()
+
+
 def exit_app() -> NoReturn:
+    print("Cleaning up...")
     if db_manager:
         db_manager.dbCursor.close()
         db_manager.mydb.close()
-    exit()
+
+    print("Exiting with code 0...")
+    exit(0)
 
 
 def print_version():
-    print_items = [
+    print_arr([
         "Version: " + __version__,
         "Author: Rizwan Mustafa",
         "This is free software; see the source for copying conditions.  There is NO",
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
-    ]
+    ])
 
-    print_arr(print_items)
 
-print_arr = lambda x  : list(map(print, x))
+def print_arr(x: List[str]): map(print, x)
 
+
+signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     for arg in argv[1:]:
