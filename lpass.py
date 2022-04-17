@@ -3,9 +3,10 @@ import os
 import pyperclip
 import json
 from getpass import getpass
-from sys import exit
+from sys import exit, argv
 from typing import List
 
+from __version import __version__
 from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
 from passwords import encrypt_password, decrypt_password, generate_password
 from credentials import RawCredential, Credential
@@ -332,8 +333,20 @@ def exit_app():
     exit()
 
 
+def print_version():
+    print("Version: " + __version__)
+    print("Author: Rizwan Mustafa")
+    print("This is free software; see the source for copying conditions.  There is NO")
+    print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
+    exit()
+
+
 if __name__ == "__main__":
     while True:
+
+        if "--version" in argv or "-V" in argv:
+            print_version()
+
         clear_console()
 
         if master_pass:
