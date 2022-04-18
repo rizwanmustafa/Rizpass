@@ -164,7 +164,6 @@ class DatabaseManager:
             self.mysql_db.commit()
         else:
             self.mongo_collection.delete_many({})
-        pass
 
     def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
         if not isinstance(id, int):
