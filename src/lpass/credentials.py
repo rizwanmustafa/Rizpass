@@ -1,7 +1,8 @@
 from sys import stderr
 import pyperclip
-from passwords import decrypt_password
 from base64 import b64decode
+
+from .passwords import decrypt_password
 
 
 class RawCredential:

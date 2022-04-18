@@ -2,15 +2,16 @@ from getpass import getpass
 from sys import exit, stderr
 from os import path
 from json import dump, load
-from passwords import decrypt_password, encrypt_password
-from credentials import RawCredential
 from base64 import b64decode, b64encode
 from typing import List
-import mysql.connector
 from pymongo.database import Database as MongoDatabase
 from pymongo.collection import Collection as MongoCollection
 from pymongo.mongo_client import MongoClient
 from bson.objectid import ObjectId
+import mysql.connector
+
+from .credentials import RawCredential
+from .passwords import decrypt_password, encrypt_password
 
 
 # TODO: Add support for custom port on database

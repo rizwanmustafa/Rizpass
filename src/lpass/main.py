@@ -8,15 +8,15 @@ from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
 import signal
 
-from __version import __version__
-from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
-from schemas import get_config_schema
-from passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
-from credentials import RawCredential, Credential
-from database_manager import DatabaseManager, DbConfig
-from setup_lpass import setup_password_manager
+from .better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
+from .schemas import get_config_schema
+from .passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
+from .credentials import RawCredential, Credential
+from .database_manager import DatabaseManager, DbConfig
+from .setup_lpass import setup_password_manager
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.lpass.json")
+VERSION_NUMBER='v1.0.0'
 
 master_pass:  str = None
 db_manager: DatabaseManager = None
@@ -385,7 +385,7 @@ def exit_app(exit_code=0) -> NoReturn:
 
 
 def print_version():
-    print("LPass " + __version__)
+    print("LPass " + VERSION_NUMBER)
     print("Author: Rizwan Mustafa")
     print("This is free software; see the source for copying conditions.  There is NO")
     print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
@@ -411,10 +411,9 @@ def handle_args(args: List[str]) -> None:
 # Handle interruptions
 signal.signal(signal.SIGINT, signal_handler)
 
-if __name__ == "__main__":
 
+def init():
     handle_args(argv)
-
     load_config()
 
     while True:
