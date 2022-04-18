@@ -13,7 +13,6 @@ from pymongo.mongo_client import MongoClient
 from bson.objectid import ObjectId
 
 
-# TODO: Create a method to encode and decode strings to b64
 # TODO: Add support for custom port on database
 
 def prepare_mongo_uri(host: str, user: str = "", password: str = "") -> str:

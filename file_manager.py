@@ -38,7 +38,6 @@ class FileManager:
         self.file.seek(0, 0)
         self.file.truncate(0)
         dump_json(self.credentials, self.file)
-        self.__load_creds()
 
     def close(self):
         self.file.close()
@@ -171,7 +170,7 @@ class FileManager:
 
         return filtered_raw_creds
 
-# TODO: Write unit tests
+# TODO: Write proper unit tests
 # if __name__ == "__main__":
 #     master_pass = input("Enter the master password: ")
 #     # Unit tests
