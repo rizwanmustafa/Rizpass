@@ -9,3 +9,5 @@ venv/
 /build
 /dist
 *.spec
+
+*egg-info/
