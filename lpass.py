@@ -3,7 +3,7 @@ import os
 import pyperclip
 import json
 from getpass import getpass
-from sys import exit, argv
+from sys import exit, argv, stderr
 from typing import List, NoReturn
 import signal
 
@@ -11,7 +11,7 @@ from __version import __version__
 from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
 from passwords import encrypt_password, decrypt_password, generate_password
 from credentials import RawCredential, Credential
-from database_manager import DatabaseManager
+from database_manager import DatabaseManager, DbConfig
 from setup_lpass import setup_password_manager
 
 master_pass:  str = None
@@ -19,22 +19,20 @@ db_manager: DatabaseManager = None
 
 
 def print_menu():
-    print_arr([
-        "-------------------------------",
-        "1.  Generate a password",
-        "2.  Add a credential",
-        "3.  Retrieve credential using id",
-        "4.  Filter credentials",
-        "5.  List all credentials",
-        "6.  Modify credential",
-        "7.  Remove credential",
-        "8.  Remove all credentials",
-        "9.  Change master password",
-        "10. Export credentials to a JSON file",
-        "11. Import credentials from a JSON file",
-        "12. Exit",
-        "-------------------------------"
-    ])
+    print("-------------------------------")
+    print("1.  Generate a password")
+    print("2.  Add a credential")
+    print("3.  Retrieve credential using id")
+    print("4.  Filter credentials")
+    print("5.  List all credentials")
+    print("6.  Modify credential")
+    print("7.  Remove credential")
+    print("8.  Remove all credentials")
+    print("9.  Change master password")
+    print("10. Export credentials to a JSON file")
+    print("11. Import credentials from a JSON file")
+    print("12. Exit")
+    print("-------------------------------")
 
 
 def perform_tasks() -> None:
@@ -92,12 +90,15 @@ def get_user_registration_status() -> bool:
 def login() -> None:
     global master_pass, db_manager
     master_pass = getpass("Input your masterpassword: ")
-    db_manager = DatabaseManager(
-        "localhost",
-        "passMan",
-        master_pass,
-        "LPass"
-    )
+    # TODO: Uncomment the code below later
+    # db_manager = DatabaseManager(True, DbConfig(
+    #     "localhost",
+    #     "passMan",
+    #     master_pass,
+    #     "LPass"
+    # ))
+    db_manager = DatabaseManager(False, DbConfig("localhost", "", "", "LPass"))
+
 
 
 def generate_password_user():
@@ -131,8 +132,8 @@ def generate_password_user():
         pyperclip.copy(generated_pass)
         print("The generated password has been copied to your clipboard.")
     except Exception as e:
-        print("The generated password could not be copied to your clipboard due to the following error:")
-        print(e)
+        print("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
+        print(e, file=stderr)
 
     if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
         return
@@ -162,7 +163,7 @@ def add_credential(user_password: str = None) -> None:
 
 
 def get_credential() -> None:
-    id = get_id_input()
+    id = input("ID: ")
 
     raw_cred = db_manager.get_password(id)
     if raw_cred == None:
@@ -198,21 +199,25 @@ def filter_credentials() -> None:
 
 
 def get_all_credentials() -> None:
-    raw_creds: List[RawCredential] = db_manager.get_all_credentials()
-    if not raw_creds:
-        print("No credentials stored yet.")
-        return
-    creds: List[Credential] = []
-    print("Processing credentials")
-    for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_pass))
-    del raw_creds
+    try:
+        raw_creds: List[RawCredential] = db_manager.get_all_credentials()
+        if not raw_creds:
+            print("No credentials stored yet.")
+            return
+        creds: List[Credential] = []
+        print("Processing credentials...")
+        for raw_cred in raw_creds:
+            creds.append(raw_cred.get_credential(master_pass))
+        del raw_creds
 
-    print("Printing all credentials:")
-    for cred in creds:
-        print(cred)
+        print("Printing all credentials...")
+        for cred in creds:
+            print(cred)
 
-    creds[-1::1][0].copy_pass()
+        creds[-1::1][0].copy_pass()
+    except Exception as e:
+        print("Could not get credentials due to the following error:", file=stderr)
+        print(e, file=stderr)
 
 
 def modify_credential() -> None:
@@ -250,7 +255,7 @@ def modify_credential() -> None:
 
 
 def remove_credential() -> None:
-    id: int = get_id_input()
+    id: int = input("ID: ")
 
     if db_manager.get_password(id) == None:
         print("No credential with given id exists!")
@@ -286,20 +291,24 @@ def change_masterpassword() -> None:
         return
     rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
     temp_db_manager = DatabaseManager("localhost", rootUsername, rootPassword)
-    temp_db_manager.dbCursor.execute(
+    temp_db_manager.mysql_cursor.execute(
         "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
     global db_manager, master_pass
-    db_manager.dbCursor.close()
-    db_manager.mydb.close()
-    db_manager = DatabaseManager(
-        "localhost", "passMan", new_masterpass, "LPass")
+    db_manager.mysql_cursor.close()
+    db_manager.mysql_db.close()
+    db_manager = DatabaseManager(True, DbConfig(
+        "localhost",
+        "passMan",
+        new_masterpass,
+        "LPass"
+    ))
     raw_creds = db_manager.get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
         salt = os.urandom(16)
-        decrypted_pass = decrypt_password(master_pass, raw_cred.encrypted_password, raw_cred.salt)
+        decrypted_pass = decrypt_password(master_pass, raw_cred.password, raw_cred.salt)
         encrypted_pass = encrypt_password(new_masterpass, decrypted_pass,  salt)
 
         db_manager.modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
@@ -328,54 +337,59 @@ def export_credentials() -> None:
 
 
 def clear_console() -> None:
-    os.system('clear')
+    print("\033c", end="")
 
 
 def signal_handler(signal, frame):
     print("\n\nExiting due to manual intervention...")
-    exit_app()
+    exit_app(130)
 
 
-def exit_app() -> NoReturn:
-    print("Cleaning up...")
+def exit_app(exit_code=0) -> NoReturn:
     if db_manager:
-        db_manager.dbCursor.close()
-        db_manager.mydb.close()
-
-    print("Exiting with code 0...")
-    exit(0)
+        db_manager.close()
+    exit(exit_code)
 
 
 def print_version():
-    print_arr([
-        "Version: " + __version__,
-        "Author: Rizwan Mustafa",
-        "This is free software; see the source for copying conditions.  There is NO",
-        "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
-    ])
+    print("LPass " + __version__)
+    print("Author: Rizwan Mustafa")
+    print("This is free software; see the source for copying conditions.  There is NO")
+    print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
 
 
-def print_arr(x: List[str]): map(print, x)
+def handle_args(args: List[str]) -> None:
+    ignore_args = {0}
+    for index, arg in enumerate(args):
+        if index in ignore_args:
+            continue
+
+        if "--version" == arg or "-V" == arg:
+            print_version()
+            exit_app(0)
+        elif "--setup" == arg or "-S" == arg:
+            setup_password_manager()
+            exit(0)
+        else:
+            print("Unknown argument: " + arg)
+            exit_app(129)
 
 
+# Handle interruptions
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
-    for arg in argv[1:]:
-        if "--version" in argv or "-V" in argv:
-            print_version()
-            exit_app()
-        else:
-            print("Unknown argument: " + arg)
-            exit_app()
+
+    handle_args(argv)
 
     while True:
         if not master_pass:
             login()
 
         elif not get_user_registration_status():
-            print("It seems like you haven't set lpass up!")
-            setup_password_manager()
+            print("It seems like you haven't set lpass up.")
+            print("You can do so by running the following command:")
+            print("lpass --setup")
 
         else:
             print_menu()

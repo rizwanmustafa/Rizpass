@@ -78,7 +78,7 @@ def setup_db():
     dbManager.execute_raw_query(
         "GRANT ALL ON LPass.* TO 'passMan'@'localhost';")
     dbManager.execute_raw_query("FLUSH PRIVILEGES;")
-    dbManager.mydb.database = "LPass"
+    dbManager.mysql_db.database = "LPass"
     createTableQuery = """CREATE TABLE Credentials(
         id INT NOT NULL AUTO_INCREMENT,
         title VARCHAR(75) NOT NULL,
@@ -90,8 +90,8 @@ def setup_db():
     dbManager.execute_raw_query(createTableQuery)
 
     # Close the connection to database with root login
-    dbManager.dbCursor.close()
-    dbManager.mydb.close()
+    dbManager.mysql_cursor.close()
+    dbManager.mysql_db.close()
 
 
 def write_settings_to_file():

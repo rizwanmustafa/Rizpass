@@ -1,5 +1,5 @@
 from getpass import getpass
-from sys import exit
+from sys import exit, stderr
 from os import path
 from json import dump, load
 from passwords import decrypt_password, encrypt_password
@@ -7,58 +7,65 @@ from credentials import RawCredential
 from base64 import b64decode, b64encode
 from typing import List
 import mysql.connector
+from pymongo.database import Database as MongoDatabase
+from pymongo.collection import Collection as MongoCollection
+from pymongo.mongo_client import MongoClient
+from bson.objectid import ObjectId
+
 
 # TODO: Create a method to encode and decode strings to b64
+# TODO: Add support for custom port on database
+
+def prepare_mongo_uri(host: str, user: str = None, password: str = None) -> str:
+    if user and password:
+        return "mongodb://%s:%s@%s" % (host, user, password)
+    else:
+        return "mongodb://%s" % host
+
+
+class DbConfig:
+    def __init__(self, host: str, user: str, password: str, db: str):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db = db
 
 
 class DatabaseManager:
+    db_name: str
 
-    def __init__(self, host: str, user: str, password: str, db: str = ""):
+    mysql_db: mysql.connector.MySQLConnection | None
+    mysql_cursor: any
 
-        # Make sure that the parameters are of correct type
-        if not isinstance(host, str):
-            raise TypeError("Parameter 'host' must be of type str")
-        elif not isinstance(user, str):
-            raise TypeError("Parameter 'user' must be of type str")
-        elif not isinstance(password, str):
-            raise TypeError("Parameter 'password' must be of type str")
+    mongo_db: MongoDatabase | None
+    mongo_client: MongoClient | None
+    mongo_collection: MongoCollection | None
 
-        # Make sure that the parameters are not empty
-        if not host:
-            raise ValueError("Invalid value provided for parameter 'host'")
-        if not user:
-            raise ValueError("Invalid value provided for parameter 'user'")
-        if not password:
-            raise ValueError("Invalid value provided for parameter 'password'")
-
-        # Assign the objects
+    def __init__(self, use_mysql: bool, db_config: DbConfig):
         try:
-            self.mydb = mysql.connector.connect(
-                host=host,
-                user=user,
-                password=password,
-                db=db
-            )
-            self.dbCursor = self.mydb.cursor()
+            if use_mysql:
+                self.mysql_db: mysql.connector.MySQLConnection = mysql.connector.connect(
+                    host=db_config.host,
+                    user=db_config.user,
+                    password=db_config.password,
+                    db=db_config.db
+                )
+                self.mysql_cursor = self.mysql_db.cursor()
+                self.db_name = "mysql"
+            else:
+                mongo_uri = prepare_mongo_uri(db_config.host, db_config.user, db_config.password)
+                self.mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+                self.mongo_db = self.mongo_client[db_config.db]
+                self.mongo_collection = self.mongo_db["credentials"]
+                self.db_name = "mongo"
+
         except Exception as e:
-            print("There was an error while connecting with MySQL: ")
-            print(e)
-            print("Exiting!")
+            print(f"There was an error while connecting with {'MySQL' if use_mysql else 'MongoDB'}: ", file=stderr)
+            print(e, file=stderr)
+            print("Exiting with code 1!", file=stderr)
             exit(1)
 
     def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
-        # Make sure that the parameters are of correct type
-        if not isinstance(title, str):
-            raise TypeError("Paramter 'title' must be of type str")
-        elif not isinstance(username, str):
-            raise TypeError("Parameter 'username' must be of type str")
-        elif not isinstance(email, str):
-            raise TypeError("Parameter 'email' must be of type str")
-        elif not isinstance(password, bytes):
-            raise TypeError("Parameter 'password' must be of type bytes")
-        elif not isinstance(salt, bytes):
-            raise TypeError("Parameter 'salt' must be of type bytes")
-
         # Make sure that required parameters are not empty
         if not title:
             raise ValueError("Parameter 'title' cannot be empty")
@@ -75,47 +82,88 @@ class DatabaseManager:
         salt = b64encode(salt).decode("ascii")
 
         # Add the password to the database
-        self.dbCursor.execute("INSERT INTO Credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
-                              (title, username, email, password, salt))
-        self.mydb.commit()
+        try:
+            if self.db_name == "mysql":
+                self.mysql_cursor.execute(
+                    "INSERT INTO Credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
+                    (title, username, email, password, salt)
+                )
+                self.mysql_db.commit()
+            else:
+                self.mongo_collection.insert_one({
+                    "title": title,
+                    "username": username,
+                    "email": email,
+                    "password": password,
+                    "salt": salt
+                })
+        except Exception as e:
+            print("There was an error while adding the credential:", file=stderr)
+            print(e, file=stderr)
 
-    def get_all_credentials(self) -> List[RawCredential]:
-        self.dbCursor.execute("SELECT * FROM Credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
+    def get_all_credentials(self) -> List[RawCredential] | None:
+        try:
+            raw_creds: List[RawCredential] = []
 
-        query_result = self.dbCursor.fetchall()
-        if query_result == None or len(query_result) == 0:
-            return []
+            if self.db_name == "mysql":
+                self.mysql_cursor.execute("SELECT * FROM Credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
+                for i in self.mysql_cursor.fetchall():
+                    raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
+            else:
+                for i in self.mongo_collection.find():
+                    raw_creds.append(RawCredential(str(i["_id"]), i["title"], i["username"], i["email"], i["password"], i["salt"]))
 
-        raw_creds: List[RawCredential] = []
-        for i in query_result:
-            raw_creds.append(RawCredential(i))
+            return raw_creds
+        except Exception as e:
+            print("There was an error while getting the credentials:", file=stderr)
+            print(e)
+            return None
 
-        return raw_creds
-
-    def get_password(self, id: int) -> RawCredential | None:
-        if not isinstance(id, int):
-            raise TypeError("Parameter 'id' must be of type int")
+    def get_password(self, id: int | str) -> RawCredential | None:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        self.dbCursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
-        query_result = self.dbCursor.fetchone()
-        if query_result:
-            return RawCredential(query_result)
-        return None
+        if self.db_name == "mysql":
+            self.mysql_cursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
+            query_result = self.mysql_cursor.fetchone()
+            if not query_result:
+                return None
+            return RawCredential(
+                query_result[0],
+                query_result[1],
+                query_result[2],
+                query_result[3],
+                query_result[4]
+            )
+        else:
+            query_result = self.mongo_collection.find_one({"_id": ObjectId(id)})
+            if not query_result:
+                return None
+            return RawCredential(
+                str(query_result["_id"]),
+                query_result["title"],
+                query_result["username"],
+                query_result["email"],
+                query_result["password"],
+                query_result["salt"]
+            )
 
-    def remove_password(self, id: int) -> None:
-        if not isinstance(id, int):
-            raise TypeError("Parameter 'id' must be of type int")
+    def remove_password(self, id: int | str) -> None:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        self.dbCursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
-        self.mydb.commit()
+        if self.db_name == "mysql":
+            self.mysql_cursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
+            self.mysql_db.commit()
+        else:
+            self.mongo_collection.delete_one({"_id": ObjectId(id)})
 
     def remove_all_passwords(self) -> None:
-        self.dbCursor.execute("DELETE FROM Credentials")
-        self.mydb.commit()
+        if self.db_name == "mysql":
+            self.mysql_cursor.execute("DELETE FROM Credentials")
+            self.mysql_db.commit()
+        else:
+            self.mongo_collection.delete_many({})
         pass
 
     def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
@@ -143,15 +191,24 @@ class DatabaseManager:
         email = email if email else originalPassword.email
         email = b64encode(bytes(email, "utf-8")).decode("ascii")
 
-        password = password if password else originalPassword.encrypted_password
+        password = password if password else originalPassword.password
         password = b64encode(password).decode("ascii")
 
         salt = salt if salt else originalPassword.salt
         salt = b64encode(salt).decode("ascii")
 
-        self.dbCursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
-            title, username, email, password, salt, id))
-        self.mydb.commit()
+        if self.db_name == "mysql":
+            self.mysql_cursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
+                title, username, email, password, salt, id))
+            self.mysql_db.commit()
+        else:
+            self.mongo_collection.update_one({"_id": ObjectId(id)}, {"$set": {
+                "title": title,
+                "username": username,
+                "email": email,
+                "password": password,
+                "salt": salt
+            }})
 
     def filter_passwords(self, title: str, username: str, email: str) -> List[RawCredential]:
         # Make sure that the parameters are of correct type
@@ -168,13 +225,19 @@ class DatabaseManager:
 
         filtered_raw_creds: List[RawCredential] = []
         for raw_cred in raw_creds:
-            if (title in raw_cred.title
-                and username in raw_cred.username
-                    and email in raw_cred.email):
+            title_match = title.lower() in raw_cred.title.lower()
+            username_match = username.lower() in raw_cred.username.lower()
+            email_match = email.lower() in raw_cred.email.lower()
+
+            if title_match and username_match and email_match:
                 filtered_raw_creds.append(raw_cred)
+
         return filtered_raw_creds
 
     def execute_raw_query(self, query: str) -> None:
+        if self.db_name != "mysql":
+            return
+
         # Exception Handling
         if not isinstance(query, str):
             raise TypeError("Parameter 'query' must be of type str")
@@ -182,9 +245,9 @@ class DatabaseManager:
             raise ValueError("Parameter 'query' cannot be empty")
 
         try:
-            self.dbCursor.execute(query)
-            self.mydb.commit()
-            return self.dbCursor.fetchall()
+            self.mysql_cursor.execute(query)
+            self.mysql_db.commit()
+            return self.mysql_cursor.fetchall()
         except Exception as e:
             print("There was an error while executing a query: ")
             print("Query: ", query)
@@ -211,7 +274,7 @@ class DatabaseManager:
                 "title": b64encode(bytes(cred.title, "utf-8")).decode('ascii'),
                 "username": b64encode(bytes(cred.username, "utf-8")).decode('ascii'),
                 "email": b64encode(bytes(cred.email, "utf-8")).decode('ascii'),
-                "password": b64encode(cred.encrypted_password).decode('ascii'),
+                "password": b64encode(cred.password).decode('ascii'),
                 "salt": b64encode(cred.salt).decode('ascii'),
             })
 
@@ -257,3 +320,14 @@ class DatabaseManager:
                                 raw_cred[2], raw_cred[3], raw_cred[4])
 
         print("All credentials have been successfully added!")
+
+    def close(self):
+        try:
+            if self.db_name == "mysql":
+                self.mysql_cursor.close()
+                self.mysql_db.close()
+            else:
+                self.mongo_client.close()
+        except Exception as e:
+            print("There was an error while closing the connection:", file=stderr)
+            print(e, file=stderr)
