@@ -5,9 +5,8 @@ from base64 import b64decode
 
 
 class RawCredential:
+    # TODO: Add a get_json function
     def __init__(self, id: int | str, title: str, username: str, email: str, password: str, salt: str):
-        # Later don't decode title and other text fields, instead decode them in the Credential class
-        # TODO: Use if is_pass_object_list rather than lengthy ternarys
         self.id = id
         self.title = b64decode(title).decode("utf-8")
         self.username = b64decode(username).decode("utf-8")
@@ -38,6 +37,7 @@ class RawCredential:
 
 class Credential:
     def __init__(self,  id: int | str, title: str, username: str, email: str, password: str) -> None:
+        # TODO: Decrypt the credentials here
         self.id = id
         self.title = title
         self.username = username
