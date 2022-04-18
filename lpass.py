@@ -4,18 +4,24 @@ import pyperclip
 import json
 from getpass import getpass
 from sys import exit, argv, stderr
-from typing import List, NoReturn
+from typing import List, Dict, NoReturn
+from cerberus import Validator as SchemaValidator
 import signal
 
 from __version import __version__
 from better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
-from passwords import encrypt_password, decrypt_password, generate_password
+from schemas import get_config_schema
+from passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
 from credentials import RawCredential, Credential
 from database_manager import DatabaseManager, DbConfig
 from setup_lpass import setup_password_manager
 
+CONFIG_FILE_PATH = os.path.expanduser("~/.lpass.json")
+
 master_pass:  str = None
 db_manager: DatabaseManager = None
+
+config: Dict[str, str] = dict()
 
 
 def print_menu():
@@ -49,7 +55,7 @@ def perform_tasks() -> None:
         return
 
     if user_choice == 1:
-        generate_password_user()
+        generate_password()
     elif user_choice == 2:
         add_credential()
     elif user_choice == 3:
@@ -74,34 +80,65 @@ def perform_tasks() -> None:
         exit_app()
 
 
-def get_user_registration_status() -> bool:
-    if not os.path.isfile(os.path.expanduser("~/.lpass.json")):
-        return False
+def load_config() -> bool:
+    global config
 
-    settingsFile = open(os.path.expanduser("~/.lpass.json"), "r+")
-    userSettings = json.load(settingsFile)
+    if not os.path.isfile(CONFIG_FILE_PATH):
+        print("It looks like you haven't set LPass up.", file=stderr)
+        print("You can do so by using the --setup flag", file=stderr)
+        exit(1)
 
-    if userSettings["user_registered"]:
+    try:
+        config_file = open(CONFIG_FILE_PATH, "r+")
+        file_content = config_file.readlines()
+        if not file_content or len(file_content) == 0:
+            print("Invalid config file!", file=stderr)
+            print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
+            exit(1)
+        else:
+            config_file.seek(0, 0)
+        user_settings: Dict[str, str] = json.load(config_file)
+
+        config_schema = get_config_schema()
+        validator = SchemaValidator(config_schema)
+
+        if not validator.validate(user_settings):
+            print("Invalid configuration file!", file=stderr)
+            for key in validator.errors:
+                print(f"- {key}:", file=stderr)
+                for error in validator.errors[key]:
+                    print("  ", error, file=stderr)
+            print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
+            exit(1)
+
+        config = dict(user_settings)
+
+        if config["db_type"] == "mongo":
+            print("MongoDB is not fully supported yet. There may be issues with some operations.")
+            print("We thank you for your cooperation.")
+
         return True
-
-    return False
+    except Exception as e:
+        print("Could not load configuration file due to the following error:", file=stderr)
+        print(e, file=stderr)
+        exit(1)
 
 
 def login() -> None:
     global master_pass, db_manager
     master_pass = getpass("Input your masterpassword: ")
-    # TODO: Uncomment the code below later
-    # db_manager = DatabaseManager(True, DbConfig(
-    #     "localhost",
-    #     "passMan",
-    #     master_pass,
-    #     "LPass"
-    # ))
-    db_manager = DatabaseManager(False, DbConfig("localhost", "", "", "LPass"))
+    db_manager = DatabaseManager(
+        config["db_type"],
+        DbConfig(
+            config["db_host"],
+            config["db_user"],
+            master_pass,
+            "LPass"
+        )
+    )
 
 
-
-def generate_password_user():
+def generate_password():
     # Integrating new method. Delete this comment later
     pass_len = better_input(
         prompt="Password length (Min: 4): ",
@@ -120,7 +157,7 @@ def generate_password_user():
     specials = confirm_user_choice("Special characters? (Y/N): ")
     print()
 
-    generated_pass = generate_password(pass_len, uppercase, lowercase, numbers, specials)
+    generated_pass = generate_random_password(pass_len, uppercase, lowercase, numbers, specials)
 
     if not generated_pass:
         print("Could not generate a password! Try again later!")
@@ -290,19 +327,22 @@ def change_masterpassword() -> None:
     if rootUsername == None:
         return
     rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
-    temp_db_manager = DatabaseManager("localhost", rootUsername, rootPassword)
+    temp_db_manager = DatabaseManager("mysql", DbConfig("localhost", rootUsername, rootPassword, ""))
     temp_db_manager.mysql_cursor.execute(
         "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
     global db_manager, master_pass
     db_manager.mysql_cursor.close()
     db_manager.mysql_db.close()
-    db_manager = DatabaseManager(True, DbConfig(
-        "localhost",
-        "passMan",
-        new_masterpass,
-        "LPass"
-    ))
+    db_manager = DatabaseManager(
+        "mysql",
+        DbConfig(
+            "localhost",
+            "passMan",
+            new_masterpass,
+            "LPass"
+        )
+    )
     raw_creds = db_manager.get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
@@ -317,23 +357,17 @@ def change_masterpassword() -> None:
 
 
 def import_credentials() -> None:
-    """
-    Imports credentials from a JSON file
-    """
     filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
     if filename == None:
         return
-    db_manager.import_pass_from_json_file(master_pass, filename)
+    db_manager.import_from_file(master_pass, filename)
 
 
 def export_credentials() -> None:
-    """
-    Export credentials to a JSON file
-    """
     filename = better_input(prompt="Filename: ", allow_empty=False)
     if filename == None:
         return
-    db_manager.export_pass_to_json_file(filename)
+    db_manager.export_to_file(filename)
 
 
 def clear_console() -> None:
@@ -346,8 +380,7 @@ def signal_handler(signal, frame):
 
 
 def exit_app(exit_code=0) -> NoReturn:
-    if db_manager:
-        db_manager.close()
+    db_manager.close() if db_manager else None
     exit(exit_code)
 
 
@@ -369,7 +402,7 @@ def handle_args(args: List[str]) -> None:
             exit_app(0)
         elif "--setup" == arg or "-S" == arg:
             setup_password_manager()
-            exit(0)
+            exit_app(0)
         else:
             print("Unknown argument: " + arg)
             exit_app(129)
@@ -382,14 +415,11 @@ if __name__ == "__main__":
 
     handle_args(argv)
 
+    load_config()
+
     while True:
         if not master_pass:
             login()
-
-        elif not get_user_registration_status():
-            print("It seems like you haven't set lpass up.")
-            print("You can do so by running the following command:")
-            print("lpass --setup")
 
         else:
             print_menu()

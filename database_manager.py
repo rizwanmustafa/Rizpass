@@ -16,8 +16,8 @@ from bson.objectid import ObjectId
 # TODO: Create a method to encode and decode strings to b64
 # TODO: Add support for custom port on database
 
-def prepare_mongo_uri(host: str, user: str = None, password: str = None) -> str:
-    if user and password:
+def prepare_mongo_uri(host: str, user: str = "", password: str = "") -> str:
+    if user != "" and password != "":
         return "mongodb://%s:%s@%s" % (host, user, password)
     else:
         return "mongodb://%s" % host
@@ -32,7 +32,7 @@ class DbConfig:
 
 
 class DatabaseManager:
-    db_name: str
+    db_type: str
 
     mysql_db: mysql.connector.MySQLConnection | None
     mysql_cursor: any
@@ -41,9 +41,9 @@ class DatabaseManager:
     mongo_client: MongoClient | None
     mongo_collection: MongoCollection | None
 
-    def __init__(self, use_mysql: bool, db_config: DbConfig):
+    def __init__(self, db_type: str, db_config: DbConfig):
         try:
-            if use_mysql:
+            if db_type == "mysql":
                 self.mysql_db: mysql.connector.MySQLConnection = mysql.connector.connect(
                     host=db_config.host,
                     user=db_config.user,
@@ -51,16 +51,16 @@ class DatabaseManager:
                     db=db_config.db
                 )
                 self.mysql_cursor = self.mysql_db.cursor()
-                self.db_name = "mysql"
+                self.db_type = "mysql"
             else:
                 mongo_uri = prepare_mongo_uri(db_config.host, db_config.user, db_config.password)
-                self.mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+                self.mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
+                self.mongo_client.server_info() # To make sure that the mongo instance is valid
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
-                self.db_name = "mongo"
-
+                self.db_type = "mongo"
         except Exception as e:
-            print(f"There was an error while connecting with {'MySQL' if use_mysql else 'MongoDB'}: ", file=stderr)
+            print(f"There was an error while connecting with {'MySQL' if db_type else 'MongoDB'}: ", file=stderr)
             print(e, file=stderr)
             print("Exiting with code 1!", file=stderr)
             exit(1)
@@ -83,7 +83,7 @@ class DatabaseManager:
 
         # Add the password to the database
         try:
-            if self.db_name == "mysql":
+            if self.db_type == "mysql":
                 self.mysql_cursor.execute(
                     "INSERT INTO Credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
                     (title, username, email, password, salt)
@@ -105,7 +105,7 @@ class DatabaseManager:
         try:
             raw_creds: List[RawCredential] = []
 
-            if self.db_name == "mysql":
+            if self.db_type == "mysql":
                 self.mysql_cursor.execute("SELECT * FROM Credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
                 for i in self.mysql_cursor.fetchall():
                     raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
@@ -123,7 +123,7 @@ class DatabaseManager:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        if self.db_name == "mysql":
+        if self.db_type == "mysql":
             self.mysql_cursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
             query_result = self.mysql_cursor.fetchone()
             if not query_result:
@@ -152,14 +152,14 @@ class DatabaseManager:
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        if self.db_name == "mysql":
+        if self.db_type == "mysql":
             self.mysql_cursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
             self.mysql_db.commit()
         else:
             self.mongo_collection.delete_one({"_id": ObjectId(id)})
 
     def remove_all_passwords(self) -> None:
-        if self.db_name == "mysql":
+        if self.db_type == "mysql":
             self.mysql_cursor.execute("DELETE FROM Credentials")
             self.mysql_db.commit()
         else:
@@ -197,7 +197,7 @@ class DatabaseManager:
         salt = salt if salt else originalPassword.salt
         salt = b64encode(salt).decode("ascii")
 
-        if self.db_name == "mysql":
+        if self.db_type == "mysql":
             self.mysql_cursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
                 title, username, email, password, salt, id))
             self.mysql_db.commit()
@@ -235,7 +235,7 @@ class DatabaseManager:
         return filtered_raw_creds
 
     def execute_raw_query(self, query: str) -> None:
-        if self.db_name != "mysql":
+        if self.db_type != "mysql":
             return
 
         # Exception Handling
@@ -255,7 +255,7 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def export_pass_to_json_file(self, filename: str) -> None:
+    def export_to_file(self, filename: str) -> None:
         if not isinstance(filename, str):
             raise TypeError("Parameter 'filename' must be of type str")
 
@@ -280,7 +280,7 @@ class DatabaseManager:
 
         dump(cred_objs, open(filename, "w"))
 
-    def import_pass_from_json_file(self, master_password, filename: str) -> None:
+    def import_from_file(self, master_password, filename: str) -> None:
         # Later ask for master password for the file
         # Later add the id
         if not isinstance(filename, str):
@@ -323,7 +323,7 @@ class DatabaseManager:
 
     def close(self):
         try:
-            if self.db_name == "mysql":
+            if self.db_type == "mysql":
                 self.mysql_cursor.close()
                 self.mysql_db.close()
             else:

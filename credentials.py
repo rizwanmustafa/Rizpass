@@ -29,7 +29,10 @@ class RawCredential:
 
     def get_credential(self, master_password: str):
         password = decrypt_password(
-            master_password, self.password, self.salt)
+            master_password,
+            self.password,
+            self.salt
+        )
         return Credential(self.id, self.title, self.username, self.email, password)
 
 

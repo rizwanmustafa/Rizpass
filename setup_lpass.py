@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 from getpass import getpass
-from database_manager import DatabaseManager
+from database_manager import DatabaseManager, DbConfig
 from os import path
 from json import dump as dump_json
 
+
 # TODO:
 # 1. Split the big method into smaller methods
+
+CONFIG_FILE_PATH = path.expanduser("~/.lpass.json")
 
 
 def prevent_empty_input(input_prompt: str) -> str:
@@ -28,9 +31,14 @@ def setup_db():
     mysqlRootUserName = input("Input MySQL root username: ")
     mysqlRootPassword = getpass("Input MySQL root password: ")
     dbManager = DatabaseManager(
-        "localhost",
-        mysqlRootUserName,
-        mysqlRootPassword)
+        "mysql",
+        DbConfig(
+            "localhost",
+            mysqlRootUserName,
+            mysqlRootPassword,
+            ""
+        )
+    )
 
     # Obtain master password and double check it with user
     for i in range(3):
@@ -95,18 +103,16 @@ def setup_db():
 
 
 def write_settings_to_file():
-    file_path = path.expanduser("~/.lpass.json")
-
-    if path.isfile(file_path):
-        print(f"Overwriting existing file: {file_path}")
+    if path.isfile(CONFIG_FILE_PATH):
+        print(f"Overwriting existing file: {CONFIG_FILE_PATH}")
     else:
-        print(f"Creating file: {file_path}")
+        print(f"Creating file: {CONFIG_FILE_PATH}")
 
-    settings_file = open(file_path, "w")
+    settings_file = open(CONFIG_FILE_PATH, "w")
 
     dump_json({"user_registered": True, }, settings_file)
 
-    print(f"Successfully written to {file_path}")
+    print(f"Successfully written to {CONFIG_FILE_PATH}")
 
 
 def setup_password_manager():
@@ -115,5 +121,5 @@ def setup_password_manager():
 
 
 if __name__ == "__main__":
-    print("Setting up lpass...")
+    print("Setting up LPass...")
     setup_password_manager()
