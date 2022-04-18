@@ -269,6 +269,7 @@ class DatabaseManager:
 
         for cred in raw_creds:
             cred_objs.append({
+                "id": cred.id,
                 "title": b64encode(bytes(cred.title, "utf-8")).decode('ascii'),
                 "username": b64encode(bytes(cred.username, "utf-8")).decode('ascii'),
                 "email": b64encode(bytes(cred.email, "utf-8")).decode('ascii'),
