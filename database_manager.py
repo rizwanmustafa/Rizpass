@@ -331,3 +331,6 @@ class DatabaseManager:
         except Exception as e:
             print("There was an error while closing the connection:", file=stderr)
             print(e, file=stderr)
+
+    def __del__(self):
+        self.close()
