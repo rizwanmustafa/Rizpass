@@ -16,6 +16,8 @@ from validator import ensure_type
 
 
 # TODO: Add support for custom port on database
+# TODO: Add support for numeric id field for mongodb
+
 
 def prepare_mongo_uri(host: str, user: str = "", password: str = "") -> str:
     if user != "" and password != "":
@@ -60,6 +62,8 @@ class DatabaseManager:
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
                 self.db_type = "mongo"
+                print("MongoDB is not fully supported yet. There may be issues with some operations.")
+                print("We thank you for your cooperation.")
         except Exception as e:
             print(f"There was an error while connecting with {'MySQL' if db_type else 'MongoDB'}: ", file=stderr)
             print(e, file=stderr)

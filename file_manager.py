@@ -1,10 +1,15 @@
 from os import path
 from sys import stderr
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from json import load as load_json, dump as dump_json
 from typing import List, Dict
+from getpass import getpass
 
 from credentials import RawCredential
+from validator import ensure_type
+from passwords import decrypt_password, encrypt_password, generate_password as gen_rand_string
+
+# TODO: Convert credentials from an array to an object with id as key
 
 
 class FileManager:
@@ -38,11 +43,19 @@ class FileManager:
         self.file.seek(0, 0)
         self.file.truncate(0)
         dump_json(self.credentials, self.file)
+        self.file.seek(0, 0)
+
+    def __gen_id(self) -> int:
+        id = len(self.credentials) + 1
+        while self.get_password(id):
+            id += 1
+        return id
 
     def close(self):
         self.file.close()
 
     def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+        id = str(self.__gen_id())
         title = b64encode(bytes(title, "utf-8")).decode("ascii")
         username = b64encode(bytes(username, "utf-8")).decode("ascii")
         email = b64encode(bytes(email, "utf-8")).decode("ascii")
@@ -53,6 +66,7 @@ class FileManager:
         try:
             # TODO: Replace with RawCredential.get_json()
             self.credentials.append({
+                "id": id,
                 "title": title,
                 "username": username,
                 "email": email,
@@ -144,13 +158,16 @@ class FileManager:
         salt = salt if salt else originalPassword.salt
         salt = b64encode(salt).decode("ascii")
 
-        self.credentials[id] = {
-            "title": title,
-            "username": username,
-            "email": email,
-            "password": password,
-            "salt": salt
-        }
+        for index, cred in enumerate(self.credentials):
+            if cred["id"] == id:
+                self.credentials[index] = {
+                    "id": id,
+                    "title": title,
+                    "username": username,
+                    "email": email,
+                    "password": password,
+                    "salt": salt
+                }
 
         self.__dump_creds()
 
@@ -169,6 +186,50 @@ class FileManager:
                 filtered_raw_creds.append(raw_cred)
 
         return filtered_raw_creds
+
+    def import_from_file(self, master_password, filename: str) -> None:
+        ensure_type(master_password, str, "master_password", "string")
+        ensure_type(filename, str, "filename", "string")
+
+        if not filename:
+            raise ValueError("Invalid value provided for parameter 'filename'")
+
+        if not path.isfile(filename):
+            print(f"{filename} does not exist!")
+            raise Exception
+
+        raw_creds = []
+        file_master_password: str = getpass("Input master password for file: ")
+        import_creds = load_json(open(filename, "r"))
+
+        if not import_creds:
+            print("There are no credentials in the file.")
+
+        for import_cred in import_creds:
+            raw_cred = [None] * 5
+
+            raw_cred[0] = b64decode(import_cred["title"]).decode("utf-8")
+            raw_cred[1] = b64decode(import_cred["username"]).decode("utf-8")
+            raw_cred[2] = b64decode(import_cred["email"]).decode("utf-8")
+            raw_cred[3] = b64decode(import_cred["password"])
+            raw_cred[4] = b64decode(import_cred["salt"])
+
+            decrypted_pass: str = decrypt_password(file_master_password, raw_cred[3], raw_cred[4])
+            encrypted_pass: str = encrypt_password(master_password, decrypted_pass, raw_cred[4])
+            raw_cred[3] = encrypted_pass
+
+            raw_creds.append(raw_cred)
+
+        for raw_cred in raw_creds:
+            self.add_credential(
+                raw_cred[0],
+                raw_cred[1],
+                raw_cred[2],
+                raw_cred[3],
+                raw_cred[4]
+            )
+
+        print("All credentials have been successfully added!")
 
 # TODO: Write proper unit tests
 # if __name__ == "__main__":
