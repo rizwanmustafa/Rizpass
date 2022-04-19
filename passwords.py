@@ -2,7 +2,8 @@ from sys import stderr
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from secrets import choice, randbelow
+from secrets import choice
+from typing import List
 import base64
 import string
 
@@ -79,7 +80,7 @@ def decrypt_password(master_password: str, encrypted_password: bytes, salt: byte
         print(e, file=stderr)
 
 
-def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str:
+def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str | None:
     # Exception handling
     if not isinstance(length, int) or length <= 0:
         raise ValueError("Invalid value for 'length'")
@@ -97,61 +98,48 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bo
         print("All options cannot be false!")
         return None
 
-    password_len = 0
-    password: str = ""
+    # Create a string collection to choose the characters from
+    str_collection: List[str] = []
 
-    upper_num = lower_num = number_num = special_num = 0
+    if uppercase:
+        str_collection.append(string.ascii_uppercase)
+    if lowercase:
+        str_collection.append(string.ascii_lowercase)
+    if numbers:
+        str_collection.append(string.digits)
+    if specials:
+        str_collection.append(string.punctuation)
 
-    while True: # TODO: Choose  a better loop structure here
-        if password_len == length:
-            print(password)
-            print(password_len)
+    for tries in range(3):
+        password = ""
+        upper_num = lower_num = number_num = special_num = 0
 
-            print((upper_num > 0) == uppercase)
-            print((lower_num > 0) == lowercase)
-            print((number_num > 0) == numbers)
-            print((special_num > 0) == specials)
+        for i in range(length):
+            char_collection = choice(str_collection)
+            randomChar = choice(char_collection)
 
-            if (
-                (upper_num > 0) == uppercase and
-                (lower_num > 0) == lowercase and
-                (number_num > 0) == numbers and
-                (special_num > 0) == specials
-            ):
-                return password
+            if char_collection == string.ascii_uppercase:
+                upper_num += 1
 
-            password_len = 0
-            password = ""
-            upper_num = lower_num = number_num = special_num = 0
+            elif char_collection == string.ascii_lowercase:
+                lower_num += 1
 
-        # Add random character to password string
-        charType: int = randbelow(4)
+            elif char_collection == string.digits:
+                number_num += 1
 
-        randomChar = None
+            elif char_collection == string.punctuation:
+                special_num += 1
 
-        # TODO: Create a new array that append these string. collections inside itself if the particular collection is needed
-        # TODO: Then use the choice function to choose a random char collection from the array
-        # TODO: Then use the choice function to choose a random char from the collection
-
-        if charType == 0 and uppercase:
-            randomChar = choice(string.ascii_uppercase)
-            upper_num += 1
-
-        elif charType == 1 and lowercase:
-            randomChar = choice(string.ascii_lowercase)
-            lower_num += 1
-
-        elif charType == 2 and numbers:
-            randomChar = choice(string.digits)
-            number_num += 1
-
-        elif charType == 3 and specials:
-            randomChar = choice(string.punctuation)
-            special_num += 1
-
-        charRepeated = False if len(password) < 2 else (
-            randomChar == password[-1] and randomChar == password[-2])
-
-        if randomChar and not charRepeated:
             password += randomChar
-            password_len += 1
+
+        if (
+            (upper_num > 0) == uppercase and
+            (lower_num > 0) == lowercase and
+            (number_num > 0) == numbers and
+            (special_num > 0) == specials
+        ):
+            return password
+
+    print("Could not generate password", file=stderr)
+    print(f"Tried {tries + 1} times", file=stderr)
+    return None
