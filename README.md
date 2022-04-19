@@ -1,6 +1,9 @@
+# Preview
+![LPass Preview](./demonstration.gif)
+
 # Requirements
-- Python3 
-- Mariadb / MySQL / MongoDB (Optional)
+- Python3 (For running the code)
+- Mariadb / MySQL (For storing the credentials)
 
 # Build instructions
 

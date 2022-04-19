@@ -1,9 +1,5 @@
-altgraph==0.17.2
-cffi==1.15.0
-cryptography==36.0.2
-mysql-connector-python==8.0.28
-protobuf==3.20.0
-pycparser==2.21
-pyinstaller==4.10
-pyinstaller-hooks-contrib==2022.3
-pyperclip==1.8.2
+cryptography
+mysql-connector-python
+pyperclip
+pymongo[srv]
+cerberus

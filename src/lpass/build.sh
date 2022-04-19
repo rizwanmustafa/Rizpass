@@ -1,1 +1,0 @@
-python3 -m PyInstaller --onefile lpass.py --exclude-module altgraph --exclude-module pyinstaller --exclude-module pyinstaller-hooks-contrib --exclude-module pip --exclude-module setuptools
