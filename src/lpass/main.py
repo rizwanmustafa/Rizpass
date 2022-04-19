@@ -14,12 +14,16 @@ from .passwords import encrypt_password, decrypt_password, generate_password as 
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
 from .setup_lpass import setup_password_manager
+from .file_manager import FileManager
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.lpass.json")
-VERSION_NUMBER='v1.0.0'
+VERSION_NUMBER = 'v1.0.0'
 
 master_pass:  str = None
 db_manager: DatabaseManager = None
+
+creds_file_path: str = None
+file_manager: FileManager = None
 
 config: Dict[str, str] = dict()
 
@@ -113,10 +117,6 @@ def load_config() -> bool:
 
         config = dict(user_settings)
 
-        if config["db_type"] == "mongo":
-            print("MongoDB is not fully supported yet. There may be issues with some operations.")
-            print("We thank you for your cooperation.")
-
         return True
     except Exception as e:
         print("Could not load configuration file due to the following error:", file=stderr)
@@ -125,17 +125,20 @@ def load_config() -> bool:
 
 
 def login() -> None:
-    global master_pass, db_manager
+    global master_pass, db_manager, creds_file_path, file_manager
     master_pass = getpass("Input your masterpassword: ")
-    db_manager = DatabaseManager(
-        config["db_type"],
-        DbConfig(
-            config["db_host"],
-            config["db_user"],
-            master_pass,
-            "LPass"
+    if creds_file_path != None:
+        file_manager = FileManager(creds_file_path)
+    else:
+        db_manager = DatabaseManager(
+            config["db_type"],
+            DbConfig(
+                config["db_host"],
+                config["db_user"],
+                master_pass,
+                "LPass"
+            )
         )
-    )
 
 
 def generate_password():
@@ -195,16 +198,25 @@ def add_credential(user_password: str = None) -> None:
     salt: bytes = os.urandom(16)
     encrypted_password = encrypt_password(master_pass, password, salt)
 
-    db_manager.add_credential(title, username, email, encrypted_password, salt)
+    if db_manager:
+        db_manager.add_credential(title, username, email, encrypted_password, salt)
+    if file_manager:
+        file_manager.add_credential(title, username, email, encrypted_password, salt)
     print("\nPassword added successfully!")
 
 
 def get_credential() -> None:
     id = input("ID: ")
 
-    raw_cred = db_manager.get_password(id)
+    raw_cred = None
+
+    if db_manager:
+        raw_cred = db_manager.get_password(id)
+    if file_manager:
+        raw_cred = file_manager.get_password(id)
+
     if raw_cred == None:
-        print("No password with given id found!")
+        print("No credential with given id found!")
         return
 
     cred: Credential = raw_cred.get_credential(master_pass)
@@ -219,7 +231,12 @@ def filter_credentials() -> None:
         "(Optional) Username should contain: ",
         "(Optional) Email should contain: ", False)
 
-    raw_creds: List[RawCredential] = db_manager.filter_passwords(title_filter, username_filter, email_filter)
+    raw_creds: List[RawCredential] = []
+    if db_manager:
+        raw_creds.extend(db_manager.filter_passwords(title_filter, username_filter, email_filter))
+    if file_manager:
+        raw_creds.extend(file_manager.filter_passwords(title_filter, username_filter, email_filter))
+
     if not raw_creds:
         print("No credentials meet your given filter.")
         return
@@ -237,21 +254,21 @@ def filter_credentials() -> None:
 
 def get_all_credentials() -> None:
     try:
-        raw_creds: List[RawCredential] = db_manager.get_all_credentials()
+        raw_creds: List[RawCredential] = []
+        if db_manager:
+            raw_creds.extend(db_manager.get_all_credentials())
+        if file_manager:
+            raw_creds.extend(file_manager.get_all_credentials())
         if not raw_creds:
             print("No credentials stored yet.")
             return
-        creds: List[Credential] = []
-        print("Processing credentials...")
-        for raw_cred in raw_creds:
-            creds.append(raw_cred.get_credential(master_pass))
-        del raw_creds
 
         print("Printing all credentials...")
-        for cred in creds:
-            print(cred)
+        for raw_cred in raw_creds:
+            print(raw_cred.get_credential(master_pass))
 
-        creds[-1::1][0].copy_pass()
+        raw_cred.get_credential(master_pass).copy_pass()
+
     except Exception as e:
         print("Could not get credentials due to the following error:", file=stderr)
         print(e, file=stderr)
@@ -259,9 +276,9 @@ def get_all_credentials() -> None:
 
 def modify_credential() -> None:
     # Later add functionality for changing the password itself
-    id = get_id_input()
+    id = input("ID: ")
 
-    if db_manager.get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_password(id) == None:
         print("No credential with given id exists!")
         return
 
@@ -274,12 +291,15 @@ def modify_credential() -> None:
 
     salt = os.urandom(16) if new_password else None
     encryptedPassword = encrypt_password(
-        master_pass, new_password, salt) if new_password else None
+        master_pass,
+        new_password,
+        salt
+    ) if new_password else None
 
     if new_title == new_username == new_email == new_password == "":
         return
     else:
-        db_manager.modify_password(
+        (db_manager if db_manager else file_manager).modify_password(
             id,
             new_title,
             new_username,
@@ -288,17 +308,17 @@ def modify_credential() -> None:
             salt
         )
 
-    print("Modified password successfully!")
+    print("Modified credential successfully!")
 
 
 def remove_credential() -> None:
     id: int = input("ID: ")
 
-    if db_manager.get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_password(id) == None:
         print("No credential with given id exists!")
         return
 
-    db_manager.remove_password(id)
+    (db_manager if db_manager else file_manager).remove_password(id)
     print("Removed password successfully!")
 
 
@@ -312,7 +332,11 @@ def remove_all_credentials() -> None:
         print("Exiting...")
         exit_app()
 
-    db_manager.remove_all_passwords()
+    if db_manager:
+        db_manager.remove_all_passwords()
+    if file_manager:
+        file_manager.remove_all_passwords()
+
     print("Removed all passwords successfully!")
 
 
@@ -332,18 +356,19 @@ def change_masterpassword() -> None:
         "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
     global db_manager, master_pass
-    db_manager.mysql_cursor.close()
-    db_manager.mysql_db.close()
-    db_manager = DatabaseManager(
-        "mysql",
-        DbConfig(
-            "localhost",
-            "passMan",
-            new_masterpass,
-            "LPass"
+    if db_manager:
+        db_manager.mysql_cursor.close()
+        db_manager.mysql_db.close()
+        db_manager = DatabaseManager(
+            "mysql",
+            DbConfig(
+                "localhost",
+                "passMan",
+                new_masterpass,
+                "LPass"
+            )
         )
-    )
-    raw_creds = db_manager.get_all_credentials()
+    raw_creds = (db_manager if db_manager else file_manager).get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
@@ -351,7 +376,7 @@ def change_masterpassword() -> None:
         decrypted_pass = decrypt_password(master_pass, raw_cred.password, raw_cred.salt)
         encrypted_pass = encrypt_password(new_masterpass, decrypted_pass,  salt)
 
-        db_manager.modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
+        (db_manager if db_manager else file_manager).modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
 
     master_pass = new_masterpass
 
@@ -360,10 +385,18 @@ def import_credentials() -> None:
     filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
     if filename == None:
         return
-    db_manager.import_from_file(master_pass, filename)
+    if db_manager:
+        db_manager.import_from_file(master_pass, filename)
+    if file_manager:
+        file_manager.import_from_file(master_pass, filename)
 
 
 def export_credentials() -> None:
+    # TODO: Implement export to file for FileManager
+    if not db_manager:
+        print("This feature is yet only available to dbs")
+        print("Sorry for the inconvenience")
+        return
     filename = better_input(prompt="Filename: ", allow_empty=False)
     if filename == None:
         return
@@ -386,13 +419,19 @@ def exit_app(exit_code=0) -> NoReturn:
 
 def print_version():
     print("LPass " + VERSION_NUMBER)
-    print("Author: Rizwan Mustafa")
-    print("This is free software; see the source for copying conditions.  There is NO")
-    print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
+
+
+def get_list_item_safely(list: List[str], index: str) -> str | None:
+    if len(list) <= index:
+        return None
+    else:
+        return list[index]
 
 
 def handle_args(args: List[str]) -> None:
+    global creds_file_path
     ignore_args = {0}
+
     for index, arg in enumerate(args):
         if index in ignore_args:
             continue
@@ -403,6 +442,13 @@ def handle_args(args: List[str]) -> None:
         elif "--setup" == arg or "-S" == arg:
             setup_password_manager()
             exit_app(0)
+        elif "--file" == arg or "-F" == arg:
+            creds_file_path = get_list_item_safely(args, index + 1)
+            if creds_file_path == None:
+                print("Filename cannot be empty!", file=stderr)
+                exit_app(129)
+            print(f"Using file: {creds_file_path}")
+            ignore_args.add(index + 1)
         else:
             print("Unknown argument: " + arg)
             exit_app(129)
@@ -415,14 +461,14 @@ signal.signal(signal.SIGINT, signal_handler)
 def init():
     handle_args(argv)
     load_config()
+    login()
 
     while True:
-        if not master_pass:
-            login()
-
-        else:
-            print_menu()
-            perform_tasks()
-            input("\nPress Enter to continue...")
-
+        print_menu()
+        perform_tasks()
+        input("\nPress Enter to continue...")
         clear_console()
+
+
+if __name__ == "__main__":
+    init()

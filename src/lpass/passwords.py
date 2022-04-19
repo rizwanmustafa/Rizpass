@@ -2,9 +2,12 @@ from sys import stderr
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from secrets import choice, randbelow
+from secrets import choice
+from typing import List
 import base64
 import string
+
+from .validator import ensure_type
 
 
 def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
@@ -24,14 +27,9 @@ def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
 
 def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> bytes | None:
     try:
-
-        # Make sure that the paremeters are of correct type
-        if not isinstance(master_password, str):
-            raise TypeError("Parameter 'master_password' must be of type str")
-        if not isinstance(raw_password, str):
-            raise TypeError("Parameter 'raw_password' must be of type str")
-        if not isinstance(salt, bytes):
-            raise TypeError("Parameter 'salt' must be of type bytes")
+        ensure_type(master_password, str, "master_password", "str")
+        ensure_type(raw_password, str, "raw_password", "str")
+        ensure_type(salt, bytes,  "salt", "bytes")
 
         # Make sure that parameters are not empty
         if not master_password:
@@ -54,12 +52,9 @@ def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> by
 
 def decrypt_password(master_password: str, encrypted_password: bytes, salt: bytes) -> str | None:
     try:
-        if not isinstance(master_password, str):
-            raise TypeError("Parameter 'master_password' must be of type str")
-        if not isinstance(encrypted_password, bytes):
-            raise TypeError("Parameter 'encrypted_password' must be of type bytes")
-        if not isinstance(salt, bytes):
-            raise TypeError("Parameter 'salt' must be of type bytes")
+        ensure_type(master_password, str, "master_password", "str")
+        ensure_type(encrypted_password, bytes, "encrypted_password", "bytes")
+        ensure_type(salt, bytes, "salt", "bytes")
 
         # Make sure that parameters are not empty
         if not master_password:
@@ -79,56 +74,60 @@ def decrypt_password(master_password: str, encrypted_password: bytes, salt: byte
         print(e, file=stderr)
 
 
-def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str:
+def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str | None:
     # Exception handling
-    if not isinstance(length, int) or length <= 0:
-        raise ValueError("Invalid value for 'length'")
-
-    if uppercase != False and uppercase != True:
-        raise ValueError("Invalid value for 'uppercase'")
-    if lowercase != False and lowercase != True:
-        raise ValueError("Invalid value for 'lowercase'")
-    if numbers != False and numbers != True:
-        raise ValueError("Invalid value for 'numbers'")
-    if specials != False and specials != True:
-        raise ValueError("Invalid value for 'specials'")
+    ensure_type(int, length, int,  "length", "int")
+    ensure_type(uppercase, bool, "uppercase", "bool")
+    ensure_type(lowercase, bool, "lowercase", "bool")
+    ensure_type(numbers, bool, "numbers", "bool")
+    ensure_type(specials, bool, "specials", "bool")
 
     if uppercase == lowercase == numbers == specials == False:
         print("All options cannot be false!")
         return None
 
-    password: str = ""
+    # Create a string collection to choose the characters from
+    str_collection: List[str] = []
 
-    while True:
-        if len(password) == length:
-            containsUppercase = False
-            containsLowercase = False
-            containsNumbers = False
-            containsSpecials = False
+    if uppercase:
+        str_collection.append(string.ascii_uppercase)
+    if lowercase:
+        str_collection.append(string.ascii_lowercase)
+    if numbers:
+        str_collection.append(string.digits)
+    if specials:
+        str_collection.append(string.punctuation)
 
-            for char in password:
-                if char.isupper():
-                    containsUppercase = True
-                elif char.islower():
-                    containsLowercase = True
-                elif char.isnumeric():
-                    containsNumbers = True
-                else:
-                    containsSpecials = True
+    for tries in range(3):
+        password = ""
+        upper_num = lower_num = number_num = special_num = 0
 
-            if containsUppercase == uppercase and containsLowercase == lowercase and containsNumbers == numbers and containsSpecials == specials:
-                return password
-            else:
-                password = ""
+        for i in range(length):
+            char_collection = choice(str_collection)
+            randomChar = choice(char_collection)
 
-        # Add random character to password string
-        charType: int = randbelow(4)
+            if char_collection == string.ascii_uppercase:
+                upper_num += 1
 
-        randomChar = choice(string.ascii_uppercase) if charType == 0 and uppercase else choice(string.ascii_lowercase) if charType == 1 and lowercase else choice(
-            string.digits) if charType == 2 and numbers else choice(string.punctuation) if specials else None
+            elif char_collection == string.ascii_lowercase:
+                lower_num += 1
 
-        charRepeated = False if len(password) < 2 else (
-            randomChar == password[-1] and randomChar == password[-2])
+            elif char_collection == string.digits:
+                number_num += 1
 
-        if randomChar and not charRepeated:
+            elif char_collection == string.punctuation:
+                special_num += 1
+
             password += randomChar
+
+        if (
+            (upper_num > 0) == uppercase and
+            (lower_num > 0) == lowercase and
+            (number_num > 0) == numbers and
+            (special_num > 0) == specials
+        ):
+            return password
+
+    print("Could not generate password", file=stderr)
+    print(f"Tried {tries + 1} times", file=stderr)
+    return None
