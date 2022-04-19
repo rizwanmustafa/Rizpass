@@ -1,11 +1,9 @@
-# Preview
-![LPass Preview](./demonstration.gif)
-
+**This project is still under construction**
 # Requirements
-- Python3 (For running the code)
-- Mariadb / MySQL (For storing the credentials)
+- Python3 
+- Mariadb / MySQL / MongoDB (Optional)
 
-# Build instructions
+# Install instructions
 
 1. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
 ```bash
@@ -17,26 +15,21 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. Install the required packages
+3. Install the package
 ```bash
-pip install -r requirements.txt
+pip install .
 ```
 
-4. Build the project into a single binary file suitable for your OS:
+4. Start LPass
 ```bash
-python3 -m PyInstaller --onefile ./lpass.py
+lpass
 ```
 
-5. Once the compilation has finished, the binary file will be located at `./dist/lpass`
-```bash
-./dist/lpass
-```
 
 Bonus - If you want to do it all in one step:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-python3 -m PyInstaller --onefile ./lpass.py
-./dist/lpass
+pip install .
+lpass
 ```
