@@ -97,38 +97,61 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bo
         print("All options cannot be false!")
         return None
 
+    password_len = 0
     password: str = ""
 
-    while True:
-        if len(password) == length:
-            containsUppercase = False
-            containsLowercase = False
-            containsNumbers = False
-            containsSpecials = False
+    upper_num = lower_num = number_num = special_num = 0
 
-            for char in password:
-                if char.isupper():
-                    containsUppercase = True
-                elif char.islower():
-                    containsLowercase = True
-                elif char.isnumeric():
-                    containsNumbers = True
-                else:
-                    containsSpecials = True
+    while True: # TODO: Choose  a better loop structure here
+        if password_len == length:
+            print(password)
+            print(password_len)
 
-            if containsUppercase == uppercase and containsLowercase == lowercase and containsNumbers == numbers and containsSpecials == specials:
+            print((upper_num > 0) == uppercase)
+            print((lower_num > 0) == lowercase)
+            print((number_num > 0) == numbers)
+            print((special_num > 0) == specials)
+
+            if (
+                (upper_num > 0) == uppercase and
+                (lower_num > 0) == lowercase and
+                (number_num > 0) == numbers and
+                (special_num > 0) == specials
+            ):
                 return password
-            else:
-                password = ""
+
+            password_len = 0
+            password = ""
+            upper_num = lower_num = number_num = special_num = 0
 
         # Add random character to password string
         charType: int = randbelow(4)
 
-        randomChar = choice(string.ascii_uppercase) if charType == 0 and uppercase else choice(string.ascii_lowercase) if charType == 1 and lowercase else choice(
-            string.digits) if charType == 2 and numbers else choice(string.punctuation) if specials else None
+        randomChar = None
+
+        # TODO: Create a new array that append these string. collections inside itself if the particular collection is needed
+        # TODO: Then use the choice function to choose a random char collection from the array
+        # TODO: Then use the choice function to choose a random char from the collection
+
+        if charType == 0 and uppercase:
+            randomChar = choice(string.ascii_uppercase)
+            upper_num += 1
+
+        elif charType == 1 and lowercase:
+            randomChar = choice(string.ascii_lowercase)
+            lower_num += 1
+
+        elif charType == 2 and numbers:
+            randomChar = choice(string.digits)
+            number_num += 1
+
+        elif charType == 3 and specials:
+            randomChar = choice(string.punctuation)
+            special_num += 1
 
         charRepeated = False if len(password) < 2 else (
             randomChar == password[-1] and randomChar == password[-2])
 
         if randomChar and not charRepeated:
             password += randomChar
+            password_len += 1
