@@ -7,6 +7,7 @@ from typing import List
 import base64
 import string
 
+from validator import ensure_type
 
 def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
     master_password = bytes(master_password, "utf-8")
@@ -25,14 +26,9 @@ def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
 
 def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> bytes | None:
     try:
-
-        # Make sure that the paremeters are of correct type
-        if not isinstance(master_password, str):
-            raise TypeError("Parameter 'master_password' must be of type str")
-        if not isinstance(raw_password, str):
-            raise TypeError("Parameter 'raw_password' must be of type str")
-        if not isinstance(salt, bytes):
-            raise TypeError("Parameter 'salt' must be of type bytes")
+        ensure_type(str, master_password, "master_password", "str")
+        ensure_type(str, raw_password, "raw_password", "str")
+        ensure_type(bytes, salt, "salt", "bytes")
 
         # Make sure that parameters are not empty
         if not master_password:
@@ -55,12 +51,9 @@ def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> by
 
 def decrypt_password(master_password: str, encrypted_password: bytes, salt: bytes) -> str | None:
     try:
-        if not isinstance(master_password, str):
-            raise TypeError("Parameter 'master_password' must be of type str")
-        if not isinstance(encrypted_password, bytes):
-            raise TypeError("Parameter 'encrypted_password' must be of type bytes")
-        if not isinstance(salt, bytes):
-            raise TypeError("Parameter 'salt' must be of type bytes")
+        ensure_type(str, master_password, "master_password", "str")
+        ensure_type(bytes, encrypted_password, "encrypted_password", "bytes")
+        ensure_type(bytes, salt, "salt", "bytes")
 
         # Make sure that parameters are not empty
         if not master_password:
@@ -82,17 +75,11 @@ def decrypt_password(master_password: str, encrypted_password: bytes, salt: byte
 
 def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str | None:
     # Exception handling
-    if not isinstance(length, int) or length <= 0:
-        raise ValueError("Invalid value for 'length'")
-
-    if uppercase != False and uppercase != True:
-        raise ValueError("Invalid value for 'uppercase'")
-    if lowercase != False and lowercase != True:
-        raise ValueError("Invalid value for 'lowercase'")
-    if numbers != False and numbers != True:
-        raise ValueError("Invalid value for 'numbers'")
-    if specials != False and specials != True:
-        raise ValueError("Invalid value for 'specials'")
+    ensure_type(int, length, "length", "int")
+    ensure_type(bool, uppercase, "uppercase", "bool")
+    ensure_type(bool, lowercase, "lowercase", "bool")
+    ensure_type(bool, numbers, "numbers", "bool")
+    ensure_type(bool, specials, "specials", "bool")
 
     if uppercase == lowercase == numbers == specials == False:
         print("All options cannot be false!")

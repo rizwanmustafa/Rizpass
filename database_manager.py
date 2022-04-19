@@ -12,6 +12,8 @@ from pymongo.collection import Collection as MongoCollection
 from pymongo.mongo_client import MongoClient
 from bson.objectid import ObjectId
 
+from validator import ensure_type
+
 
 # TODO: Add support for custom port on database
 
@@ -54,7 +56,7 @@ class DatabaseManager:
             else:
                 mongo_uri = prepare_mongo_uri(db_config.host, db_config.user, db_config.password)
                 self.mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
-                self.mongo_client.server_info() # To make sure that the mongo instance is valid
+                self.mongo_client.server_info()  # To make sure that the mongo instance is valid
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
                 self.db_type = "mongo"
@@ -65,6 +67,12 @@ class DatabaseManager:
             exit(1)
 
     def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, bytes, "password", "bytes")
+        ensure_type(salt, bytes, "salt", "bytes")
+
         # Make sure that required parameters are not empty
         if not title:
             raise ValueError("Parameter 'title' cannot be empty")
@@ -119,6 +127,7 @@ class DatabaseManager:
             return None
 
     def get_password(self, id: int | str) -> RawCredential | None:
+        ensure_type(id, int, "id", "int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
@@ -148,6 +157,7 @@ class DatabaseManager:
             )
 
     def remove_password(self, id: int | str) -> None:
+        ensure_type(id, int, "id", "int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
@@ -165,6 +175,13 @@ class DatabaseManager:
             self.mongo_collection.delete_many({})
 
     def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+        ensure_type(id, int, "id", "int")
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, bytes, "password", "bytes")
+        ensure_type(salt, bytes, "salt", "bytes")
+
         if not isinstance(id, int):
             raise TypeError("Parameter 'id' must be of type int")
         if not id:
@@ -209,6 +226,10 @@ class DatabaseManager:
             }})
 
     def filter_passwords(self, title: str, username: str, email: str) -> List[RawCredential]:
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+
         # Make sure that the parameters are of correct type
         if not isinstance(title, str):
             raise TypeError("Paramter 'title' must be of type str")
@@ -233,6 +254,8 @@ class DatabaseManager:
         return filtered_raw_creds
 
     def execute_raw_query(self, query: str) -> None:
+        ensure_type(query, str, "query", "string")
+
         if self.db_type != "mysql":
             return
 
@@ -254,8 +277,7 @@ class DatabaseManager:
             exit(1)
 
     def export_to_file(self, filename: str) -> None:
-        if not isinstance(filename, str):
-            raise TypeError("Parameter 'filename' must be of type str")
+        ensure_type(filename, str, "filename", "string")
 
         if not filename:
             raise ValueError("Invalid value provided for parameter 'filename'")
@@ -280,10 +302,8 @@ class DatabaseManager:
         dump(cred_objs, open(filename, "w"))
 
     def import_from_file(self, master_password, filename: str) -> None:
-        # Later ask for master password for the file
-        # Later add the id
-        if not isinstance(filename, str):
-            raise TypeError("Parameter 'filename' must be of type str")
+        ensure_type(master_password, str, "master_password", "string")
+        ensure_type(filename, str, "filename", "string")
 
         if not filename:
             raise ValueError("Invalid value provided for parameter 'filename'")

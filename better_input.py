@@ -97,7 +97,7 @@ def get_credential_input(title: bool | str = True,
 
 def confirm_user_choice(prompt: str):
     """
-    Returns true if user input 'y' or 'Y' after the prompt
+    Returns true if user inputs 'y' or 'Y' after the prompt
     """
     confirm_choice = input(prompt)
     return confirm_choice.upper() == "Y"
