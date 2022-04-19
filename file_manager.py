@@ -187,7 +187,7 @@ class FileManager:
 
         return filtered_raw_creds
 
-    def import_from_file(self, master_password, filename: str) -> None:
+    def import_from_file(self, master_password : str, filename: str) -> None:
         ensure_type(master_password, str, "master_password", "string")
         ensure_type(filename, str, "filename", "string")
 

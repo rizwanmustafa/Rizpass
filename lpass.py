@@ -382,15 +382,21 @@ def change_masterpassword() -> None:
 
 
 def import_credentials() -> None:
-    if not db_manager:
-        print("This oper")
     filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
     if filename == None:
         return
-    db_manager.import_from_file(master_pass, filename)
+    if db_manager:
+        db_manager.import_from_file(master_pass, filename)
+    if file_manager:
+        file_manager.import_from_file(master_pass, filename)
 
 
 def export_credentials() -> None:
+    # TODO: Implement export to file for FileManager
+    if not db_manager:
+        print("This feature is yet only available to dbs")
+        print("Sorry for the inconvenience")
+        return
     filename = better_input(prompt="Filename: ", allow_empty=False)
     if filename == None:
         return
