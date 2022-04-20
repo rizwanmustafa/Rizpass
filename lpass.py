@@ -11,7 +11,7 @@ import signal
 from __version import __version__
 from better_input import better_input, get_credential_input, confirm_user_choice
 from schemas import get_config_schema
-from passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
+from passwords import encrypt_string, decrypt_string, generate_password as generate_random_password
 from credentials import RawCredential, Credential
 from database_manager import DatabaseManager, DbConfig
 from file_manager import FileManager
@@ -196,12 +196,27 @@ def add_credential(user_password: str = None) -> None:
         return
 
     salt: bytes = os.urandom(16)
-    encrypted_password = encrypt_password(master_pass, password, salt)
+    encrypted_title = encrypt_string(master_pass, title, salt)
+    encrypted_username = encrypt_string(master_pass, username, salt)
+    encrypted_email = encrypt_string(master_pass, email, salt)
+    encrypted_password = encrypt_string(master_pass, password, salt)
 
     if db_manager:
-        db_manager.add_credential(title, username, email, encrypted_password, salt)
+        db_manager.add_credential(
+            encrypted_title,
+            encrypted_username,
+            encrypted_email,
+            encrypted_password,
+            salt
+        )
     if file_manager:
-        file_manager.add_credential(title, username, email, encrypted_password, salt)
+        file_manager.add_credential(
+            encrypted_title,
+            encrypted_username,
+            encrypted_email,
+            encrypted_password,
+            salt
+        )
     print("\nPassword added successfully!")
 
 
@@ -211,7 +226,7 @@ def get_credential() -> None:
     raw_cred = None
 
     if db_manager:
-        raw_cred = db_manager.get_password(id)
+        raw_cred = db_manager.get_credential(id)
     if file_manager:
         raw_cred = file_manager.get_password(id)
 
@@ -278,7 +293,7 @@ def modify_credential() -> None:
     # Later add functionality for changing the password itself
     id = input("ID: ")
 
-    if (db_manager if db_manager else file_manager).get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
         return
 
@@ -290,7 +305,7 @@ def modify_credential() -> None:
         return
 
     salt = os.urandom(16) if new_password else None
-    encryptedPassword = encrypt_password(
+    encryptedPassword = encrypt_string(
         master_pass,
         new_password,
         salt
@@ -314,7 +329,7 @@ def modify_credential() -> None:
 def remove_credential() -> None:
     id: int = input("ID: ")
 
-    if (db_manager if db_manager else file_manager).get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
         return
 
@@ -373,8 +388,8 @@ def change_masterpassword() -> None:
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
         salt = os.urandom(16)
-        decrypted_pass = decrypt_password(master_pass, raw_cred.password, raw_cred.salt)
-        encrypted_pass = encrypt_password(new_masterpass, decrypted_pass,  salt)
+        decrypted_pass = decrypt_string(master_pass, raw_cred.password, raw_cred.salt)
+        encrypted_pass = encrypt_string(new_masterpass, decrypted_pass,  salt)
 
         (db_manager if db_manager else file_manager).modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
 

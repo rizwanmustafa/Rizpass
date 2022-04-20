@@ -25,7 +25,7 @@ def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
     return Fernet(key)
 
 
-def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> bytes | None:
+def encrypt_string(master_password: str, raw_password: str, salt: bytes) -> bytes | None:
     try:
         ensure_type(master_password, str, "master_password", "str")
         ensure_type(raw_password, str, "raw_password", "str")
@@ -50,7 +50,7 @@ def encrypt_password(master_password: str, raw_password: str, salt: bytes) -> by
         return None
 
 
-def decrypt_password(master_password: str, encrypted_password: bytes, salt: bytes) -> str | None:
+def decrypt_string(master_password: str, encrypted_password: bytes, salt: bytes) -> str | None:
     try:
         ensure_type(master_password, str, "master_password", "str")
         ensure_type(encrypted_password, bytes, "encrypted_password", "bytes")
@@ -76,7 +76,7 @@ def decrypt_password(master_password: str, encrypted_password: bytes, salt: byte
 
 def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str | None:
     # Exception handling
-    ensure_type(int, length, int,  "length", "int")
+    ensure_type(length, int,  "length", "int")
     ensure_type(uppercase, bool, "uppercase", "bool")
     ensure_type(lowercase, bool, "lowercase", "bool")
     ensure_type(numbers, bool, "numbers", "bool")

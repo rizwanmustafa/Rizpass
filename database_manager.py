@@ -2,21 +2,20 @@ from getpass import getpass
 from sys import exit, stderr
 from os import path
 from json import dump, load
-from passwords import decrypt_password, encrypt_password
+from passwords import decrypt_string, encrypt_string
 from credentials import RawCredential
 from base64 import b64decode, b64encode
 from typing import List
 import mysql.connector
+from pymongo import ASCENDING
 from pymongo.database import Database as MongoDatabase
 from pymongo.collection import Collection as MongoCollection
 from pymongo.mongo_client import MongoClient
-from bson.objectid import ObjectId
 
 from validator import ensure_type
 
 
 # TODO: Add support for custom port on database
-# TODO: Add support for numeric id field for mongodb
 
 
 def prepare_mongo_uri(host: str, user: str = "", password: str = "") -> str:
@@ -62,18 +61,34 @@ class DatabaseManager:
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
                 self.db_type = "mongo"
+
+                self.mongo_collection.create_index([("id", ASCENDING)], unique=True)
                 print("MongoDB is not fully supported yet. There may be issues with some operations.")
                 print("We thank you for your cooperation.")
         except Exception as e:
-            print(f"There was an error while connecting with {'MySQL' if db_type else 'MongoDB'}: ", file=stderr)
+            print(f"There was an error while connecting with {'MySQL' if db_type == 'mysql' else 'MongoDB'}: ", file=stderr)
             print(e, file=stderr)
             print("Exiting with code 1!", file=stderr)
             exit(1)
 
-    def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
-        ensure_type(title, str, "title", "string")
-        ensure_type(username, str, "username", "string")
-        ensure_type(email, str, "email", "string")
+    def __gen_id(self) -> int | None:
+        """This method will generate a unique id for the credential. Note: To be used only with MongoDB"""
+        try:
+            if self.db_type == "mysql":
+                return None
+
+            id = self.mongo_collection.estimated_document_count() + 1
+            while self.get_credential(id):
+                id += 1
+            return id
+        except Exception as e:
+            print("There was an error while generating an id:", file=stderr)
+            print(e, file=stderr)
+
+    def add_credential(self, title: bytes, username: bytes, email: bytes, password: bytes, salt: bytes) -> None:
+        ensure_type(title, bytes, "title", "string")
+        ensure_type(username, bytes, "username", "string")
+        ensure_type(email, bytes, "email", "string")
         ensure_type(password, bytes, "password", "bytes")
         ensure_type(salt, bytes, "salt", "bytes")
 
@@ -86,9 +101,10 @@ class DatabaseManager:
             raise ValueError("Parameter 'salt' cannot be empty")
 
         # Encode to b64
-        title = b64encode(bytes(title, "utf-8")).decode("ascii")
-        username = b64encode(bytes(username, "utf-8")).decode("ascii")
-        email = b64encode(bytes(email, "utf-8")).decode("ascii")
+        id = str(self.__gen_id()) if self.db_type == "mongo" else None
+        title = b64encode(title).decode("ascii")
+        username = b64encode(username).decode("ascii")
+        email = b64encode(email).decode("ascii")
         password = b64encode(password).decode("ascii")
         salt = b64encode(salt).decode("ascii")
 
@@ -102,6 +118,7 @@ class DatabaseManager:
                 self.mysql_db.commit()
             else:
                 self.mongo_collection.insert_one({
+                    "id": id,
                     "title": title,
                     "username": username,
                     "email": email,
@@ -122,7 +139,7 @@ class DatabaseManager:
                     raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
             else:
                 for i in self.mongo_collection.find():
-                    raw_creds.append(RawCredential(str(i["_id"]), i["title"], i["username"], i["email"], i["password"], i["salt"]))
+                    raw_creds.append(RawCredential(str(i["id"]), i["title"], i["username"], i["email"], i["password"], i["salt"]))
 
             return raw_creds
         except Exception as e:
@@ -130,8 +147,8 @@ class DatabaseManager:
             print(e)
             return None
 
-    def get_password(self, id: int | str) -> RawCredential | None:
-        ensure_type(id, int, "id", "int")
+    def get_credential(self, id: int | str) -> RawCredential | None:
+        ensure_type(id, int | str, "id", "int or string")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
@@ -148,11 +165,11 @@ class DatabaseManager:
                 query_result[4]
             )
         else:
-            query_result = self.mongo_collection.find_one({"_id": ObjectId(id)})
+            query_result = self.mongo_collection.find_one({"id": id})
             if not query_result:
                 return None
             return RawCredential(
-                str(query_result["_id"]),
+                str(query_result["id"]),
                 query_result["title"],
                 query_result["username"],
                 query_result["email"],
@@ -169,7 +186,7 @@ class DatabaseManager:
             self.mysql_cursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
             self.mysql_db.commit()
         else:
-            self.mongo_collection.delete_one({"_id": ObjectId(id)})
+            self.mongo_collection.delete_one({"id": id})
 
     def remove_all_passwords(self) -> None:
         if self.db_type == "mysql":
@@ -197,7 +214,7 @@ class DatabaseManager:
         elif not isinstance(email, str):
             raise TypeError("Parameter 'email' must be of type str")
 
-        originalPassword = self.get_password(id)
+        originalPassword = self.get_credential(id)
         if not originalPassword:
             return
 
@@ -221,7 +238,7 @@ class DatabaseManager:
                 title, username, email, password, salt, id))
             self.mysql_db.commit()
         else:
-            self.mongo_collection.update_one({"_id": ObjectId(id)}, {"$set": {
+            self.mongo_collection.update_one({"id": id}, {"$set": {
                 "title": title,
                 "username": username,
                 "email": email,
@@ -296,17 +313,17 @@ class DatabaseManager:
         for cred in raw_creds:
             cred_objs.append({
                 "id": cred.id,
-                "title": b64encode(bytes(cred.title, "utf-8")).decode('ascii'),
-                "username": b64encode(bytes(cred.username, "utf-8")).decode('ascii'),
-                "email": b64encode(bytes(cred.email, "utf-8")).decode('ascii'),
+                "title": b64encode(cred.title).decode('ascii'),
+                "username": b64encode(cred.username).decode('ascii'),
+                "email": b64encode(cred.email).decode('ascii'),
                 "password": b64encode(cred.password).decode('ascii'),
                 "salt": b64encode(cred.salt).decode('ascii'),
             })
 
         dump(cred_objs, open(filename, "w"))
 
-    def import_from_file(self, master_password, filename: str) -> None:
-        ensure_type(master_password, str, "master_password", "string")
+    def import_from_file(self, master_pass, filename: str) -> None:
+        ensure_type(master_pass, str, "master_password", "string")
         ensure_type(filename, str, "filename", "string")
 
         if not filename:
@@ -316,31 +333,34 @@ class DatabaseManager:
             print(f"{filename} does not exist!")
             raise Exception
 
-        raw_creds = []
-        file_master_password: str = getpass("Input master password for file: ")
-        import_creds = load(open(filename, "r"))
+        file_master_pass: str = getpass("Input master password for file: ")
+        file_creds = load(open(filename, "r"))
 
-        if not import_creds:
+        if not file_creds:
             print("There are no credentials in the file.")
 
-        for import_cred in import_creds:
-            raw_cred = [None] * 5
+        for file_cred in file_creds:
+            temp_cred = {
+                "title": b64decode(file_cred["title"]),
+                "username": b64decode(file_cred["username"]),
+                "email": b64decode(file_cred["email"]),
+                "password": b64decode(file_cred["password"]),
+                "salt": b64decode(file_cred["salt"]),
+            }
 
-            raw_cred[0] = b64decode(import_cred["title"]).decode("utf-8")
-            raw_cred[1] = b64decode(import_cred["username"]).decode("utf-8")
-            raw_cred[2] = b64decode(import_cred["email"]).decode("utf-8")
-            raw_cred[3] = b64decode(import_cred["password"])
-            raw_cred[4] = b64decode(import_cred["salt"])
+            for i in temp_cred:
+                if i == "salt":
+                    continue
+                decrypted_prop: str = decrypt_string(file_master_pass, temp_cred[i], temp_cred["salt"])
+                temp_cred[i] = encrypt_string(master_pass, decrypted_prop, temp_cred["salt"])
 
-            decrypted_pass: str = decrypt_password(file_master_password, raw_cred[3], raw_cred[4])
-            encrypted_pass: str = encrypt_password(master_password, decrypted_pass, raw_cred[4])
-            raw_cred[3] = encrypted_pass
-
-            raw_creds.append(raw_cred)
-
-        for raw_cred in raw_creds:
-            self.add_credential(raw_cred[0], raw_cred[1],
-                                raw_cred[2], raw_cred[3], raw_cred[4])
+            self.add_credential(
+                temp_cred["title"],
+                temp_cred["username"],
+                temp_cred["email"],
+                temp_cred["password"],
+                temp_cred["salt"]
+            )
 
         print("All credentials have been successfully added!")
 

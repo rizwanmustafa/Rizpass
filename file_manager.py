@@ -1,3 +1,4 @@
+import filecmp
 from os import path
 from sys import stderr
 from base64 import b64encode, b64decode
@@ -7,9 +8,11 @@ from getpass import getpass
 
 from credentials import RawCredential
 from validator import ensure_type
-from passwords import decrypt_password, encrypt_password, generate_password as gen_rand_string
+from passwords import decrypt_string, encrypt_string
 
 # TODO: Convert credentials from an array to an object with id as key
+# TODO: Rather than appending raw objects into the self.credentials, append RawCredentials instead.
+# Then upon dumping, use the get_object function to get the object.
 
 
 class FileManager:
@@ -54,11 +57,12 @@ class FileManager:
     def close(self):
         self.file.close()
 
-    def add_credential(self, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+    def add_credential(self, title: bytes, username: bytes, email: bytes, password: bytes, salt: bytes) -> None:
+        """This method takes in the encrypted credentials and adds them to the file."""
         id = str(self.__gen_id())
-        title = b64encode(bytes(title, "utf-8")).decode("ascii")
-        username = b64encode(bytes(username, "utf-8")).decode("ascii")
-        email = b64encode(bytes(email, "utf-8")).decode("ascii")
+        title = b64encode(title).decode("ascii")
+        username = b64encode(username).decode("ascii")
+        email = b64encode(email).decode("ascii")
         password = b64encode(password).decode("ascii")
         salt = b64encode(salt).decode("ascii")
 
@@ -187,8 +191,8 @@ class FileManager:
 
         return filtered_raw_creds
 
-    def import_from_file(self, master_password : str, filename: str) -> None:
-        ensure_type(master_password, str, "master_password", "string")
+    def import_from_file(self, master_pass: str, filename: str) -> None:
+        ensure_type(master_pass, str, "master_password", "string")
         ensure_type(filename, str, "filename", "string")
 
         if not filename:
@@ -199,34 +203,35 @@ class FileManager:
             raise Exception
 
         raw_creds = []
-        file_master_password: str = getpass("Input master password for file: ")
-        import_creds = load_json(open(filename, "r"))
+        file_master_pass: str = getpass("Input master password for file: ")
+        file_creds = load_json(open(filename, "r"))
 
-        if not import_creds:
+        if not file_creds:
             print("There are no credentials in the file.")
 
-        for import_cred in import_creds:
-            raw_cred = [None] * 5
+        # TODO: Combine these two loops into one
 
-            raw_cred[0] = b64decode(import_cred["title"]).decode("utf-8")
-            raw_cred[1] = b64decode(import_cred["username"]).decode("utf-8")
-            raw_cred[2] = b64decode(import_cred["email"]).decode("utf-8")
-            raw_cred[3] = b64decode(import_cred["password"])
-            raw_cred[4] = b64decode(import_cred["salt"])
+        for file_cred in file_creds:
+            temp_cred = {
+                "title": b64decode(file_cred["title"]),
+                "username": b64decode(file_cred["username"]),
+                "email": b64decode(file_cred["email"]),
+                "password": b64decode(file_cred["password"]),
+                "salt": b64decode(file_cred["salt"]),
+            }
 
-            decrypted_pass: str = decrypt_password(file_master_password, raw_cred[3], raw_cred[4])
-            encrypted_pass: str = encrypt_password(master_password, decrypted_pass, raw_cred[4])
-            raw_cred[3] = encrypted_pass
+            for i in temp_cred:
+                if i == "salt":
+                    continue
+                decrypted_prop: str = decrypt_string(file_master_pass, temp_cred[i], temp_cred["salt"])
+                temp_cred[i] = encrypt_string(master_pass, decrypted_prop, temp_cred["salt"])
 
-            raw_creds.append(raw_cred)
-
-        for raw_cred in raw_creds:
             self.add_credential(
-                raw_cred[0],
-                raw_cred[1],
-                raw_cred[2],
-                raw_cred[3],
-                raw_cred[4]
+                temp_cred["title"],
+                temp_cred["username"],
+                temp_cred["email"],
+                temp_cred["password"],
+                temp_cred["salt"]
             )
 
         print("All credentials have been successfully added!")
