@@ -230,7 +230,7 @@ def get_credential() -> None:
     if db_manager:
         raw_cred = db_manager.get_credential(id)
     if file_manager:
-        raw_cred = file_manager.get_password(id)
+        raw_cred = file_manager.get_credential(id)
 
     if raw_cred == None:
         print("No credential with given id found!")
@@ -250,9 +250,9 @@ def filter_credentials() -> None:
 
     creds: List[RawCredential] = []
     if db_manager:
-        creds.extend(db_manager.filter_passwords(title_filter, username_filter, email_filter, master_pass))
+        creds.extend(db_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
     if file_manager:
-        creds.extend(file_manager.filter_passwords(title_filter, username_filter, email_filter, master_pass))
+        creds.extend(file_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
 
     if not creds:
         print("No credentials meet your given filter.")
@@ -312,7 +312,7 @@ def modify_credential() -> None:
     if new_title == new_username == new_email == new_password == "":
         return
     else:
-        (db_manager if db_manager else file_manager).modify_password(
+        (db_manager if db_manager else file_manager).modify_credential(
             id,
             new_title,
             new_username,
@@ -331,7 +331,7 @@ def remove_credential() -> None:
         print("No credential with given id exists!")
         return
 
-    (db_manager if db_manager else file_manager).remove_password(id)
+    (db_manager if db_manager else file_manager).remove_credential(id)
     print("Removed password successfully!")
 
 
@@ -346,9 +346,9 @@ def remove_all_credentials() -> None:
         exit_app()
 
     if db_manager:
-        db_manager.remove_all_passwords()
+        db_manager.remove_all_credentials()
     if file_manager:
-        file_manager.remove_all_passwords()
+        file_manager.remove_all_credentials()
 
     print("Removed all passwords successfully!")
 
@@ -389,7 +389,7 @@ def change_masterpassword() -> None:
         decrypted_pass = decrypt_string(master_pass, raw_cred.password, raw_cred.salt)
         encrypted_pass = encrypt_string(new_masterpass, decrypted_pass,  salt)
 
-        (db_manager if db_manager else file_manager).modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
+        (db_manager if db_manager else file_manager).modify_credential(raw_cred.id, "", "", "", encrypted_pass, salt)
 
     master_pass = new_masterpass
 

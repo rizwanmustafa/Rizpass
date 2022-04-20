@@ -64,7 +64,7 @@ class FileManager:
 
     def __gen_id(self) -> str:
         id = len(self.credentials) + 1
-        while self.get_password(id):
+        while self.get_credential(id):
             id += 1
         return id
 
@@ -119,7 +119,7 @@ class FileManager:
             print(e)
             return None
 
-    def get_password(self, id: int | str) -> RawCredential | None:
+    def get_credential(self, id: int | str) -> RawCredential | None:
         query_result = None
         for i in self.credentials:
             if i.id == id:
@@ -128,7 +128,7 @@ class FileManager:
 
         return query_result
 
-    def remove_password(self, id: int | str) -> None:
+    def remove_credential(self, id: int | str) -> None:
         cred_index = None
 
         for index, cred in enumerate(self.credentials):
@@ -142,13 +142,13 @@ class FileManager:
         self.credentials.pop(cred_index)
         self.__dump_creds()
 
-    def remove_all_passwords(self) -> None:
+    def remove_all_credentials(self) -> None:
         self.credentials = []
         self.__dump_creds()
 
-    def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
 
-        originalPassword = self.get_password(id)
+        originalPassword = self.get_credential(id)
         if not originalPassword:
             print("No credential with the given id exists!", file=stderr)
             return
@@ -179,7 +179,7 @@ class FileManager:
 
         self.__dump_creds()
 
-    def filter_passwords(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
+    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         raw_creds: List[RawCredential] = self.get_all_credentials()
         if raw_creds == []:
             return raw_creds

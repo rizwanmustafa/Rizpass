@@ -177,7 +177,7 @@ class DatabaseManager:
                 query_result["salt"]
             )
 
-    def remove_password(self, id: int | str) -> None:
+    def remove_credential(self, id: int | str) -> None:
         ensure_type(id, int, "id", "int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
@@ -188,14 +188,14 @@ class DatabaseManager:
         else:
             self.mongo_collection.delete_one({"id": id})
 
-    def remove_all_passwords(self) -> None:
+    def remove_all_credentials(self) -> None:
         if self.db_type == "mysql":
             self.mysql_cursor.execute("DELETE FROM Credentials")
             self.mysql_db.commit()
         else:
             self.mongo_collection.delete_many({})
 
-    def modify_password(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
         ensure_type(id, int, "id", "int")
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
@@ -246,7 +246,7 @@ class DatabaseManager:
                 "salt": salt
             }})
 
-    def filter_passwords(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
+    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
