@@ -1,9 +1,8 @@
-import filecmp
 from os import path
 from sys import stderr
 from base64 import b64encode, b64decode
 from json import load as load_json, dump as dump_json
-from typing import List, Dict
+from typing import List
 from getpass import getpass
 
 from credentials import RawCredential, Credential
@@ -22,6 +21,7 @@ class FileManager:
         try:
             if path.isfile(file_path):
                 self.file = open(file_path, "r+")
+                self.file.write("[]") if self.file.readlines() == [] else None
             else:
                 self.file = open(file_path, "w+")
                 self.file.write("[]")
@@ -37,6 +37,7 @@ class FileManager:
         self.close()
 
     def __load_creds(self):
+        self.credentials: List[RawCredential] = []
         self.file.seek(0, 0)
         import_creds = load_json(self.file)
         for import_cred in import_creds:
@@ -48,7 +49,7 @@ class FileManager:
                 import_cred["password"],
                 import_cred["salt"]
             ))
-        self.credentials.sort(key=lambda x: x["id"])
+        self.credentials.sort(key=lambda x: x.id)
         self.file.seek(0, 0)
 
     def __dump_creds(self):
@@ -99,25 +100,7 @@ class FileManager:
             print(e, file=stderr)
 
     def get_all_credentials(self) -> List[RawCredential] | None:
-        try:
-            raw_creds: List[RawCredential] = []
-
-            for cred in self.credentials:
-                raw_creds.append(RawCredential(
-                    cred["id"],
-                    cred["title"],
-                    cred["username"],
-                    cred["email"],
-                    cred["password"],
-                    cred["salt"]
-                ))
-
-            return raw_creds
-
-        except Exception as e:
-            print("There was an error while getting the credentials:", file=stderr)
-            print(e)
-            return None
+            return self.credentials
 
     def get_credential(self, id: int | str) -> RawCredential | None:
         query_result = None
@@ -169,7 +152,7 @@ class FileManager:
         salt = b64encode(salt).decode("ascii")
 
         for index, cred in enumerate(self.credentials):
-            if cred["id"] == id:
+            if cred.id == id:
                 self.credentials[index].id = id
                 self.credentials[index].title = title
                 self.credentials[index].username = username

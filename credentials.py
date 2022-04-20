@@ -1,5 +1,5 @@
 from sys import stderr
-from base64 import b64decode
+from base64 import b64decode, b64encode
 import pyperclip
 
 from passwords import decrypt_string
@@ -37,12 +37,13 @@ class RawCredential:
     def get_obj(self):
         return {
             "id": self.id,
-            "title": self.title,
-            "username": self.username,
-            "email": self.email,
-            "password": self.password,
-            "salt": self.salt
+            "title": b64encode(self.title).decode("ascii"),
+            "username": b64encode(self.username).decode("ascii"),
+            "email": b64encode(self.email).decode("ascii"),
+            "password": b64encode(self.password).decode("ascii"),
+            "salt": b64encode(self.salt).decode("ascii")
         }
+
 
 class Credential:
     def __init__(self,  id: int | str, title: str, username: str, email: str, password: str) -> None:
