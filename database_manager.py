@@ -3,7 +3,7 @@ from sys import exit, stderr
 from os import path
 from json import dump, load
 from passwords import decrypt_string, encrypt_string
-from credentials import RawCredential
+from credentials import RawCredential, Credential
 from base64 import b64decode, b64encode
 from typing import List
 import mysql.connector
@@ -246,33 +246,27 @@ class DatabaseManager:
                 "salt": salt
             }})
 
-    def filter_passwords(self, title: str, username: str, email: str) -> List[RawCredential]:
+    def filter_passwords(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
-
-        # Make sure that the parameters are of correct type
-        if not isinstance(title, str):
-            raise TypeError("Paramter 'title' must be of type str")
-        elif not isinstance(username, str):
-            raise TypeError("Paramter 'username' must be of type str")
-        elif not isinstance(email, str):
-            raise TypeError("Parameter 'email' must be of type str")
+        ensure_type(master_pass, str, "master_pass", "string")
 
         raw_creds: List[RawCredential] = self.get_all_credentials()
         if raw_creds == []:
             return raw_creds
 
-        filtered_raw_creds: List[RawCredential] = []
+        filtered_creds: List[Credential] = []
         for raw_cred in raw_creds:
-            title_match = title.lower() in raw_cred.title.lower()
-            username_match = username.lower() in raw_cred.username.lower()
-            email_match = email.lower() in raw_cred.email.lower()
+            cred = raw_cred.get_credential(master_pass)
+            title_match = title.lower() in cred.title.lower()
+            username_match = username.lower() in cred.username.lower()
+            email_match = email.lower() in cred.email.lower()
 
             if title_match and username_match and email_match:
-                filtered_raw_creds.append(raw_cred)
+                filtered_creds.append(cred)
 
-        return filtered_raw_creds
+        return filtered_creds
 
     def execute_raw_query(self, query: str) -> None:
         ensure_type(query, str, "query", "string")

@@ -27,6 +27,8 @@ file_manager: FileManager = None
 
 config: Dict[str, str] = dict()
 
+# TODO: Add requirements for master password
+
 
 def print_menu():
     print("-------------------------------")
@@ -246,25 +248,21 @@ def filter_credentials() -> None:
         "(Optional) Username should contain: ",
         "(Optional) Email should contain: ", False)
 
-    raw_creds: List[RawCredential] = []
+    creds: List[RawCredential] = []
     if db_manager:
-        raw_creds.extend(db_manager.filter_passwords(title_filter, username_filter, email_filter))
+        creds.extend(db_manager.filter_passwords(title_filter, username_filter, email_filter, master_pass))
     if file_manager:
-        raw_creds.extend(file_manager.filter_passwords(title_filter, username_filter, email_filter))
+        creds.extend(file_manager.filter_passwords(title_filter, username_filter, email_filter, master_pass))
 
-    if not raw_creds:
+    if not creds:
         print("No credentials meet your given filter.")
         return
-    creds: List[Credential] = []
-    for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_pass))
-    del raw_creds
 
     print("Following credentials meet your given filters:")
     for credential in creds:
         print(credential)
 
-    creds[-1::1][0].copy_pass()
+    credential.copy_pass()
 
 
 def get_all_credentials() -> None:
