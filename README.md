@@ -22,8 +22,9 @@ pip install .
 
 4. Start LPass
 ```bash
-lpass
+python3 -m lpass
 ```
+Note: You can also start lpass by executing `lpass` in the terminal directly however this may require modification to the `$PATH` variable
 
 
 Bonus - If you want to do it all in one step:
@@ -31,5 +32,5 @@ Bonus - If you want to do it all in one step:
 python3 -m venv venv
 source venv/bin/activate
 pip install .
-lpass
+python3 -m lpass
 ```

@@ -8,7 +8,7 @@ from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
 import signal
 
-from .better_input import better_input, get_credential_input, get_id_input, confirm_user_choice
+from .better_input import better_input, get_credential_input, confirm_user_choice
 from .schemas import get_config_schema
 from .passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
 from .credentials import RawCredential, Credential
