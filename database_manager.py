@@ -73,7 +73,7 @@ class DatabaseManager:
             print("Exiting with code 1!", file=stderr)
             exit(1)
 
-    def __gen_id(self) -> str | None:
+    def __gen_id(self) -> int | None:
         """This method will generate a unique id for the credential. Note: To be used only with MongoDB"""
         try:
             if self.db_type == "mysql":
@@ -82,7 +82,7 @@ class DatabaseManager:
             id = self.mongo_collection.estimated_document_count() + 1
             while self.get_credential(id):
                 id += 1
-            return str(id)
+            return id
         except Exception as e:
             print("There was an error while generating an id:", file=stderr)
             print(e, file=stderr)

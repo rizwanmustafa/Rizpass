@@ -63,7 +63,7 @@ class FileManager:
         dump_json(export_creds, self.file)
         self.file.seek(0, 0)
 
-    def __gen_id(self) -> str:
+    def __gen_id(self) -> int:
         id = len(self.credentials) + 1
         while self.get_credential(id):
             id += 1
