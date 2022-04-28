@@ -6,6 +6,7 @@ from getpass import getpass
 from sys import exit, argv, stderr
 from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
+from subprocess import call as shell_call
 import signal
 
 from __version import __version__
@@ -77,7 +78,7 @@ def perform_tasks() -> None:
     elif user_choice == 8:
         remove_all_credentials()
     elif user_choice == 9:
-        change_masterpassword()
+        change_masterpass()
     elif user_choice == 10:
         export_credentials()
     elif user_choice == 11:
@@ -354,34 +355,59 @@ def remove_all_credentials() -> None:
     print("Removed all passwords successfully!")
 
 
-def change_masterpassword() -> None:
+def change_masterpass() -> None:
+    global db_manager, master_pass
+
     if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
         return
 
     new_masterpass = getpass(
-        "Input new masterpassword (Should meet MySQL Password Requirements): ")
+        "Input new masterpassword (Should meet DB Password Requirements): "
+    )
 
-    rootUsername = better_input(prompt="Input mysql root username: ", allow_empty=False)
-    if rootUsername == None:
+    if new_masterpass == master_pass:
+        print("New masterpassword is the same as the old one!")
         return
-    rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
-    temp_db_manager = DatabaseManager("mysql", DbConfig("localhost", rootUsername, rootPassword, ""))
-    temp_db_manager.mysql_cursor.execute(
-        "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
-    global db_manager, master_pass
-    if db_manager:
-        db_manager.mysql_cursor.close()
-        db_manager.mysql_db.close()
-        db_manager = DatabaseManager(
-            "mysql",
-            DbConfig(
-                "localhost",
-                "passMan",
-                new_masterpass,
-                "LPass"
-            )
+    # TODO: Implement input validation
+    if config["db_type"] == "mysql" and db_manager:
+        root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
+        root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
+        temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
+        temp_db_manager.mysql_cursor.execute(
+            "ALTER USER '%s'@'localhost' IDENTIFIED BY %s;",  # TODO: Research if we need the localhost or the db_host from the config
+            (config["db_user"],  new_masterpass, )
         )
+
+    elif config["db_type"] == "mongo" and db_manager:
+        root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
+        root_pass = getpass("Input MongoDB root password: ")
+
+        mongo_cmd = f"""
+        mongosh --host {config["db_host"]} --port {config.get("db_port", None)} --u {root_user} --p {root_pass} --eval \\
+        'db = db.getSiblingDB("{config["db_name"]}"); db.updateUser("{config["db_user"]}", {{ pwd: "{new_masterpass}" }})'
+        """
+
+        print(mongo_cmd, "\n")
+        if input("Do you want to run the command (Y/N): ").lower() == "y":
+            shell_call(mongo_cmd, shell=True)
+        else:
+            print("Please run the command manually...")
+            input("Press enter to continue...")
+
+    db_manager.close()
+
+    db_manager = DatabaseManager(
+        config.get("db_type", "mysql"),
+        DbConfig(
+            config["db_host"],
+            config["db_user"],
+            new_masterpass,
+            config["db_name"],
+            config.get("db_port", None)
+        )
+    )
+
     raw_creds = (db_manager if db_manager else file_manager).get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword

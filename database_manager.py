@@ -73,7 +73,7 @@ class DatabaseManager:
             print("Exiting with code 1!", file=stderr)
             exit(1)
 
-    def __gen_id(self) -> int | None:
+    def __gen_id(self) -> str | None:
         """This method will generate a unique id for the credential. Note: To be used only with MongoDB"""
         try:
             if self.db_type == "mysql":
@@ -82,7 +82,7 @@ class DatabaseManager:
             id = self.mongo_collection.estimated_document_count() + 1
             while self.get_credential(id):
                 id += 1
-            return id
+            return str(id)
         except Exception as e:
             print("There was an error while generating an id:", file=stderr)
             print(e, file=stderr)
@@ -103,7 +103,7 @@ class DatabaseManager:
             raise ValueError("Parameter 'salt' cannot be empty")
 
         # Encode to b64
-        id = str(self.__gen_id()) if self.db_type == "mongo" else None
+        id = self.__gen_id() if self.db_type == "mongo" else None
         title = b64encode(title).decode("ascii")
         username = b64encode(username).decode("ascii")
         email = b64encode(email).decode("ascii")
@@ -141,7 +141,7 @@ class DatabaseManager:
                     raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
             else:
                 for i in self.mongo_collection.find():
-                    raw_creds.append(RawCredential(str(i["id"]), i["title"], i["username"], i["email"], i["password"], i["salt"]))
+                    raw_creds.append(RawCredential(i["id"], i["title"], i["username"], i["email"], i["password"], i["salt"]))
 
             return raw_creds
         except Exception as e:
@@ -151,8 +151,6 @@ class DatabaseManager:
 
     def get_credential(self, id: int | str) -> RawCredential | None:
         ensure_type(id, int | str, "id", "int or string")
-        if not id:
-            raise ValueError("Invalid value provided for parameter 'id'")
 
         if self.db_type == "mysql":
             self.mysql_cursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
@@ -171,7 +169,7 @@ class DatabaseManager:
             if not query_result:
                 return None
             return RawCredential(
-                str(query_result["id"]),
+                query_result["id"],
                 query_result["title"],
                 query_result["username"],
                 query_result["email"],
@@ -180,7 +178,7 @@ class DatabaseManager:
             )
 
     def remove_credential(self, id: int | str) -> None:
-        ensure_type(id, int, "id", "int")
+        ensure_type(id, int | str, "id", "int or string")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
@@ -197,29 +195,19 @@ class DatabaseManager:
         else:
             self.mongo_collection.delete_many({})
 
-    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
-        ensure_type(id, int, "id", "int")
+    def modify_credential(self, id: int | str, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+        ensure_type(id, int | str, "id", "int or string")
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
         ensure_type(password, bytes, "password", "bytes")
         ensure_type(salt, bytes, "salt", "bytes")
 
-        if not isinstance(id, int):
-            raise TypeError("Parameter 'id' must be of type int")
-        if not id:
-            raise ValueError("Invalid value provided for parameter 'id'")
-        if not isinstance(title, str):
-            raise TypeError("Paramter 'title' must be of type str")
-        elif not isinstance(username, str):
-            raise TypeError("Paramter 'username' must be of type str")
-        elif not isinstance(email, str):
-            raise TypeError("Parameter 'email' must be of type str")
-
         originalPassword = self.get_credential(id)
         if not originalPassword:
             return
 
+        # TODO: Fix this function
         title = title if title else originalPassword.title
         title = b64encode(bytes(title, "utf-8")).decode("ascii")
 
