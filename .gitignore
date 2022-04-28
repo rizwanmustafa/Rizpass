@@ -1,6 +1,7 @@
 /__pycache__
 
 # Project specific stuff
+launch.json
 passwords.json
 
 venv/
