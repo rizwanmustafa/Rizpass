@@ -11,19 +11,12 @@ from pymongo import ASCENDING
 from pymongo.database import Database as MongoDatabase
 from pymongo.collection import Collection as MongoCollection
 from pymongo.mongo_client import MongoClient
+from urllib.parse import quote_plus
 
 from validator import ensure_type
 
 
 # TODO: Add support for custom port on database
-
-
-def prepare_mongo_uri(host: str, user: str = "", password: str = "") -> str:
-    if user != "" and password != "":
-        return "mongodb://%s:%s@%s" % (host, user, password)
-    else:
-        return "mongodb://%s" % host
-
 
 class DbConfig:
     def __init__(self, host: str, user: str, password: str, db: str):
@@ -55,8 +48,13 @@ class DatabaseManager:
                 self.mysql_cursor = self.mysql_db.cursor()
                 self.db_type = "mysql"
             else:
-                mongo_uri = prepare_mongo_uri(db_config.host, db_config.user, db_config.password)
-                self.mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
+                self.mongo_client = MongoClient(
+                    host=quote_plus(db_config.host),
+                    username=quote_plus(db_config.user) if db_config.user and db_config.password else None,
+                    password=quote_plus(db_config.password) if db_config.user and db_config.password else None,
+                    authSource=db_config.db,
+                    serverSelectionTimeoutMS=3000
+                )
                 self.mongo_client.server_info()  # To make sure that the mongo instance is valid
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
