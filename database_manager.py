@@ -19,11 +19,12 @@ from validator import ensure_type
 # TODO: Add support for custom port on database
 
 class DbConfig:
-    def __init__(self, host: str, user: str, password: str, db: str):
+    def __init__(self, host: str, user: str, password: str, db: str, port: int | None=None):
         self.host = host
         self.user = user
         self.password = password
         self.db = db
+        self.port = port
 
 
 class DatabaseManager:
@@ -39,6 +40,7 @@ class DatabaseManager:
     def __init__(self, db_type: str, db_config: DbConfig):
         try:
             if db_type == "mysql":
+                self.db_type = "mysql"
                 self.mysql_db: mysql.connector.MySQLConnection = mysql.connector.connect(
                     host=db_config.host,
                     user=db_config.user,
@@ -46,24 +48,26 @@ class DatabaseManager:
                     db=db_config.db
                 )
                 self.mysql_cursor = self.mysql_db.cursor()
-                self.db_type = "mysql"
             else:
+                print()
+                print("MongoDB is not fully supported yet. There may be issues with some operations.")
+                print("We thank you for your cooperation.")
+                self.db_type = "mongo"
                 self.mongo_client = MongoClient(
                     host=quote_plus(db_config.host),
                     username=quote_plus(db_config.user) if db_config.user and db_config.password else None,
                     password=quote_plus(db_config.password) if db_config.user and db_config.password else None,
+                    port=db_config.port if db_config.port else None,
                     authSource=db_config.db,
                     serverSelectionTimeoutMS=3000
                 )
                 self.mongo_client.server_info()  # To make sure that the mongo instance is valid
                 self.mongo_db = self.mongo_client[db_config.db]
                 self.mongo_collection = self.mongo_db["credentials"]
-                self.db_type = "mongo"
 
                 self.mongo_collection.create_index([("id", ASCENDING)], unique=True)
-                print("MongoDB is not fully supported yet. There may be issues with some operations.")
-                print("We thank you for your cooperation.")
         except Exception as e:
+            print()
             print(f"There was an error while connecting with {'MySQL' if db_type == 'mysql' else 'MongoDB'}: ", file=stderr)
             print(e, file=stderr)
             print("Exiting with code 1!", file=stderr)

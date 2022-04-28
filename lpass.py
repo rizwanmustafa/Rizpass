@@ -138,7 +138,8 @@ def login() -> None:
                 config["db_host"],
                 config["db_user"],
                 master_pass,
-                "LPass"
+                config["db_name"],
+                config.get("db_port", None)
             )
         )
 
