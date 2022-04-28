@@ -16,10 +16,8 @@ from urllib.parse import quote_plus
 from validator import ensure_type
 
 
-# TODO: Add support for custom port on database
-
 class DbConfig:
-    def __init__(self, host: str, user: str, password: str, db: str, port: int | None=None):
+    def __init__(self, host: str, user: str, password: str, db: str, port: int | None = None):
         self.host = host
         self.user = user
         self.password = password
@@ -30,12 +28,12 @@ class DbConfig:
 class DatabaseManager:
     db_type: str
 
-    mysql_db: mysql.connector.MySQLConnection | None
-    mysql_cursor: any
+    mysql_db: mysql.connector.MySQLConnection | None = None
+    mysql_cursor: any = None
 
-    mongo_db: MongoDatabase | None
-    mongo_client: MongoClient | None
-    mongo_collection: MongoCollection | None
+    mongo_db: MongoDatabase | None = None
+    mongo_client: MongoClient | None = None
+    mongo_collection: MongoCollection | None = None
 
     def __init__(self, db_type: str, db_config: DbConfig):
         try:
@@ -45,7 +43,9 @@ class DatabaseManager:
                     host=db_config.host,
                     user=db_config.user,
                     password=db_config.password,
-                    db=db_config.db
+                    db=db_config.db,
+                    port=db_config.port,
+                    connection_timeout=3
                 )
                 self.mysql_cursor = self.mysql_db.cursor()
             else:
@@ -363,10 +363,13 @@ class DatabaseManager:
     def close(self):
         try:
             if self.db_type == "mysql":
-                self.mysql_cursor.close()
-                self.mysql_db.close()
+                if self.mysql_cursor:
+                    self.mysql_cursor.close()
+                if self.mysql_db:
+                    self.mysql_db.close()
             else:
-                self.mongo_client.close()
+                if self.mongo_client:
+                    self.mongo_client.close()
         except Exception as e:
             print("There was an error while closing the connection:", file=stderr)
             print(e, file=stderr)
