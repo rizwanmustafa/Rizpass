@@ -387,65 +387,95 @@ def change_masterpass() -> None:
     new_masterpass = getpass(
         "Input new masterpassword (Should meet DB Password Requirements): "
     )
-
     if new_masterpass == master_pass:
         print("New masterpassword is the same as the old one!")
         return
 
-    # TODO: Implement input validation
-    if config["db_type"] == "mysql" and db_manager:
-        root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
-        root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
-        temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
-        temp_db_manager.mysql_cursor.execute(
-            "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
-            (config["db_user"],  new_masterpass, )
-        )
 
-    elif config["db_type"] == "mongo" and db_manager:
-        root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
-        root_pass = getpass("Input MongoDB root password: ")
-
-        db_client = MongoClient(
-            config["db_host"],
-            username=root_user,
-            password=root_pass,
-            serverSelectionTimeoutMS=1000,
-            connectTimeoutMS=3000,
-            socketTimeoutMS=3000,
-        )
-        db_db = db_client[config["db_name"]]
-        db_db.command({
-            "updateUser": config["db_user"],
-            "pwd": new_masterpass,
-        })
-
-        db_client.close()
-
-        print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
-
-    db_manager.close()
-
-    db_manager = DatabaseManager(
-        config.get("db_type", "mysql"),
-        DbConfig(
-            config["db_host"],
-            config["db_user"],
-            new_masterpass,
-            config["db_name"],
-            config.get("db_port", None)
-        )
-    )
-
+    # Update credentials to use new masterpass
     raw_creds = (db_manager or file_manager).get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
+        old_cred = raw_cred.get_credential(master_pass)
         salt = os.urandom(16)
-        decrypted_pass = decrypt_string(master_pass, raw_cred.password, raw_cred.salt)
-        encrypted_pass = encrypt_string(new_masterpass, decrypted_pass,  salt)
+        new_pass = encrypt_and_encode(
+            new_masterpass,
+            old_cred.password,
+            salt
+        )
+        new_title = encrypt_and_encode(
+            new_masterpass,
+            old_cred.title,
+            salt
+        )
+        new_email = encrypt_and_encode(
+            new_masterpass,
+            old_cred.email,
+            salt
+        )
+        new_username = encrypt_and_encode(
+            new_masterpass,
+            old_cred.username,
+            salt
+        )
 
-        (db_manager or file_manager).modify_credential(raw_cred.id, "", "", "", encrypted_pass, salt)
+        (db_manager or file_manager).modify_credential(
+            raw_cred.id,
+            new_title,
+            new_username,
+            new_email,
+            new_pass,
+            b64encode(salt).decode("ascii")
+        )
+
+    # Change database password
+    if db_manager:
+        # TODO: Implement input validation
+        if config["db_type"] == "mysql" :
+            root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
+            root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
+            temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
+            temp_db_manager.mysql_cursor.execute(
+                "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
+                (config["db_user"],  new_masterpass, )
+            )
+
+        elif config["db_type"] == "mongo" :
+            root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
+            root_pass = getpass("Input MongoDB root password: ")
+
+            db_client = MongoClient(
+                config["db_host"],
+                username=root_user,
+                password=root_pass,
+                port=config.get("db_port", 27017),
+                serverSelectionTimeoutMS=1000,
+                connectTimeoutMS=3000,
+                socketTimeoutMS=3000,
+            )
+            db_db = db_client[config["db_name"]]
+            db_db.command({
+                "updateUser": config["db_user"],
+                "pwd": new_masterpass,
+            })
+
+            db_client.close()
+
+            print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
+
+        db_manager.close()
+
+        db_manager = DatabaseManager(
+            config.get("db_type", "mysql"),
+            DbConfig(
+                config["db_host"],
+                config["db_user"],
+                new_masterpass,
+                config["db_name"],
+                config.get("db_port", None)
+            )
+        )
 
     master_pass = new_masterpass
 

@@ -306,10 +306,6 @@ class DatabaseManager:
                 if i == "salt" or i == "id":
                     continue
 
-                print(temp_cred["salt"])
-                print(i)
-                print(file_cred[i])
-
                 decrypted_prop: str = decode_and_decrypt(
                     file_master_pass,
                     file_cred[i],

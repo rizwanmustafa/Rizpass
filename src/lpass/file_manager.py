@@ -136,12 +136,14 @@ class FileManager:
 
         for index, cred in enumerate(self.credentials):
             if cred.id == id:
-                self.credentials[index].id = id
-                self.credentials[index].title = title
-                self.credentials[index].username = username
-                self.credentials[index].email = email
-                self.credentials[index].password = password
-                self.credentials[index].salt = salt
+                self.credentials[index] = RawCredential(
+                    id,
+                    title,
+                    username,
+                    email,
+                    password,
+                    salt
+                )
                 break
 
         self.__dump_creds()
