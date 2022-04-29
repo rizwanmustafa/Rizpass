@@ -46,10 +46,10 @@ def setup_mysql():
         setup_masterpass()
 
     # Login to MySQL with root credentials
-    db_host = input("Input MySQL host: ")
-    db_root_user = input("Input MySQL root username: ")
-    db_root_pass = getpass("Input MySQL root password: ")
-    db_port = int(input("Input MySQL port (Optional): "))
+    db_host = input("MySQL host: ")
+    db_root_user = input("MySQL root username: ")
+    db_root_pass = getpass("MySQL root password: ")
+    db_port = int(input("MySQL port (Optional): "))
     db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
         host=db_host,
         user=db_root_user,
@@ -61,12 +61,12 @@ def setup_mysql():
     db_cursor = db_manager.cursor()
 
     # Create new database
-    db_name = input(f"Input new database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+    db_name = input(f"New database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
     db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
     db_cursor.execute(f"CREATE DATABASE {db_name}")
     print(f"{Fore.GREEN}Database created!{Fore.RESET}")
 
-    db_user = input(f"Input new MySQL user name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+    db_user = input(f"New MySQL user name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
     db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'{db_host}'")
     db_cursor.execute(f"CREATE USER '{db_user}'@'{db_host}' IDENTIFIED BY '{master_pass}'")
     print(f"{Fore.GREEN}Database user created!{Fore.RESET}")
@@ -92,6 +92,7 @@ def setup_mysql():
     db_manager.close()
 
     # Write the new credentials to the config
+    config["db_type"] = "mysql"
     config["db_host"] = db_host
     config["db_user"] = db_user
     config["db_name"] = db_name
@@ -113,10 +114,10 @@ def setup_mongodb():
             exit(1)
 
         # Login to MongoDB with admin privileges
-        db_host = input("Input MongoDB host: ")
-        db_root_user = input("Input MongoDB root username: ")
-        db_root_pass = getpass("Input MongoDB root password: ")
-        db_port = int(input("Input MongoDB port (Optional): "))
+        db_host = input("MongoDB host: ")
+        db_root_user = input("MongoDB root username: ")
+        db_root_pass = getpass("MongoDB root password: ")
+        db_port = int(input("MongoDB port (Optional): "))
         db_client = MongoClient(
             db_host,
             username=quote_plus(db_root_user),
@@ -128,13 +129,13 @@ def setup_mongodb():
         print(f"{Fore.GREEN}Connection successful!{Fore.RESET}")
 
         # Create a new database
-        db_name = input(f"Input new database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+        db_name = input(f"New database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
         db_client.drop_database(db_name)
 
         db_db = db_client[db_name]
 
         # Create new user
-        db_user = quote_plus(input("Input new MongoDB user name: "))
+        db_user = quote_plus(input("New MongoDB user name: "))
         db_pass = quote_plus(master_pass)
 
         db_db.command({
@@ -149,6 +150,7 @@ def setup_mongodb():
         db_client.close()
 
         # Save the configuration
+        config["db_type"] = "mongo"
         config["db_host"] = db_host
         config["db_user"] = db_user
         config["db_name"] = db_name
@@ -165,7 +167,7 @@ def setup_mongodb():
 def setup_masterpass():
     global config, master_pass
     # TODO: Print some guidlines for the password to follow
-    master_pass = getpass("Input new master password: ")
+    master_pass = getpass("New master password: ")
     # TODO: Check if master password is strong
 
 
@@ -185,7 +187,7 @@ def write_settings_to_file():
 def setup_password_manager():
     setup_masterpass()
 
-    db_type = input("Input database type (MongoDB/MySQL): ").lower()
+    db_type = input("Database type (Mongo/MySQL): ").lower()
     if db_type == "mongo":
         setup_mongodb()
     else:
@@ -197,6 +199,6 @@ def setup_password_manager():
 
 
 if __name__ == "__main__":
-    setup_mongodb()
+    # setup_mongodb()
     # print("Setting up LPass...")
-    # setup_password_manager()
+    setup_password_manager()
