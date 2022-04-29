@@ -6,11 +6,12 @@ from getpass import getpass
 from sys import exit, argv, stderr
 from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
+from subprocess import call as shell_call
 import signal
 
 from .better_input import better_input, get_credential_input, confirm_user_choice
 from .schemas import get_config_schema
-from .passwords import encrypt_password, decrypt_password, generate_password as generate_random_password
+from .passwords import encrypt_string, decrypt_string, generate_password as generate_random_password
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
 from .setup_lpass import setup_password_manager
@@ -26,6 +27,8 @@ creds_file_path: str = None
 file_manager: FileManager = None
 
 config: Dict[str, str] = dict()
+
+# TODO: Add requirements for master password
 
 
 def print_menu():
@@ -75,7 +78,7 @@ def perform_tasks() -> None:
     elif user_choice == 8:
         remove_all_credentials()
     elif user_choice == 9:
-        change_masterpassword()
+        change_masterpass()
     elif user_choice == 10:
         export_credentials()
     elif user_choice == 11:
@@ -136,7 +139,8 @@ def login() -> None:
                 config["db_host"],
                 config["db_user"],
                 master_pass,
-                "LPass"
+                config["db_name"],
+                config.get("db_port", None)
             )
         )
 
@@ -196,12 +200,27 @@ def add_credential(user_password: str = None) -> None:
         return
 
     salt: bytes = os.urandom(16)
-    encrypted_password = encrypt_password(master_pass, password, salt)
+    encrypted_title = encrypt_string(master_pass, title, salt)
+    encrypted_username = encrypt_string(master_pass, username, salt)
+    encrypted_email = encrypt_string(master_pass, email, salt)
+    encrypted_password = encrypt_string(master_pass, password, salt)
 
     if db_manager:
-        db_manager.add_credential(title, username, email, encrypted_password, salt)
+        db_manager.add_credential(
+            encrypted_title,
+            encrypted_username,
+            encrypted_email,
+            encrypted_password,
+            salt
+        )
     if file_manager:
-        file_manager.add_credential(title, username, email, encrypted_password, salt)
+        file_manager.add_credential(
+            encrypted_title,
+            encrypted_username,
+            encrypted_email,
+            encrypted_password,
+            salt
+        )
     print("\nPassword added successfully!")
 
 
@@ -211,9 +230,9 @@ def get_credential() -> None:
     raw_cred = None
 
     if db_manager:
-        raw_cred = db_manager.get_password(id)
+        raw_cred = db_manager.get_credential(id)
     if file_manager:
-        raw_cred = file_manager.get_password(id)
+        raw_cred = file_manager.get_credential(id)
 
     if raw_cred == None:
         print("No credential with given id found!")
@@ -231,25 +250,21 @@ def filter_credentials() -> None:
         "(Optional) Username should contain: ",
         "(Optional) Email should contain: ", False)
 
-    raw_creds: List[RawCredential] = []
+    creds: List[RawCredential] = []
     if db_manager:
-        raw_creds.extend(db_manager.filter_passwords(title_filter, username_filter, email_filter))
+        creds.extend(db_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
     if file_manager:
-        raw_creds.extend(file_manager.filter_passwords(title_filter, username_filter, email_filter))
+        creds.extend(file_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
 
-    if not raw_creds:
+    if not creds:
         print("No credentials meet your given filter.")
         return
-    creds: List[Credential] = []
-    for raw_cred in raw_creds:
-        creds.append(raw_cred.get_credential(master_pass))
-    del raw_creds
 
     print("Following credentials meet your given filters:")
     for credential in creds:
         print(credential)
 
-    creds[-1::1][0].copy_pass()
+    credential.copy_pass()
 
 
 def get_all_credentials() -> None:
@@ -278,7 +293,7 @@ def modify_credential() -> None:
     # Later add functionality for changing the password itself
     id = input("ID: ")
 
-    if (db_manager if db_manager else file_manager).get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
         return
 
@@ -290,7 +305,7 @@ def modify_credential() -> None:
         return
 
     salt = os.urandom(16) if new_password else None
-    encryptedPassword = encrypt_password(
+    encryptedPassword = encrypt_string(
         master_pass,
         new_password,
         salt
@@ -299,7 +314,7 @@ def modify_credential() -> None:
     if new_title == new_username == new_email == new_password == "":
         return
     else:
-        (db_manager if db_manager else file_manager).modify_password(
+        (db_manager if db_manager else file_manager).modify_credential(
             id,
             new_title,
             new_username,
@@ -314,11 +329,11 @@ def modify_credential() -> None:
 def remove_credential() -> None:
     id: int = input("ID: ")
 
-    if (db_manager if db_manager else file_manager).get_password(id) == None:
+    if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
         return
 
-    (db_manager if db_manager else file_manager).remove_password(id)
+    (db_manager if db_manager else file_manager).remove_credential(id)
     print("Removed password successfully!")
 
 
@@ -333,50 +348,75 @@ def remove_all_credentials() -> None:
         exit_app()
 
     if db_manager:
-        db_manager.remove_all_passwords()
+        db_manager.remove_all_credentials()
     if file_manager:
-        file_manager.remove_all_passwords()
+        file_manager.remove_all_credentials()
 
     print("Removed all passwords successfully!")
 
 
-def change_masterpassword() -> None:
+def change_masterpass() -> None:
+    global db_manager, master_pass
+
     if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
         return
 
     new_masterpass = getpass(
-        "Input new masterpassword (Should meet MySQL Password Requirements): ")
+        "Input new masterpassword (Should meet DB Password Requirements): "
+    )
 
-    rootUsername = better_input(prompt="Input mysql root username: ", allow_empty=False)
-    if rootUsername == None:
+    if new_masterpass == master_pass:
+        print("New masterpassword is the same as the old one!")
         return
-    rootPassword = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
-    temp_db_manager = DatabaseManager("mysql", DbConfig("localhost", rootUsername, rootPassword, ""))
-    temp_db_manager.mysql_cursor.execute(
-        "ALTER USER 'passMan'@'localhost' IDENTIFIED BY %s;", (new_masterpass, ))
 
-    global db_manager, master_pass
-    if db_manager:
-        db_manager.mysql_cursor.close()
-        db_manager.mysql_db.close()
-        db_manager = DatabaseManager(
-            "mysql",
-            DbConfig(
-                "localhost",
-                "passMan",
-                new_masterpass,
-                "LPass"
-            )
+    # TODO: Implement input validation
+    if config["db_type"] == "mysql" and db_manager:
+        root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
+        root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
+        temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
+        temp_db_manager.mysql_cursor.execute(
+            "ALTER USER '%s'@'localhost' IDENTIFIED BY %s;",  # TODO: Research if we need the localhost or the db_host from the config
+            (config["db_user"],  new_masterpass, )
         )
+
+    elif config["db_type"] == "mongo" and db_manager:
+        root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
+        root_pass = getpass("Input MongoDB root password: ")
+
+        mongo_cmd = f"""
+        mongosh --host {config["db_host"]} --port {config.get("db_port", None)} --u {root_user} --p {root_pass} --eval \\
+        'db = db.getSiblingDB("{config["db_name"]}"); db.updateUser("{config["db_user"]}", {{ pwd: "{new_masterpass}" }})'
+        """
+
+        print(mongo_cmd, "\n")
+        if input("Do you want to run the command (Y/N): ").lower() == "y":
+            shell_call(mongo_cmd, shell=True)
+        else:
+            print("Please run the command manually...")
+            input("Press enter to continue...")
+
+    db_manager.close()
+
+    db_manager = DatabaseManager(
+        config.get("db_type", "mysql"),
+        DbConfig(
+            config["db_host"],
+            config["db_user"],
+            new_masterpass,
+            config["db_name"],
+            config.get("db_port", None)
+        )
+    )
+
     raw_creds = (db_manager if db_manager else file_manager).get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
         salt = os.urandom(16)
-        decrypted_pass = decrypt_password(master_pass, raw_cred.password, raw_cred.salt)
-        encrypted_pass = encrypt_password(new_masterpass, decrypted_pass,  salt)
+        decrypted_pass = decrypt_string(master_pass, raw_cred.password, raw_cred.salt)
+        encrypted_pass = encrypt_string(new_masterpass, decrypted_pass,  salt)
 
-        (db_manager if db_manager else file_manager).modify_password(raw_cred.id, "", "", "", encrypted_pass, salt)
+        (db_manager if db_manager else file_manager).modify_credential(raw_cred.id, "", "", "", encrypted_pass, salt)
 
     master_pass = new_masterpass
 

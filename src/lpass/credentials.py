@@ -1,17 +1,16 @@
 from sys import stderr
+from base64 import b64decode, b64encode
 import pyperclip
-from base64 import b64decode
-
-from .passwords import decrypt_password
+from .passwords import decrypt_string
 
 
 class RawCredential:
     # TODO: Add a get_json function
     def __init__(self, id: int | str, title: str, username: str, email: str, password: str, salt: str):
         self.id = id
-        self.title = b64decode(title).decode("utf-8")
-        self.username = b64decode(username).decode("utf-8")
-        self.email = b64decode(email).decode('utf-8')
+        self.title = b64decode(title)
+        self.username = b64decode(username)
+        self.email = b64decode(email)
         self.password = b64decode(password)
         self.salt = b64decode(salt)
 
@@ -28,17 +27,25 @@ class RawCredential:
         return string
 
     def get_credential(self, master_password: str):
-        password = decrypt_password(
-            master_password,
-            self.password,
-            self.salt
-        )
-        return Credential(self.id, self.title, self.username, self.email, password)
+        title = decrypt_string(master_password, self.title, self.salt)
+        username = decrypt_string(master_password, self.username, self.salt)
+        email = decrypt_string(master_password, self.email, self.salt)
+        password = decrypt_string(master_password, self.password, self.salt)
+        return Credential(self.id, title, username, email, password)
+
+    def get_obj(self):
+        return {
+            "id": self.id,
+            "title": b64encode(self.title).decode("ascii"),
+            "username": b64encode(self.username).decode("ascii"),
+            "email": b64encode(self.email).decode("ascii"),
+            "password": b64encode(self.password).decode("ascii"),
+            "salt": b64encode(self.salt).decode("ascii")
+        }
 
 
 class Credential:
     def __init__(self,  id: int | str, title: str, username: str, email: str, password: str) -> None:
-        # TODO: Decrypt the credentials here
         self.id = id
         self.title = title
         self.username = username

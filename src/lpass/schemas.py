@@ -17,4 +17,8 @@ def get_config_schema():
             "type": "string",
             "required": True
         },
+        "db_port": {
+            "type": "integer",
+            "required": False
+        }
     }
