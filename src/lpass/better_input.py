@@ -48,7 +48,7 @@ def get_credential_input(title: bool | str = True,
                          username: bool | str = True,
                          email: bool | str = True,
                          password: bool | str = True,
-                         allow_empty: bool = True) -> Tuple(str, str, str, str, str):
+                         allow_empty: bool = True) -> Tuple[str, str, str, str, str]:
     """
     Set a parameter to True if you want to get its input from user and want the default prompt.
     If you want a custom prompt, set the parameter to a string of custom prompt
