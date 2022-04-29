@@ -230,7 +230,7 @@ def add_credential(user_password: str = None) -> None:
 
 
 def get_credential() -> None:
-    id = input("ID: ")
+    id = int(input("ID: "))
 
     raw_cred = None
 
@@ -296,7 +296,7 @@ def get_all_credentials() -> None:
 
 def modify_credential() -> None:
     # Later add functionality for changing the password itself
-    id = input("ID: ")
+    id = int(input("ID: "))
 
     if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
@@ -332,7 +332,7 @@ def modify_credential() -> None:
 
 
 def remove_credential() -> None:
-    id: int = input("ID: ")
+    id = int(input("ID: "))
 
     if (db_manager if db_manager else file_manager).get_credential(id) == None:
         print("No credential with given id exists!")

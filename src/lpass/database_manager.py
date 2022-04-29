@@ -91,6 +91,7 @@ class DatabaseManager:
             print(e, file=stderr)
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+        """This method takes in the encrypted and encoded credentials and adds them to the database."""
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
@@ -139,8 +140,8 @@ class DatabaseManager:
             print(e)
             return None
 
-    def get_credential(self, id: int | str) -> RawCredential | None:
-        ensure_type(id, int | str, "id", "int or string")
+    def get_credential(self, id: int) -> RawCredential | None:
+        ensure_type(id, int, "id", "int")
 
         if self.db_type == "mysql":
             self.mysql_cursor.execute("SELECT * FROM credentials WHERE id = %s", (id, ))
@@ -167,8 +168,8 @@ class DatabaseManager:
                 query_result["salt"]
             )
 
-    def remove_credential(self, id: int | str) -> None:
-        ensure_type(id, int | str, "id", "int or string")
+    def remove_credential(self, id: int) -> None:
+        ensure_type(id, int, "id", "int")
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
@@ -185,8 +186,8 @@ class DatabaseManager:
         else:
             self.mongo_collection.delete_many({})
 
-    def modify_credential(self, id: int | str, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
-        ensure_type(id, int | str, "id", "int or string")
+    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+        ensure_type(id, int, "id", "int")
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")

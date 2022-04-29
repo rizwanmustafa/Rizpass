@@ -73,7 +73,7 @@ class FileManager:
         self.file.close()
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
-        """This method takes in the encrypted credentials and adds them to the file."""
+        """This method takes in the encrypted and encoded credentials and adds them to the file."""
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
