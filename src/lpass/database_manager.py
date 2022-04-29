@@ -186,33 +186,13 @@ class DatabaseManager:
         else:
             self.mongo_collection.delete_many({})
 
-    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
+    def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
         ensure_type(id, int, "id", "int")
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
-        ensure_type(password, bytes, "password", "bytes")
-        ensure_type(salt, bytes, "salt", "bytes")
-
-        originalPassword = self.get_credential(id)
-        if not originalPassword:
-            return
-
-        # TODO: Fix this function
-        title = title if title else originalPassword.title
-        title = b64encode(bytes(title, "utf-8")).decode("ascii")
-
-        username = username if username else originalPassword.username
-        username = b64encode(bytes(username, "utf-8")).decode("ascii")
-
-        email = email if email else originalPassword.email
-        email = b64encode(bytes(email, "utf-8")).decode("ascii")
-
-        password = password if password else originalPassword.password
-        password = b64encode(password).decode("ascii")
-
-        salt = salt if salt else originalPassword.salt
-        salt = b64encode(salt).decode("ascii")
+        ensure_type(password, str, "password", "string")
+        ensure_type(salt, str, "salt", "string")
 
         if self.db_type == "mysql":
             self.mysql_cursor.execute("UPDATE credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (

@@ -75,6 +75,9 @@ def decrypt_string(master_password: str, encrypted_password: bytes, salt: bytes)
 
 
 def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> str | None:
+    if not data:
+        return ''
+
     ensure_type(master_pass, str, "master_pass", "str")
     ensure_type(data, str, "data", "str")
     ensure_type(salt, bytes, "salt", "bytes")
@@ -83,6 +86,9 @@ def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> str | None:
 
 
 def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
+    if not data:
+        return ''
+
     ensure_type(master_pass, str, "master_pass", "str")
     ensure_type(data, str, "data", "str")
     ensure_type(salt, bytes, "salt", "bytes")

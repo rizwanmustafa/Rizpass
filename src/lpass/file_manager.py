@@ -127,27 +127,12 @@ class FileManager:
         self.credentials = []
         self.__dump_creds()
 
-    def modify_credential(self, id: int, title: str, username: str, email: str, password: bytes, salt: bytes) -> None:
-
-        originalPassword = self.get_credential(id)
-        if not originalPassword:
-            print("No credential with the given id exists!", file=stderr)
-            return
-
-        title = title if title else originalPassword.title
-        title = b64encode(title).decode("ascii")
-
-        username = username if username else originalPassword.username
-        username = b64encode(username).decode("ascii")
-
-        email = email if email else originalPassword.email
-        email = b64encode(email).decode("ascii")
-
-        password = password if password else originalPassword.password
-        password = b64encode(password).decode("ascii")
-
-        salt = salt if salt else originalPassword.salt
-        salt = b64encode(salt).decode("ascii")
+    def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, str, "password", "string")
+        ensure_type(salt, str, "salt", "string")
 
         for index, cred in enumerate(self.credentials):
             if cred.id == id:
@@ -157,6 +142,7 @@ class FileManager:
                 self.credentials[index].email = email
                 self.credentials[index].password = password
                 self.credentials[index].salt = salt
+                break
 
         self.__dump_creds()
 

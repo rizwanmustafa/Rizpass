@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from base64 import b64encode
+from base64 import b64decode, b64encode
 import os
 import pyperclip
 import json
@@ -298,7 +298,9 @@ def modify_credential() -> None:
     # Later add functionality for changing the password itself
     id = int(input("ID: "))
 
-    if (db_manager if db_manager else file_manager).get_credential(id) == None:
+    old_cred = (db_manager or file_manager).get_credential(id).get_credential(master_pass)
+
+    if old_cred == None:
         print("No credential with given id exists!")
         return
 
@@ -309,24 +311,40 @@ def modify_credential() -> None:
     if not confirm_user_choice("Are you sure you want to modify this password (Y/N): "):
         return
 
-    salt = os.urandom(16) if new_password else None
-    encryptedPassword = encrypt_string(
-        master_pass,
-        new_password,
-        salt
-    ) if new_password else None
-
     if new_title == new_username == new_email == new_password == "":
         return
-    else:
-        (db_manager if db_manager else file_manager).modify_credential(
-            id,
-            new_title,
-            new_username,
-            new_email,
-            encryptedPassword,
-            salt
-        )
+
+    salt = os.urandom(16)
+
+    new_pass = encrypt_and_encode(
+        master_pass,
+        new_password if new_password else old_cred.password,
+        salt
+    )
+    new_title = encrypt_and_encode(
+        master_pass,
+        new_title if new_title else old_cred.title,
+        salt
+    )
+    new_email = encrypt_and_encode(
+        master_pass,
+        new_email if new_email else old_cred.email,
+        salt
+    )
+    new_username = encrypt_and_encode(
+        master_pass,
+        new_username if new_username else old_cred.username,
+        salt
+    )
+
+    (db_manager or file_manager).modify_credential(
+        id,
+        new_title,
+        new_username,
+        new_email,
+        new_pass,
+        b64encode(salt).decode("ascii")
+    )
 
     print("Modified credential successfully!")
 
@@ -334,11 +352,11 @@ def modify_credential() -> None:
 def remove_credential() -> None:
     id = int(input("ID: "))
 
-    if (db_manager if db_manager else file_manager).get_credential(id) == None:
+    if (db_manager or file_manager).get_credential(id) == None:
         print("No credential with given id exists!")
         return
 
-    (db_manager if db_manager else file_manager).remove_credential(id)
+    (db_manager or file_manager).remove_credential(id)
     print("Removed password successfully!")
 
 
@@ -419,7 +437,7 @@ def change_masterpass() -> None:
         )
     )
 
-    raw_creds = (db_manager if db_manager else file_manager).get_all_credentials()
+    raw_creds = (db_manager or file_manager).get_all_credentials()
 
     # Decrypt passwords and encrypt them with new salt and masterpassword
     for raw_cred in raw_creds:
@@ -427,7 +445,7 @@ def change_masterpass() -> None:
         decrypted_pass = decrypt_string(master_pass, raw_cred.password, raw_cred.salt)
         encrypted_pass = encrypt_string(new_masterpass, decrypted_pass,  salt)
 
-        (db_manager if db_manager else file_manager).modify_credential(raw_cred.id, "", "", "", encrypted_pass, salt)
+        (db_manager or file_manager).modify_credential(raw_cred.id, "", "", "", encrypted_pass, salt)
 
     master_pass = new_masterpass
 
