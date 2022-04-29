@@ -59,7 +59,9 @@ class DatabaseManager:
                     password=quote_plus(db_config.password) if db_config.user and db_config.password else None,
                     port=db_config.port if db_config.port else None,
                     authSource=db_config.db,
-                    serverSelectionTimeoutMS=3000
+                    serverSelectionTimeoutMS=3000,
+                    connectTimeoutMS=3000,
+                    socketTimeoutMS=3000
                 )
                 self.mongo_client.server_info()  # To make sure that the mongo instance is valid
                 self.mongo_db = self.mongo_client[db_config.db]
@@ -138,7 +140,7 @@ class DatabaseManager:
             if self.db_type == "mysql":
                 self.mysql_cursor.execute("SELECT * FROM credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
                 for i in self.mysql_cursor.fetchall():
-                    raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
+                    raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4], i[5]))
             else:
                 for i in self.mongo_collection.find():
                     raw_creds.append(RawCredential(i["id"], i["title"], i["username"], i["email"], i["password"], i["salt"]))

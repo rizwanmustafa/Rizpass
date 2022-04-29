@@ -7,6 +7,8 @@ from sys import exit, argv, stderr
 from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
 from subprocess import call as shell_call
+from pymongo.mongo_client import MongoClient
+from colorama import init as color_init, Fore
 import signal
 
 from .better_input import better_input, get_credential_input, confirm_user_choice
@@ -383,17 +385,23 @@ def change_masterpass() -> None:
         root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
         root_pass = getpass("Input MongoDB root password: ")
 
-        mongo_cmd = f"""
-        mongosh --host {config["db_host"]} --port {config.get("db_port", None)} --u {root_user} --p {root_pass} --eval \\
-        'db = db.getSiblingDB("{config["db_name"]}"); db.updateUser("{config["db_user"]}", {{ pwd: "{new_masterpass}" }})'
-        """
+        db_client = MongoClient(
+            config["db_host"],
+            username=root_user,
+            password=root_pass,
+            serverSelectionTimeoutMS=1000,
+            connectTimeoutMS=3000,
+            socketTimeoutMS=3000,
+        )
+        db_db = db_client[config["db_name"]]
+        db_db.command({
+            "updateUser": config["db_user"],
+            "pwd": new_masterpass,
+        })
 
-        print(mongo_cmd, "\n")
-        if input("Do you want to run the command (Y/N): ").lower() == "y":
-            shell_call(mongo_cmd, shell=True)
-        else:
-            print("Please run the command manually...")
-            input("Press enter to continue...")
+        db_client.close()
+
+        print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
 
     db_manager.close()
 

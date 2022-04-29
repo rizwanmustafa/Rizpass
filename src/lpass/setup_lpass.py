@@ -121,7 +121,9 @@ def setup_mongodb():
             username=quote_plus(db_root_user),
             password=quote_plus(db_root_pass),
             port=db_port if db_port else 27017,
-            serverSelectionTimeoutMS=3000
+            serverSelectionTimeoutMS=3000,
+            connectTimeoutMS=3000,
+            socketTimeoutMS=3000
         )
         db_client.server_info()  # Check if connection is successful
         print(f"{Fore.GREEN}Connection successful!{Fore.RESET}")
