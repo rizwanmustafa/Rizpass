@@ -461,15 +461,16 @@ def import_credentials() -> None:
 
 
 def export_credentials() -> None:
-    # TODO: Implement export to file for FileManager
-    if not db_manager:
-        print("This feature is yet only available to dbs")
-        print("Sorry for the inconvenience")
+    file_path = better_input(prompt="File Path: ", allow_empty=False)
+    file_master_pass = getpass("File Master Password (Optional): ")
+
+    if file_path == None:
         return
-    filename = better_input(prompt="Filename: ", allow_empty=False)
-    if filename == None:
-        return
-    db_manager.export_to_file(filename)
+    (db_manager or file_manager).export_to_file(
+        file_path,
+        master_pass,
+        file_master_pass if file_master_pass else master_pass
+    )
 
 
 def clear_console() -> None:

@@ -163,6 +163,35 @@ class FileManager:
 
         return filtered_creds
 
+    def export_to_file(self, file_path: str, master_pass: str, file_master_pass: str) -> None:
+        ensure_type(file_path, str, "filename", "string")
+        ensure_type(master_pass, str, "master_pass", "string")
+        ensure_type(file_master_pass, str, "file_master_pass", "string")
+
+        if not file_path:
+            raise ValueError("Invalid value provided for parameter 'filename'")
+
+        raw_creds: List[RawCredential] = self.get_all_credentials()
+        if not raw_creds:
+            print("No credentials to export.")
+            return
+
+        cred_objs = []
+
+        for raw_cred in raw_creds:
+            cred = raw_cred.get_credential(master_pass)
+
+            cred_objs.append({
+                "id": cred.id,
+                "title": encrypt_and_encode(file_master_pass, cred.title, raw_cred.salt),
+                "username": encrypt_and_encode(file_master_pass, cred.username, raw_cred.salt),
+                "email": encrypt_and_encode(file_master_pass, cred.email, raw_cred.salt),
+                "password": encrypt_and_encode(file_master_pass, cred.password, raw_cred.salt),
+                "salt": b64encode(raw_cred.salt).decode('ascii'),
+            })
+
+        dump_json(cred_objs, open(file_path, "w"))
+
     def import_from_file(self, master_pass: str, filename: str) -> None:
         ensure_type(master_pass, str, "master_password", "string")
         ensure_type(filename, str, "filename", "string")

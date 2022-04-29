@@ -252,30 +252,34 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def export_to_file(self, filename: str) -> None:
-        ensure_type(filename, str, "filename", "string")
+    def export_to_file(self, file_path: str, master_pass : str, file_master_pass: str) -> None:
+        ensure_type(file_path, str, "filename", "string")
+        ensure_type(master_pass, str, "master_pass", "string")
+        ensure_type(file_master_pass, str, "file_master_pass", "string")
 
-        if not filename:
+        if not file_path:
             raise ValueError("Invalid value provided for parameter 'filename'")
 
         raw_creds: List[RawCredential] = self.get_all_credentials()
-
         if not raw_creds:
             print("No credentials to export.")
             return
+
         cred_objs = []
 
-        for cred in raw_creds:
+        for raw_cred in raw_creds:
+            cred = raw_cred.get_credential(master_pass)
+
             cred_objs.append({
                 "id": cred.id,
-                "title": b64encode(cred.title).decode('ascii'),
-                "username": b64encode(cred.username).decode('ascii'),
-                "email": b64encode(cred.email).decode('ascii'),
-                "password": b64encode(cred.password).decode('ascii'),
-                "salt": b64encode(cred.salt).decode('ascii'),
+                "title": encrypt_and_encode(file_master_pass, cred.title, raw_cred.salt),
+                "username": encrypt_and_encode(file_master_pass, cred.username, raw_cred.salt),
+                "email": encrypt_and_encode(file_master_pass, cred.email, raw_cred.salt),
+                "password": encrypt_and_encode(file_master_pass, cred.password, raw_cred.salt),
+                "salt": b64encode(raw_cred.salt).decode('ascii'),
             })
 
-        dump(cred_objs, open(filename, "w"))
+        dump(cred_objs, open(file_path, "w"))
 
     def import_from_file(self, master_pass, filename: str) -> None:
         ensure_type(master_pass, str, "master_password", "string")
