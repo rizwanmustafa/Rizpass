@@ -65,16 +65,16 @@ def setup_mysql():
     print(f"{Fore.GREEN}Database created!{Fore.RESET}")
 
     db_user = input(f"New MySQL user name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
-    db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'{db_host}'")
-    db_cursor.execute(f"CREATE USER '{db_user}'@'{db_host}' IDENTIFIED BY '{master_pass}'")
+    db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
+    db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
     print(f"{Fore.GREEN}Database user created!{Fore.RESET}")
 
-    db_cursor.execute(f"GRANT ALL ON {db_name}.* TO '{db_user}'@'{db_host}';")
+    db_cursor.execute(f"GRANT ALL ON {db_name}.* TO '{db_user}'@'%';")
     db_cursor.execute("FLUSH PRIVILEGES;")
     print(f"{Fore.GREEN}Privileges granted to the new database user!{Fore.RESET}")
 
     db_manager.database = db_name
-    createTableQuery = """CREATE TABLE Credentials(
+    createTableQuery = """CREATE TABLE credentials(
         id INT NOT NULL AUTO_INCREMENT,
         title VARCHAR(300) NOT NULL,
         username VARCHAR(300),

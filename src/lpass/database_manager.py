@@ -114,7 +114,7 @@ class DatabaseManager:
         try:
             if self.db_type == "mysql":
                 self.mysql_cursor.execute(
-                    "INSERT INTO Credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
+                    "INSERT INTO credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
                     (title, username, email, password, salt)
                 )
                 self.mysql_db.commit()
@@ -136,7 +136,7 @@ class DatabaseManager:
             raw_creds: List[RawCredential] = []
 
             if self.db_type == "mysql":
-                self.mysql_cursor.execute("SELECT * FROM Credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
+                self.mysql_cursor.execute("SELECT * FROM credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
                 for i in self.mysql_cursor.fetchall():
                     raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4]))
             else:
@@ -153,7 +153,7 @@ class DatabaseManager:
         ensure_type(id, int | str, "id", "int or string")
 
         if self.db_type == "mysql":
-            self.mysql_cursor.execute("SELECT * FROM Credentials WHERE id = %s", (id, ))
+            self.mysql_cursor.execute("SELECT * FROM credentials WHERE id = %s", (id, ))
             query_result = self.mysql_cursor.fetchone()
             if not query_result:
                 return None
@@ -183,14 +183,14 @@ class DatabaseManager:
             raise ValueError("Invalid value provided for parameter 'id'")
 
         if self.db_type == "mysql":
-            self.mysql_cursor.execute("DELETE FROM Credentials WHERE id=%s", (id, ))
+            self.mysql_cursor.execute("DELETE FROM credentials WHERE id=%s", (id, ))
             self.mysql_db.commit()
         else:
             self.mongo_collection.delete_one({"id": id})
 
     def remove_all_credentials(self) -> None:
         if self.db_type == "mysql":
-            self.mysql_cursor.execute("DELETE FROM Credentials")
+            self.mysql_cursor.execute("DELETE FROM credentials")
             self.mysql_db.commit()
         else:
             self.mongo_collection.delete_many({})
@@ -224,7 +224,7 @@ class DatabaseManager:
         salt = b64encode(salt).decode("ascii")
 
         if self.db_type == "mysql":
-            self.mysql_cursor.execute("UPDATE Credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
+            self.mysql_cursor.execute("UPDATE credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
                 title, username, email, password, salt, id))
             self.mysql_db.commit()
         else:
