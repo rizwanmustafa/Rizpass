@@ -6,7 +6,6 @@ from getpass import getpass
 from sys import exit, argv, stderr
 from typing import List, Dict, NoReturn
 from cerberus import Validator as SchemaValidator
-from subprocess import call as shell_call
 from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
@@ -31,6 +30,8 @@ file_manager: FileManager = None
 config: Dict[str, str] = dict()
 
 # TODO: Add requirements for master password
+
+color_init()
 
 
 def print_menu():

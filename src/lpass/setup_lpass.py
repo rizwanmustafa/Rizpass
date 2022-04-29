@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from doctest import master
-from re import M
 from pymongo.mongo_client import MongoClient
 from getpass import getpass
 from os import path
