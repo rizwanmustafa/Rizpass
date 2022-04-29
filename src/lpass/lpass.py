@@ -378,7 +378,7 @@ def change_masterpass() -> None:
         root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
         temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
         temp_db_manager.mysql_cursor.execute(
-            "ALTER USER '%s'@'localhost' IDENTIFIED BY %s;",  # TODO: Research if we need the localhost or the db_host from the config
+            "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
             (config["db_user"],  new_masterpass, )
         )
 
