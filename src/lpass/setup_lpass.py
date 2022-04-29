@@ -18,21 +18,7 @@ master_pass: str | None = None
 
 CONFIG_FILE_PATH = path.expanduser("~/.lpass.json")
 
-
-def prevent_empty_input(input_prompt: str) -> str:
-    input_value = None
-    for i in range(3):
-        input_value = input(input_prompt)
-
-        if input_value.strip() == "":
-            print("Value cannot be empty or whitespace!")
-            continue
-
-        return input_value
-
-    print("Exiting!")
-    exit(1)
-
+# TODO: Setup input validation
 
 def setup_mysql():
     global config
@@ -156,20 +142,19 @@ def setup_mongodb():
 
         print(f"{Fore.GREEN}Database setup successful!{Fore.RESET}")
     except Exception as e:
-        print(f"{Fore.RED}Database setup failed!{Fore.RESET}")
+        print(f"{Fore.RED}Database setup failed!{Fore.RESET}", file=stderr)
         print(f"{Fore.RED}Error: {e}{Fore.RESET}", file=stderr)
         print("Exiting!")
         exit(1)
 
 
 def setup_masterpass():
+    # TODO: Print some guidlines for the password to follow and make sure that the master password input is strong
     global config, master_pass
-    # TODO: Print some guidlines for the password to follow
     master_pass = getpass("New master password: ")
-    # TODO: Check if master password is strong
 
 
-def write_settings_to_file():
+def write_settings():
     if path.isfile(CONFIG_FILE_PATH):
         print(f"Overwriting existing file: {CONFIG_FILE_PATH}")
     else:
@@ -183,6 +168,8 @@ def write_settings_to_file():
 
 
 def setup_password_manager():
+    print("Setting up LPass...")
+
     setup_masterpass()
 
     db_type = input("Database type (Mongo/MySQL): ").lower()
@@ -191,12 +178,10 @@ def setup_password_manager():
     else:
         setup_mysql()
 
-    write_settings_to_file()
+    write_settings()
 
     print(f"{Fore.GREEN}Setup complete!{Fore.RESET}")
 
 
 if __name__ == "__main__":
-    # setup_mongodb()
-    # print("Setting up LPass...")
     setup_password_manager()
