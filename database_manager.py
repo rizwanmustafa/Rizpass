@@ -44,7 +44,7 @@ class DatabaseManager:
                     user=db_config.user,
                     password=db_config.password,
                     db=db_config.db,
-                    port=db_config.port,
+                    port=db_config.port if db_config.port else 3306,
                     connection_timeout=3
                 )
                 self.mysql_cursor = self.mysql_db.cursor()
