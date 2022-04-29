@@ -7,7 +7,7 @@ from getpass import getpass
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
-from .passwords import decrypt_string, encrypt_string
+from .passwords import decode_and_decrypt, encrypt_and_encode
 
 # TODO: Convert credentials from an array to an object with id as key
 # TODO: Rather than appending raw objects into the self.credentials, append RawCredentials instead.
@@ -72,19 +72,17 @@ class FileManager:
     def close(self):
         self.file.close()
 
-    def add_credential(self, title: bytes, username: bytes, email: bytes, password: bytes, salt: bytes) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
         """This method takes in the encrypted credentials and adds them to the file."""
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, str, "password", "string")
+        ensure_type(salt, str, "salt", "string")
+
         id = self.__gen_id()
-        title = b64encode(title).decode("ascii")
-        username = b64encode(username).decode("ascii")
-        email = b64encode(email).decode("ascii")
-        password = b64encode(password).decode("ascii")
-        salt = b64encode(salt).decode("ascii")
 
-        # Add the password to the database
         try:
-            # TODO: Replace with RawCredential.get_json()
-
             self.credentials.append(RawCredential(
                 id,
                 title,
@@ -199,19 +197,23 @@ class FileManager:
         # TODO: Combine these two loops into one
 
         for file_cred in file_creds:
-            temp_cred = {
-                "title": b64decode(file_cred["title"]),
-                "username": b64decode(file_cred["username"]),
-                "email": b64decode(file_cred["email"]),
-                "password": b64decode(file_cred["password"]),
-                "salt": b64decode(file_cred["salt"]),
-            }
+            salt = b64decode(file_cred["salt"])
+            temp_cred = {"id": file_cred["id"], "salt": file_cred["salt"]}
 
-            for i in temp_cred:
-                if i == "salt":
+            for i in file_cred:
+                if i == "salt" or i == "id":
                     continue
-                decrypted_prop: str = decrypt_string(file_master_pass, temp_cred[i], temp_cred["salt"])
-                temp_cred[i] = encrypt_string(master_pass, decrypted_prop, temp_cred["salt"])
+
+                decrypted_prop: str = decode_and_decrypt(
+                    file_master_pass,
+                    file_cred[i],
+                    salt
+                )
+                temp_cred[i] = encrypt_and_encode(
+                    master_pass,
+                    decrypted_prop,
+                    salt
+                )
 
             self.add_credential(
                 temp_cred["title"],

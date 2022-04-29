@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from base64 import b64encode
 import os
 import pyperclip
 import json
@@ -12,7 +13,7 @@ import signal
 
 from .better_input import better_input, get_credential_input, confirm_user_choice
 from .schemas import get_config_schema
-from .passwords import encrypt_string, decrypt_string, generate_password as generate_random_password
+from .passwords import encrypt_string, decrypt_string, generate_password as generate_random_password, encrypt_and_encode
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
 from .setup_lpass import setup_password_manager
@@ -202,11 +203,12 @@ def add_credential(user_password: str = None) -> None:
     if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
         return
 
-    salt: bytes = os.urandom(16)
-    encrypted_title = encrypt_string(master_pass, title, salt)
-    encrypted_username = encrypt_string(master_pass, username, salt)
-    encrypted_email = encrypt_string(master_pass, email, salt)
-    encrypted_password = encrypt_string(master_pass, password, salt)
+    salt = os.urandom(16)
+    encrypted_title = encrypt_and_encode(master_pass, title, salt)
+    encrypted_username = encrypt_and_encode(master_pass, username, salt)
+    encrypted_email = encrypt_and_encode(master_pass, email, salt)
+    encrypted_password = encrypt_and_encode(master_pass, password, salt)
+    encoded_salt = b64encode(salt).decode("ascii")
 
     if db_manager:
         db_manager.add_credential(
@@ -214,7 +216,7 @@ def add_credential(user_password: str = None) -> None:
             encrypted_username,
             encrypted_email,
             encrypted_password,
-            salt
+            encoded_salt
         )
     if file_manager:
         file_manager.add_credential(
@@ -222,7 +224,7 @@ def add_credential(user_password: str = None) -> None:
             encrypted_username,
             encrypted_email,
             encrypted_password,
-            salt
+            encoded_salt
         )
     print("\nPassword added successfully!")
 

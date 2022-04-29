@@ -11,8 +11,9 @@ from pymongo import ASCENDING
 import mysql.connector
 from urllib.parse import quote_plus
 
+
 from .credentials import RawCredential, Credential
-from .passwords import decrypt_string, encrypt_string
+from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
 
 
@@ -89,28 +90,15 @@ class DatabaseManager:
             print("There was an error while generating an id:", file=stderr)
             print(e, file=stderr)
 
-    def add_credential(self, title: bytes, username: bytes, email: bytes, password: bytes, salt: bytes) -> None:
-        ensure_type(title, bytes, "title", "string")
-        ensure_type(username, bytes, "username", "string")
-        ensure_type(email, bytes, "email", "string")
-        ensure_type(password, bytes, "password", "bytes")
-        ensure_type(salt, bytes, "salt", "bytes")
-
-        # Make sure that required parameters are not empty
-        if not title:
-            raise ValueError("Parameter 'title' cannot be empty")
-        elif not password:
-            raise ValueError("Parameter 'password' cannot be empty")
-        elif not salt:
-            raise ValueError("Parameter 'salt' cannot be empty")
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, str, "password", "string")
+        ensure_type(salt, str, "salt", "string")
 
         # Encode to b64
         id = self.__gen_id() if self.db_type == "mongo" else None
-        title = b64encode(title).decode("ascii")
-        username = b64encode(username).decode("ascii")
-        email = b64encode(email).decode("ascii")
-        password = b64encode(password).decode("ascii")
-        salt = b64encode(salt).decode("ascii")
 
         # Add the password to the database
         try:
@@ -326,19 +314,27 @@ class DatabaseManager:
             print("There are no credentials in the file.")
 
         for file_cred in file_creds:
-            temp_cred = {
-                "title": b64decode(file_cred["title"]),
-                "username": b64decode(file_cred["username"]),
-                "email": b64decode(file_cred["email"]),
-                "password": b64decode(file_cred["password"]),
-                "salt": b64decode(file_cred["salt"]),
-            }
+            salt = b64decode(file_cred["salt"])
+            temp_cred = {"id": file_cred["id"], "salt": file_cred["salt"]}
 
-            for i in temp_cred:
-                if i == "salt":
+            for i in file_cred:
+                if i == "salt" or i == "id":
                     continue
-                decrypted_prop: str = decrypt_string(file_master_pass, temp_cred[i], temp_cred["salt"])
-                temp_cred[i] = encrypt_string(master_pass, decrypted_prop, temp_cred["salt"])
+
+                print(temp_cred["salt"])
+                print(i)
+                print(file_cred[i])
+
+                decrypted_prop: str = decode_and_decrypt(
+                    file_master_pass,
+                    file_cred[i],
+                    salt
+                )
+                temp_cred[i] = encrypt_and_encode(
+                    master_pass,
+                    decrypted_prop,
+                    salt
+                )
 
             self.add_credential(
                 temp_cred["title"],
