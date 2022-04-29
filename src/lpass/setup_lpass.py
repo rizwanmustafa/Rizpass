@@ -20,6 +20,7 @@ CONFIG_FILE_PATH = path.expanduser("~/.lpass.json")
 
 # TODO: Setup input validation
 
+
 def setup_mysql():
     global config
 
@@ -91,7 +92,7 @@ def setup_mongodb():
 
         access_control_setup = input("Have you set up access control? (Y/N) ").lower()
         if access_control_setup != "y":
-            print("We strongly recommend you set up access control!")
+            print("Please setup access control to setup LPass!")
             print("Exiting!")
             exit(1)
 
@@ -113,10 +114,11 @@ def setup_mongodb():
         print(f"{Fore.GREEN}Connection successful!{Fore.RESET}")
 
         # Create a new database
-        db_name = input(f"New database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+        db_name = input(f"New database name {Fore.RED}(Note: It will drop it and its users){Fore.RESET}: ")
         db_client.drop_database(db_name)
-
         db_db = db_client[db_name]
+        db_db.command({"dropAllUsersFromDatabase": 1})
+        print(f"{Fore.GREEN}Database and its users dropped!{Fore.RESET}")
 
         # Create new user
         db_user = quote_plus(input("New MongoDB user name: "))
@@ -127,8 +129,10 @@ def setup_mongodb():
             "pwd": "{0}".format(db_pass),
             "roles": [{"role": "readWrite", "db": db_name}]
         })
+        print(f"{Fore.GREEN}New database user created!{Fore.RESET}")
 
         db_db.create_collection("credentials")
+        print(f"{Fore.GREEN}New database collection 'credentials' created!{Fore.RESET}")
 
         # Close the connection to database with root login
         db_client.close()
@@ -156,7 +160,7 @@ def setup_masterpass():
 
 def write_settings():
     if path.isfile(CONFIG_FILE_PATH):
-        print(f"Overwriting existing file: {CONFIG_FILE_PATH}")
+        print(f"{Fore.YELLOW}Overwriting existing file: {CONFIG_FILE_PATH}{Fore.RESET}")
     else:
         print(f"Creating file: {CONFIG_FILE_PATH}")
 
