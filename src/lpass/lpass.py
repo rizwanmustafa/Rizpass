@@ -36,26 +36,26 @@ color_init()
 
 
 def print_menu():
-    print("-------------------------------")
-    print("1.  Generate a password")
-    print("2.  Add a credential")
-    print("3.  Retrieve credential using id")
-    print("4.  Filter credentials")
-    print("5.  List all credentials")
-    print("6.  Modify credential")
-    print("7.  Remove credential")
-    print("8.  Remove all credentials")
-    print("9.  Change master password")
-    print("10. Export credentials to a JSON file")
-    print("11. Import credentials from a JSON file")
-    print("12. Exit")
-    print("-------------------------------")
+    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
+    print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
+    print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
+    print(f"{Fore.BLUE}3{Fore.RESET}  Retrieve credential using id")
+    print(f"{Fore.BLUE}4{Fore.RESET}  Filter credentials")
+    print(f"{Fore.BLUE}5{Fore.RESET}  List all credentials")
+    print(f"{Fore.BLUE}6{Fore.RESET}  Modify credential")
+    print(f"{Fore.BLUE}7{Fore.RESET}  Remove credential")
+    print(f"{Fore.BLUE}8{Fore.RESET}  Remove all credentials")
+    print(f"{Fore.BLUE}9{Fore.RESET}  Change master password")
+    print(f"{Fore.BLUE}10{Fore.RESET} Export credentials to a JSON file")
+    print(f"{Fore.BLUE}11{Fore.RESET} Import credentials from a JSON file")
+    print(f"{Fore.BLUE}12{Fore.RESET} Exit")
+    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
 
 
 def perform_tasks() -> None:
     max_limit = 12
     user_choice = better_input(
-        prompt="Please input your choice: ",
+        prompt="Choice: ",
         allow_empty=False,
         type_converter=int,
         pre_validator=lambda x: x.isnumeric(),
@@ -135,7 +135,7 @@ def load_config() -> bool:
 
 def login() -> None:
     global master_pass, db_manager, creds_file_path, file_manager
-    master_pass = getpass("Input your masterpassword: ")
+    master_pass = getpass("Masterpassword: ")
     if creds_file_path != None:
         file_manager = FileManager(creds_file_path)
     else:
@@ -176,7 +176,7 @@ def generate_password():
         print("Could not generate a password! Try again later!")
         return
 
-    print("Generated Password: ", generated_pass)
+    print("Generated Password: ", Fore.BLUE + generated_pass + Fore.RESET)
 
     try:
         pyperclip.copy(generated_pass)
@@ -290,6 +290,7 @@ def get_all_credentials() -> None:
         for raw_cred in raw_creds:
             lastCred = raw_cred.get_credential(master_pass)
             print(lastCred)
+            print()
 
         if lastCred:
             lastCred.copy_pass()

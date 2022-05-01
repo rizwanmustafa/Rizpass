@@ -10,6 +10,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo import ASCENDING
 import mysql.connector
 from urllib.parse import quote_plus
+from colorama import Fore
 
 
 from .credentials import RawCredential, Credential
@@ -50,9 +51,6 @@ class DatabaseManager:
                 )
                 self.mysql_cursor = self.mysql_db.cursor()
             else:
-                print()
-                print("MongoDB is not fully supported yet. There may be issues with some operations.")
-                print("We thank you for your cooperation.")
                 self.db_type = "mongo"
                 self.mongo_client = MongoClient(
                     host=quote_plus(db_config.host),
@@ -71,9 +69,10 @@ class DatabaseManager:
                 self.mongo_collection.create_index([("id", ASCENDING)], unique=True)
         except Exception as e:
             print()
-            print(f"There was an error while connecting with {'MySQL' if db_type == 'mysql' else 'MongoDB'}: ", file=stderr)
-            print(e, file=stderr)
-            print("Exiting with code 1!", file=stderr)
+            print(f"{Fore.RED}There was an error while connecting with {'MySQL' if db_type == 'mysql' else 'MongoDB'}:", file=stderr)
+            print(str(e), file=stderr)
+            print()
+            print(f"Exiting with code 1!{Fore.RESET}", file=stderr)
             exit(1)
 
     def __gen_id(self) -> int | None:
@@ -252,7 +251,7 @@ class DatabaseManager:
             print("Exiting!")
             exit(1)
 
-    def export_to_file(self, file_path: str, master_pass : str, file_master_pass: str) -> None:
+    def export_to_file(self, file_path: str, master_pass: str, file_master_pass: str) -> None:
         ensure_type(file_path, str, "filename", "string")
         ensure_type(master_pass, str, "master_pass", "string")
         ensure_type(file_master_pass, str, "file_master_pass", "string")

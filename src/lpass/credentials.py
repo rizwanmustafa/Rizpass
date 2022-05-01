@@ -1,7 +1,7 @@
 from sys import stderr
 from base64 import b64decode
 import pyperclip
-from colorama import Fore, Style
+from colorama import Fore
 
 from .passwords import decode_and_decrypt
 from .validator import ensure_type
@@ -27,14 +27,14 @@ class RawCredential:
 
     def __str__(self):
         output = "\n"
-        output += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}\n"
-        output += f"{Style.BRIGHT}ID:{Style.RESET_ALL} {self.id}\n"
-        output += f"{Style.BRIGHT}Title:{Style.RESET_ALL} {self.title}\n"
-        output += f"{Style.BRIGHT}Username:{Style.RESET_ALL} {self.username}\n"
-        output += f"{Style.BRIGHT}Email Address:{Style.RESET_ALL} {self.email}\n"
-        output += f"{Style.BRIGHT}Encrypted Password:{Style.RESET_ALL} {self.password}\n"
-        output += f"{Style.BRIGHT}Salt:{Style.RESET_ALL} {self.salt}\n"
-        output += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}"
+        output += f"{Fore.BLUE}-------------------------------{Fore.RESET}\n"
+        output += f"{Fore.BLUE}ID:{Fore.RESET} {self.id}\n"
+        output += f"{Fore.BLUE}(Encrypted and Encoded)Title:{Fore.RESET} {self.title}\n"
+        output += f"{Fore.BLUE}(Encrypted and Encoded)Username:{Fore.RESET} {self.username}\n"
+        output += f"{Fore.BLUE}(Encrypted and Encoded)Email:{Fore.RESET} {self.email}\n"
+        output += f"{Fore.BLUE}Encrypted Password:{Fore.RESET} {self.password}\n"
+        output += f"{Fore.BLUE}(Encoded) Salt:{Fore.RESET} {self.salt}\n"
+        output += f"{Fore.BLUE}-------------------------------{Fore.RESET}"
         return output
 
     def get_credential(self, master_password: str):
@@ -109,13 +109,13 @@ class Credential:
 
     def __str__(self):
         string = "\n"
-        string += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}\n"
-        string += f"{Style.BRIGHT}ID:{Style.RESET_ALL} {self.id}\n"
-        string += f"{Style.BRIGHT}Title:{Style.RESET_ALL} {self.title}\n"
-        string += f"{Style.BRIGHT}Username:{Style.RESET_ALL} {self.username}\n"
-        string += f"{Style.BRIGHT}Email Address:{Style.RESET_ALL} {self.email}\n"
-        string += f"{Style.BRIGHT}Password:{Style.RESET_ALL} {self.password}\n"
-        string += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}"
+        string += f"{Fore.BLUE}-------------------------------{Fore.RESET}\n"
+        string += f"{Fore.BLUE}ID:{Fore.RESET} {self.id}\n"
+        string += f"{Fore.BLUE}Title:{Fore.RESET} {self.title}\n"
+        string += f"{Fore.BLUE}Username:{Fore.RESET} {self.username}\n"
+        string += f"{Fore.BLUE}Email:{Fore.RESET} {self.email}\n"
+        string += f"{Fore.BLUE}Password:{Fore.RESET} {self.password}\n"
+        string += f"{Fore.BLUE}-------------------------------{Fore.RESET}"
         return string
 
     def copy_pass(self):
