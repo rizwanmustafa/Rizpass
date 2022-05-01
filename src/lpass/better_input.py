@@ -11,7 +11,7 @@ def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_vali
 
         if not allow_empty and user_input.strip() == "":
             print("Empty or whitespace input is not allowed!")
-            if i != 2:
+            if i != repeat_times:
                 print("Try again!")
             print()
             continue
@@ -19,7 +19,7 @@ def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_vali
         if ((pre_validator != None and not pre_validator(user_input))
                 or (post_validator and not post_validator(type_converter(user_input)))):
             print("Invalid value entered!")
-            if i != 2:
+            if i != repeat_times:
                 print("Try again!")
             print()
             continue
@@ -43,6 +43,7 @@ def get_id_input(prompt: None | str = None) -> int:
     return int(id)
 
 
+# TODO: Split this function into smaller ones for each field input
 def get_credential_input(title: bool | str = True,
                          id: bool | str = True,
                          username: bool | str = True,
