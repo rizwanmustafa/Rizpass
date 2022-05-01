@@ -100,7 +100,7 @@ class FileManager:
     def get_all_credentials(self) -> List[RawCredential] | None:
         return self.credentials
 
-    def get_credential(self, id: int | str) -> RawCredential | None:
+    def get_credential(self, id: int) -> RawCredential | None:
         query_result = None
         for i in self.credentials:
             if i.id == id:
@@ -109,18 +109,13 @@ class FileManager:
 
         return query_result
 
-    def remove_credential(self, id: int | str) -> None:
-        cred_index = None
+    def remove_credential(self, id: int) -> None:
 
         for index, cred in enumerate(self.credentials):
             if cred.id == id:
-                cred_index = index
+                self.credentials.pop(index)
+                break
 
-        if not cred_index:
-            print("No credential with the given id exists!", file=stderr)
-            return
-
-        self.credentials.pop(cred_index)
         self.__dump_creds()
 
     def remove_all_credentials(self) -> None:
