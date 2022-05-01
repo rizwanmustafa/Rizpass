@@ -48,12 +48,13 @@ def print_menu():
     print(f"{Fore.BLUE}9{Fore.RESET}  Change master password")
     print(f"{Fore.BLUE}10{Fore.RESET} Export credentials to a JSON file")
     print(f"{Fore.BLUE}11{Fore.RESET} Import credentials from a JSON file")
-    print(f"{Fore.BLUE}12{Fore.RESET} Exit")
+    print(f"{Fore.BLUE}12{Fore.RESET} List all credentials (encrypted and encoded)")
+    print(f"{Fore.BLUE}13{Fore.RESET} Exit")
     print(Fore.BLUE + "-------------------------------" + Fore.RESET)
 
 
 def perform_tasks() -> None:
-    max_limit = 12
+    max_limit = 13
     user_choice = better_input(
         prompt="Choice: ",
         allow_empty=False,
@@ -90,6 +91,8 @@ def perform_tasks() -> None:
     elif user_choice == 11:
         import_credentials()
     elif user_choice == 12:
+        get_all_encrypted_credentials()
+    elif user_choice == 13:
         exit_app()
 
 
@@ -298,6 +301,17 @@ def get_all_credentials() -> None:
     except Exception as e:
         print("Could not get credentials due to the following error:", file=stderr)
         print(e, file=stderr)
+
+
+def get_all_encrypted_credentials() -> None:
+    raw_creds = (db_manager or file_manager).get_all_credentials()
+    if not raw_creds:
+        print(f"{Fore.RED}No credentials stored yet.{Fore.RESET}", file=stderr)
+        return
+
+    print(f"{Fore.YELLOW}Printing all credentials(encrypted and encoded)...{Fore.RESET}")
+    for raw_cred in raw_creds:
+        print(raw_cred)
 
 
 def modify_credential() -> None:

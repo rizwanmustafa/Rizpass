@@ -29,11 +29,11 @@ class RawCredential:
         output = "\n"
         output += f"{Fore.BLUE}-------------------------------{Fore.RESET}\n"
         output += f"{Fore.BLUE}ID:{Fore.RESET} {self.id}\n"
-        output += f"{Fore.BLUE}(Encrypted and Encoded)Title:{Fore.RESET} {self.title}\n"
-        output += f"{Fore.BLUE}(Encrypted and Encoded)Username:{Fore.RESET} {self.username}\n"
-        output += f"{Fore.BLUE}(Encrypted and Encoded)Email:{Fore.RESET} {self.email}\n"
-        output += f"{Fore.BLUE}Encrypted Password:{Fore.RESET} {self.password}\n"
-        output += f"{Fore.BLUE}(Encoded) Salt:{Fore.RESET} {self.salt}\n"
+        output += f"{Fore.BLUE}Title:{Fore.RESET} {self.title}\n"
+        output += f"{Fore.BLUE}Username:{Fore.RESET} {self.username}\n"
+        output += f"{Fore.BLUE}Email:{Fore.RESET} {self.email}\n"
+        output += f"{Fore.BLUE}Password:{Fore.RESET} {self.password}\n"
+        output += f"{Fore.BLUE}Salt:{Fore.RESET} {self.salt}\n"
         output += f"{Fore.BLUE}-------------------------------{Fore.RESET}"
         return output
 
