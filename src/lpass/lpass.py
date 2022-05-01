@@ -288,7 +288,7 @@ def get_all_credentials() -> None:
             print("No credentials stored yet.")
             return
 
-        print("Printing all credentials...")
+        print(f"{Fore.MAGENTA}Printing all credentials...{Fore.RESET}")
         lastCred = None
         for raw_cred in raw_creds:
             lastCred = raw_cred.get_credential(master_pass)
@@ -309,7 +309,7 @@ def get_all_encrypted_credentials() -> None:
         print(f"{Fore.RED}No credentials stored yet.{Fore.RESET}", file=stderr)
         return
 
-    print(f"{Fore.YELLOW}Printing all credentials(encrypted and encoded)...{Fore.RESET}")
+    print(f"{Fore.MAGENTA}Printing all credentials(encrypted and encoded)...{Fore.RESET}")
     for raw_cred in raw_creds:
         print(raw_cred)
 
