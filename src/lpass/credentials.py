@@ -8,6 +8,7 @@ from .validator import ensure_type
 
 
 class RawCredential:
+    """This takes in encrypted and base64 encoded credentials and returns a RawCredential object."""
     # TODO: Add a get_json function
     def __init__(self, id: int, title: str, username: str, email: str, password: str, salt: str):
         ensure_type(id, int, "id", "int")

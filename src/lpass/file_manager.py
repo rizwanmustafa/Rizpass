@@ -10,8 +10,6 @@ from .validator import ensure_type
 from .passwords import decode_and_decrypt, encrypt_and_encode
 
 # TODO: Convert credentials from an array to an object with id as key
-# TODO: Rather than appending raw objects into the self.credentials, append RawCredentials instead.
-# Then upon dumping, use the get_object function to get the object.
 
 
 class FileManager:
@@ -205,8 +203,6 @@ class FileManager:
 
         if not file_creds:
             print("There are no credentials in the file.")
-
-        # TODO: Combine these two loops into one
 
         for file_cred in file_creds:
             salt = b64decode(file_cred["salt"])
