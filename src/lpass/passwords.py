@@ -33,9 +33,9 @@ def encrypt_string(master_password: str, raw_password: str, salt: bytes) -> byte
 
         # Make sure that parameters are not empty
         if not master_password:
-            raise ValueError("Paramter 'master_password' cannot be empty")
+            raise ValueError("Parameter 'master_password' cannot be empty")
         if not raw_password:
-            raise ValueError("Paramter 'raw_password' cannot be empty")
+            raise ValueError("Parameter 'raw_password' cannot be empty")
         if not salt:
             raise ValueError("Parameter 'salt' cannot be empty")
 
@@ -58,11 +58,11 @@ def decrypt_string(master_password: str, encrypted_password: bytes, salt: bytes)
 
         # Make sure that parameters are not empty
         if not master_password:
-            raise ValueError("Paramter 'master_password' cannot be empty")
-        if not encrypted_password:
-            raise ValueError("Paramter 'encrypted_password' cannot be empty")
+            raise ValueError("Parameter 'master_password' cannot be empty")
         if not salt:
             raise ValueError("Parameter 'salt' cannot be empty")
+        if not encrypted_password:
+            return ''
 
         fernet_object: Fernet = __get_custom_fernet_object(master_password, salt)
         password_bytes: bytes = fernet_object.decrypt(encrypted_password)
@@ -93,7 +93,8 @@ def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
     ensure_type(data, str, "data", "str")
     ensure_type(salt, bytes, "salt", "bytes")
 
-    return decrypt_string(master_pass, base64.b64decode(data), salt)
+    decrypted_data = decrypt_string(master_pass, base64.b64decode(data), salt)
+    return decrypted_data if decrypted_data else ""
 
 
 def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bool, specials: bool) -> str | None:
