@@ -4,12 +4,15 @@ from base64 import b64encode, b64decode
 from json import load as load_json, dump as dump_json
 from typing import List
 from getpass import getpass
+from colorama import Fore, init as colorama_init
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
 from .passwords import decode_and_decrypt, encrypt_and_encode
 
 # TODO: Convert credentials from an array to an object with id as key
+
+colorama_init()
 
 
 class FileManager:
@@ -113,6 +116,8 @@ class FileManager:
             if cred.id == id:
                 self.credentials.pop(index)
                 break
+        else:
+            print(f"{Fore.RED}Credential with id {id} not found{Fore.RESET}", file=stderr)
 
         self.__dump_creds()
 

@@ -65,6 +65,8 @@ def perform_tasks() -> None:
     if user_choice == None:
         return
 
+    print()
+
     if user_choice == 1:
         generate_password()
     elif user_choice == 2:
@@ -183,7 +185,7 @@ def generate_password():
         print("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
         print(e, file=stderr)
 
-    if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
+    if not confirm_user_choice("Do you want to add this password (Y/N): "):
         return
     add_credential(generated_pass)
 
@@ -353,7 +355,7 @@ def remove_credential() -> None:
     id = int(input("ID: "))
 
     if (db_manager or file_manager).get_credential(id) == None:
-        print("No credential with given id exists!")
+        print(f"{Fore.RED}No credential with id: {id} exists!{Fore.RESET}", file=stderr)
         return
 
     (db_manager or file_manager).remove_credential(id)
@@ -390,7 +392,6 @@ def change_masterpass() -> None:
     if new_masterpass == master_pass:
         print("New masterpassword is the same as the old one!")
         return
-
 
     # Update credentials to use new masterpass
     raw_creds = (db_manager or file_manager).get_all_credentials()
@@ -432,7 +433,7 @@ def change_masterpass() -> None:
     # Change database password
     if db_manager:
         # TODO: Implement input validation
-        if config["db_type"] == "mysql" :
+        if config["db_type"] == "mysql":
             root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
             root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
             temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
@@ -441,7 +442,7 @@ def change_masterpass() -> None:
                 (config["db_user"],  new_masterpass, )
             )
 
-        elif config["db_type"] == "mongo" :
+        elif config["db_type"] == "mongo":
             root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
             root_pass = getpass("Input MongoDB root password: ")
 
