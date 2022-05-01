@@ -10,8 +10,8 @@ import string
 from .validator import ensure_type
 
 
-def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
-    master_password = bytes(master_password, "utf-8")
+def __get_custom_fernet_object(master_pass: str, salt: bytes) -> Fernet:
+    master_pass = bytes(master_pass, "utf-8")
 
     # Get custom key for Fernet using user's masterpassword
     kdf = PBKDF2HMAC(
@@ -20,26 +20,26 @@ def __get_custom_fernet_object(master_password: str, salt: bytes) -> Fernet:
         salt=salt,
         iterations=100000,
     )
-    key = base64.urlsafe_b64encode(kdf.derive(master_password))
+    key = base64.urlsafe_b64encode(kdf.derive(master_pass))
 
     return Fernet(key)
 
 
-def encrypt_string(master_password: str, raw_password: str, salt: bytes) -> bytes | None:
+def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> bytes | None:
     try:
-        ensure_type(master_password, str, "master_password", "str")
+        ensure_type(master_pass, str, "master_pass", "str")
         ensure_type(raw_password, str, "raw_password", "str")
         ensure_type(salt, bytes,  "salt", "bytes")
 
         # Make sure that parameters are not empty
-        if not master_password:
-            raise ValueError("Parameter 'master_password' cannot be empty")
+        if not master_pass:
+            raise ValueError("Parameter 'master_pass' cannot be empty")
         if not raw_password:
             raise ValueError("Parameter 'raw_password' cannot be empty")
         if not salt:
             raise ValueError("Parameter 'salt' cannot be empty")
 
-        fernet_object: Fernet = __get_custom_fernet_object(master_password, salt)
+        fernet_object: Fernet = __get_custom_fernet_object(master_pass, salt)
         password_bytes: bytes = bytes(raw_password, "utf-8")
         encryptedPassword = fernet_object.encrypt(password_bytes)
 
@@ -50,21 +50,21 @@ def encrypt_string(master_password: str, raw_password: str, salt: bytes) -> byte
         return None
 
 
-def decrypt_string(master_password: str, encrypted_password: bytes, salt: bytes) -> str | None:
+def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> str | None:
     try:
-        ensure_type(master_password, str, "master_password", "str")
+        ensure_type(master_pass, str, "master_pass", "str")
         ensure_type(encrypted_password, bytes, "encrypted_password", "bytes")
         ensure_type(salt, bytes, "salt", "bytes")
 
         # Make sure that parameters are not empty
-        if not master_password:
-            raise ValueError("Parameter 'master_password' cannot be empty")
+        if not master_pass:
+            raise ValueError("Parameter 'master_pass' cannot be empty")
         if not salt:
             raise ValueError("Parameter 'salt' cannot be empty")
         if not encrypted_password:
             return ''
 
-        fernet_object: Fernet = __get_custom_fernet_object(master_password, salt)
+        fernet_object: Fernet = __get_custom_fernet_object(master_pass, salt)
         password_bytes: bytes = fernet_object.decrypt(encrypted_password)
         raw_password: str = str(password_bytes, "utf-8")
 
