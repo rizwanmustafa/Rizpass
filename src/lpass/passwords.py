@@ -72,6 +72,7 @@ def decrypt_string(master_password: str, encrypted_password: bytes, salt: bytes)
     except Exception as e:
         print("There was an error decrypting the password:", file=stderr)
         print(e, file=stderr)
+        return None
 
 
 def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> str | None:

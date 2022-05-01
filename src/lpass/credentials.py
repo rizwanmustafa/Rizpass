@@ -1,8 +1,9 @@
 from sys import stderr
-from base64 import b64decode, b64encode
+from base64 import b64decode
 import pyperclip
+from colorama import Fore
 
-from .passwords import decrypt_string
+from .passwords import decode_and_decrypt
 from .validator import ensure_type
 
 
@@ -16,11 +17,11 @@ class RawCredential:
         ensure_type(password, str, "password", "string")
 
         self.id = id
-        self.title = b64decode(title)
-        self.username = b64decode(username)
-        self.email = b64decode(email)
-        self.password = b64decode(password)
-        self.salt = b64decode(salt)
+        self.title = title
+        self.username = username
+        self.email = email
+        self.password = password
+        self.salt = salt
 
     def __str__(self):
         string = "\n"
@@ -35,20 +36,43 @@ class RawCredential:
         return string
 
     def get_credential(self, master_password: str):
-        title = decrypt_string(master_password, self.title, self.salt)
-        username = decrypt_string(master_password, self.username, self.salt)
-        email = decrypt_string(master_password, self.email, self.salt)
-        password = decrypt_string(master_password, self.password, self.salt)
+        print(f"Decrypting password with id {self.id}...")
+        salt = b64decode(self.salt)
+        title = decode_and_decrypt(
+            master_password,
+            self.title,
+            salt
+        )
+        username = decode_and_decrypt(
+            master_password,
+            self.username,
+            salt
+        )
+        email = decode_and_decrypt(
+            master_password,
+            self.email,
+            salt
+        )
+        password = decode_and_decrypt(
+            master_password,
+            self.password,
+            salt
+        )
+        if title != None and username != None and email != None and password != None:
+            print(f"{Fore.GREEN}Decryption sucessful!{Fore.RESET}")
+        else:
+            print(f"{Fore.RED}Decryption failed!{Fore.RESET}")
+
         return Credential(self.id, title, username, email, password)
 
     def get_obj(self):
         return {
             "id": self.id,
-            "title": b64encode(self.title).decode("ascii"),
-            "username": b64encode(self.username).decode("ascii"),
-            "email": b64encode(self.email).decode("ascii"),
-            "password": b64encode(self.password).decode("ascii"),
-            "salt": b64encode(self.salt).decode("ascii")
+            "title": self.title,
+            "username": self.username,
+            "email": self.email,
+            "password": self.password,
+            "salt": self.salt,
         }
 
 
