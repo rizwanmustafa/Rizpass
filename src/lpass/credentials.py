@@ -1,7 +1,7 @@
 from sys import stderr
 from base64 import b64decode
 import pyperclip
-from colorama import Fore
+from colorama import Fore, Style
 
 from .passwords import decode_and_decrypt
 from .validator import ensure_type
@@ -10,6 +10,7 @@ from .validator import ensure_type
 class RawCredential:
     """This takes in encrypted and base64 encoded credentials and returns a RawCredential object."""
     # TODO: Add a get_json function
+
     def __init__(self, id: int, title: str, username: str, email: str, password: str, salt: str):
         ensure_type(id, int, "id", "int")
         ensure_type(title, str, "title", "string")
@@ -25,16 +26,16 @@ class RawCredential:
         self.salt = salt
 
     def __str__(self):
-        string = "\n"
-        string += "-------------------------------\n"
-        string += "ID: {0}\n".format(self.id)
-        string += "Title: {0}\n".format(self.title)
-        string += "Username: {0}\n".format(self.username)
-        string += "Email Address: {0}\n".format(self.email)
-        string += "Encrypted Password: {0}\n".format(self.password)
-        string += "Salt: {0}\n".format(self.salt)
-        string += "-------------------------------"
-        return string
+        output = "\n"
+        output += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}\n"
+        output += f"{Style.BRIGHT}ID:{Style.RESET_ALL} {self.id}\n"
+        output += f"{Style.BRIGHT}Title:{Style.RESET_ALL} {self.title}\n"
+        output += f"{Style.BRIGHT}Username:{Style.RESET_ALL} {self.username}\n"
+        output += f"{Style.BRIGHT}Email Address:{Style.RESET_ALL} {self.email}\n"
+        output += f"{Style.BRIGHT}Encrypted Password:{Style.RESET_ALL} {self.password}\n"
+        output += f"{Style.BRIGHT}Salt:{Style.RESET_ALL} {self.salt}\n"
+        output += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}"
+        return output
 
     def get_credential(self, master_password: str):
         print(f"Decrypting password with id {self.id}...")
@@ -76,6 +77,21 @@ class RawCredential:
             "salt": self.salt,
         }
 
+    def copy_pass(self, master_pass: str):
+        # TODO: Have a separate try catch block for this
+        decrypted_password = decode_and_decrypt(
+            master_pass,
+            self.password,
+            b64decode(self.salt)
+        )
+        try:
+            pyperclip.copy(decrypted_password)
+        except Exception as e:
+            print(f"{Fore.RED}This password could not be copied to your clipboard due to the following error: {Fore.RESET}", file=stderr)
+            print(f"{Fore.RED}{e}{Fore.RESET}", file=stderr)
+        else:
+            print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")
+
 
 class Credential:
     def __init__(self,  id: int, title: str, username: str, email: str, password: str) -> None:
@@ -92,20 +108,21 @@ class Credential:
         self.password = password
 
     def __str__(self):
-        output = "\n"
-        output += "-------------------------------\n"
-        output += "ID: {0}\n".format(self.id)
-        output += "Title: {0}\n".format(self.title)
-        output += "Username: {0}\n".format(self.username)
-        output += "Email Address: {0}\n".format(self.email)
-        output += "Password: {0}\n".format(self.password)
-        output += "-------------------------------"
-        return output
+        string = "\n"
+        string += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}\n"
+        string += f"{Style.BRIGHT}ID:{Style.RESET_ALL} {self.id}\n"
+        string += f"{Style.BRIGHT}Title:{Style.RESET_ALL} {self.title}\n"
+        string += f"{Style.BRIGHT}Username:{Style.RESET_ALL} {self.username}\n"
+        string += f"{Style.BRIGHT}Email Address:{Style.RESET_ALL} {self.email}\n"
+        string += f"{Style.BRIGHT}Password:{Style.RESET_ALL} {self.password}\n"
+        string += f"{Style.BRIGHT}-------------------------------{Style.RESET_ALL}"
+        return string
 
     def copy_pass(self):
         try:
             pyperclip.copy(self.password)
-            print("This password has been copied to your clipboard!")
         except Exception as e:
-            print("This password could not be copied to your clipboard due to the following error: ", file=stderr)
-            print(e, file=stderr)
+            print(f"{Fore.RED}This password could not be copied to your clipboard due to the following error: {Fore.RESET}", file=stderr)
+            print(f"{Fore.RED}{e}{Fore.RESET}", file=stderr)
+        else:
+            print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")

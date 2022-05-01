@@ -286,10 +286,13 @@ def get_all_credentials() -> None:
             return
 
         print("Printing all credentials...")
+        lastCred = None
         for raw_cred in raw_creds:
-            print(raw_cred.get_credential(master_pass))
+            lastCred = raw_cred.get_credential(master_pass)
+            print(lastCred)
 
-        raw_cred.get_credential(master_pass).copy_pass()
+        if lastCred:
+            lastCred.copy_pass()
 
     except Exception as e:
         print("Could not get credentials due to the following error:", file=stderr)
