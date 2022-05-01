@@ -1,12 +1,20 @@
 from sys import stderr
 from base64 import b64decode, b64encode
 import pyperclip
+
 from .passwords import decrypt_string
+from .validator import ensure_type
 
 
 class RawCredential:
     # TODO: Add a get_json function
-    def __init__(self, id: int | str, title: str, username: str, email: str, password: str, salt: str):
+    def __init__(self, id: int, title: str, username: str, email: str, password: str, salt: str):
+        ensure_type(id, int, "id", "int")
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, str, "password", "string")
+
         self.id = id
         self.title = b64decode(title)
         self.username = b64decode(username)
@@ -45,7 +53,13 @@ class RawCredential:
 
 
 class Credential:
-    def __init__(self,  id: int | str, title: str, username: str, email: str, password: str) -> None:
+    def __init__(self,  id: int, title: str, username: str, email: str, password: str) -> None:
+        ensure_type(id, int, "id", "int")
+        ensure_type(title, str, "title", "string")
+        ensure_type(username, str, "username", "string")
+        ensure_type(email, str, "email", "string")
+        ensure_type(password, str, "password", "string")
+
         self.id = id
         self.title = title
         self.username = username
