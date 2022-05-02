@@ -51,3 +51,20 @@ Configuring Lpass is as simple as running the following command and answering th
 ```bash
 python3 -m lpass --setup
 ```
+
+## Configuration File
+LPass uses a json object for storing its configuration. The setup command creates a configuration file at `~/.lpass.json`  
+Here is a list of the fields contained in the configuration file and their description:
+```
+db_type (string, Required) : Name of the database. 'mysql' for MySQL or MariaDB and 'mongo' for MongoDB.
+db_host (string, Required) : Address at which the database is hosted e.g 'localhost'
+db_name (string, Required) : Name of the database created specifically for LPass to store your credentials in.
+db_user (string, Required) : Name of the database user created specifically for LPass (Should have read and write permissions on the database).
+db_port (integer, Optional): Port number for communication with the database. Defaults to 3306 for 'mysql' and 27017 for 'mongo'.
+```
+
+#### Sample Configuration File
+
+```json
+{"db_type": "mongo", "db_host": "localhost", "db_user": "passMan", "db_name": "lpass", "db_port": 7000}
+```
