@@ -5,22 +5,29 @@
 
 # Install instructions
 
-1. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
+1. Clone this repository
+```bash
+git clone https://github.com/rizwanmustafa/LPass.git
+cd LPass
+```
+
+
+2. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
 ```bash
 python3 -m venv venv
 ```
 
-2. Activate the virtual environment:
+3. Activate the virtual environment:
 ```bash
 source venv/bin/activate
 ```
 
-3. Install the package
+4. Install the package
 ```bash
 pip install .
 ```
 
-4. Start LPass
+5. Start LPass
 ```bash
 python3 -m lpass
 ```
@@ -29,6 +36,8 @@ Note: You can also start lpass by executing `lpass` in the terminal directly how
 
 Bonus - If you want to do it all in one step:
 ```bash
+git clone https://github.com/rizwanmustafa/LPass.git
+cd LPass
 python3 -m venv venv
 source venv/bin/activate
 pip install .
