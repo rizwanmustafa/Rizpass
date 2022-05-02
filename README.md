@@ -1,8 +1,8 @@
 **This project is still under construction**
 # Table of Contents
 - [Requirements](#requirements)
-- [Install instructions](#install-instructions)
-- [Configure LPass](#configure-lpass)
+- [Installation](#installation)
+- [Configuration](#configuration)
   * [Configuration File](#configuration-file)
       - [Sample Configuration File](#sample-configuration-file)
 
