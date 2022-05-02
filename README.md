@@ -1,9 +1,16 @@
 **This project is still under construction**
+# Table of Contents
+- [Requirements](#requirements)
+- [Install instructions](#install-instructions)
+- [Configure LPass](#configure-lpass)
+  * [Configuration File](#configuration-file)
+      - [Sample Configuration File](#sample-configuration-file)
+
 # Requirements
 - Python3 
 - Mariadb / MySQL / MongoDB (Optional)
 
-# Install instructions
+# Installation
 
 1. Clone this repository
 ```bash
@@ -44,7 +51,7 @@ pip install .
 python3 -m lpass
 ```
 
-# Configure LPass
+# Configuration
 
 Configuring Lpass is as simple as running the following command and answering the questions asked
 
