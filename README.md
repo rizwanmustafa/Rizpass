@@ -43,3 +43,11 @@ source venv/bin/activate
 pip install .
 python3 -m lpass
 ```
+
+# Configure LPass
+
+Configuring Lpass is as simple as running the following command and answering the questions asked
+
+```bash
+python3 -m lpass --setup
+```
