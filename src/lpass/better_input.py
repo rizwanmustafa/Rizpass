@@ -37,6 +37,45 @@ def better_input(prompt: str, allow_empty: bool, repeat_times: int = 3, pre_vali
     exit()
 
 
+def even_better_input(
+    prompt: str,
+    optional: bool = False,
+    attempts: int = 3,
+    validator: Callable = None,
+) -> str | None:
+    """
+    A better input function that can be used to get input from the user.
+    :param prompt: The prompt to display to the user.
+    :param optional: Whether the input is optional.
+    :param attempts: The max number of attempts the user will be able to provide input.
+    :param validator: The validator to use to validate the input. This function must return True if the input is valid, else return an error message.
+    :return: The input from the user if it was valid otherwise None.
+    """
+
+    ensure_type(prompt, str, "prompt", "string")
+    ensure_type(optional, bool, "optional", "boolean")
+    ensure_type(attempts, int, "attempts", "integer")
+    ensure_type(validator, Callable, "validator", "callable")
+
+    for _ in range(attempts):
+        user_input = input(prompt)
+        valid_input = validator(user_input)
+
+        if valid_input != True and optional == False:
+            print(
+                f"{Fore.RED}{valid_input if type(valid_input) == str else 'Invalid input!'}{Fore.RESET}",
+                file=stderr,
+                end="\n\n"
+            )
+            continue
+
+        return user_input
+
+    print(f"{Fore.RED}Failed to get a valid input!{Fore.RESET}", file=stderr)
+
+    return None
+
+
 def pos_int_input(prompt: str, attempts: int = 3, optional: bool = False) -> int | None:
     """
     Get a positive integer input from user. Returns None if the user fails to provide a valid input.
