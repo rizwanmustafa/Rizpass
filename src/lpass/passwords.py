@@ -126,7 +126,7 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bo
         password = ""
         upper_num = lower_num = number_num = special_num = 0
 
-        for i in range(length):
+        for _ in range(length):
             char_collection = choice(str_collection)
             randomChar = choice(char_collection)
 

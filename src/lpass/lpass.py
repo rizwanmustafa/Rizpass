@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from base64 import b64decode, b64encode
+from base64 import b64encode
 import os
 import pyperclip
 import json
@@ -11,9 +11,9 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .better_input import better_input, get_credential_input, confirm_user_choice
+from .better_input import better_input,  confirm, pos_int_input, str_input
 from .schemas import get_config_schema
-from .passwords import encrypt_string, decrypt_string, generate_password as generate_random_password, encrypt_and_encode
+from .passwords import generate_password as generate_random_password, encrypt_and_encode
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
 from .setup_lpass import setup_password_manager
@@ -35,8 +35,19 @@ config: Dict[str, str] = dict()
 color_init()
 
 
+def get_mode() -> str:
+    if file_manager:
+        return "file"
+    elif config["db_type"] == "mongo":
+        return "mongo"
+    else:
+        return "mysql"
+
+
 def print_menu():
     print(Fore.BLUE + "-------------------------------" + Fore.RESET)
+    print(Fore.BLUE + f"LPass {VERSION_NUMBER}" + Fore.RESET)
+    print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
     print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
     print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
     print(f"{Fore.BLUE}3{Fore.RESET}  Retrieve credential using id")
@@ -167,10 +178,10 @@ def generate_password():
         return
 
     # uppercase, lowercase, numbers, specials
-    uppercase = confirm_user_choice("Uppercase letters? (Y/N): ")
-    lowercase = confirm_user_choice("Lowercase letters? (Y/N): ")
-    numbers = confirm_user_choice("Numbers? (Y/N): ")
-    specials = confirm_user_choice("Special characters? (Y/N): ")
+    uppercase = confirm("Uppercase letters? (Y/N): ")
+    lowercase = confirm("Lowercase letters? (Y/N): ")
+    numbers = confirm("Numbers? (Y/N): ")
+    specials = confirm("Special characters? (Y/N): ")
     print()
 
     generated_pass = generate_random_password(pass_len, uppercase, lowercase, numbers, specials)
@@ -188,24 +199,31 @@ def generate_password():
         print("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
         print(e, file=stderr)
 
-    if not confirm_user_choice("Do you want to add this password (Y/N): "):
+    if not confirm("Do you want to add this password (Y/N): "):
         return
     add_credential(generated_pass)
 
 
 def add_credential(user_password: str = None) -> None:
-    title, _, username, email, password = get_credential_input(
-        title="Title: ",
-        id=False,
-        username="(Optional) Username: ",
-        email="(Optional) Email: ",
-        password=user_password == None,
-        allow_empty=False)
+    title = str_input("Title: ")
+    if title == None:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
 
-    if user_password:
-        password = user_password
+    username = str_input("(Optional) Username: ", optional=True)
+    if username == None:
+        username = ""
 
-    if not confirm_user_choice("Are you sure you want to add this password (Y/N): "):
+    email = str_input("(Optional) Email: ", optional=True)
+    if email == None:
+        email = ""
+
+    password = user_password if user_password else str_input("Password: ", password=True)
+    if password == None:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
+
+    if not confirm("Are you sure you want to add this password (Y/N): ", loose=True):
         return
 
     salt = os.urandom(16)
@@ -235,7 +253,11 @@ def add_credential(user_password: str = None) -> None:
 
 
 def get_credential() -> None:
-    id = int(input("ID: "))
+    # id = int(input("ID: "))
+    id = pos_int_input("ID: ")
+    if not id:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
 
     raw_cred = None
 
@@ -254,13 +276,20 @@ def get_credential() -> None:
 
 
 def filter_credentials() -> None:
-    title_filter, _, username_filter, email_filter, _ = get_credential_input(
-        "(Optional) Title should contain: ",
-        False,
-        "(Optional) Username should contain: ",
-        "(Optional) Email should contain: ", False)
+    title_filter = str_input("(Optional) Title should contain: ", optional=True)
+    if title_filter == None:
+        title_filter = ""
+
+    username_filter = str_input("(Optional) Username should contain: ", optional=True)
+    if username_filter == None:
+        username_filter = ""
+
+    email_filter = str_input("(Optional) Email should contain: ", optional=True)
+    if email_filter == None:
+        email_filter = ""
 
     creds: List[RawCredential] = []
+
     if db_manager:
         creds.extend(db_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
     if file_manager:
@@ -316,19 +345,36 @@ def get_all_encrypted_credentials() -> None:
 
 def modify_credential() -> None:
     # Later add functionality for changing the password itself
-    id = int(input("ID: "))
+    # id = int(input("ID: "))
+    id = pos_int_input("ID: ")
+    if not id:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
 
     old_cred = (db_manager or file_manager).get_credential(id).get_credential(master_pass)
 
     if old_cred == None:
-        print("No credential with given id exists!")
+        print(f"{Fore.RED}No credential with given id exists!{Fore.RESET}", file=stderr)
         return
 
     print("Leave any field empty if you do not wish to change it")
-    new_title, _, new_username, new_email, new_password = get_credential_input(
-        id=False)
+    new_title = str_input("(Optional) Title: ", optional=True)
+    if new_title == None or not new_title.strip():
+        new_title = ""
 
-    if not confirm_user_choice("Are you sure you want to modify this password (Y/N): "):
+    new_username = str_input("(Optional) Username: ", optional=True)
+    if new_username == None or not new_username.strip():
+        new_username = ""
+
+    new_email = str_input("(Optional) Email: ", optional=True)
+    if new_email == None or not new_email.strip():
+        new_email = ""
+
+    new_password = str_input("(Optional) Password: ", password=True, optional=True)
+    if new_password == None or not new_password.strip():
+        new_password = ""
+
+    if not confirm("Are you sure you want to modify this password (Y/N): "):
         return
 
     if new_title == new_username == new_email == new_password == "":
@@ -370,7 +416,11 @@ def modify_credential() -> None:
 
 
 def remove_credential() -> None:
-    id = int(input("ID: "))
+    # id = int(input("ID: "))
+    id = pos_int_input("ID: ")
+    if not id:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
 
     if (db_manager or file_manager).get_credential(id) == None:
         print(f"{Fore.RED}No credential with id: {id} exists!{Fore.RESET}", file=stderr)
@@ -382,7 +432,7 @@ def remove_credential() -> None:
 
 def remove_all_credentials() -> None:
     for _ in range(2):
-        if not confirm_user_choice("Are you sure you want to remove all stored passwords (Y/N): "):
+        if not confirm("Are you sure you want to remove all stored passwords (Y/N): "):
             return
 
     if getpass("Re-enter master password: ") != master_pass:
@@ -401,7 +451,7 @@ def remove_all_credentials() -> None:
 def change_masterpass() -> None:
     global db_manager, master_pass
 
-    if not confirm_user_choice("Are you sure you want to change your masterpassword (Y/N): "):
+    if not confirm("Are you sure you want to change your masterpassword (Y/N): "):
         return
 
     new_masterpass = getpass(
