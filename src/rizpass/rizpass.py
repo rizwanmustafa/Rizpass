@@ -165,7 +165,7 @@ def login() -> None:
         )
 
 
-def generate_password():
+def generate_password() -> None:
     # Integrating new method. Delete this comment later
     pass_len = better_input(
         prompt="Password length (Min: 4): ",
@@ -194,14 +194,14 @@ def generate_password():
 
     try:
         pyperclip.copy(generated_pass)
-        print("The generated password has been copied to your clipboard.")
     except Exception as e:
-        print("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
-        print(e, file=stderr)
+        print(f"{Fore.RED}The generated password could not be copied to your clipboard due to the following error:", file=stderr)
+        print(e, Fore.RESET, file=stderr)
+    else:
+        print("The generated password has been copied to your clipboard.")
 
-    if not confirm("Do you want to add this password (Y/N): "):
-        return
-    add_credential(generated_pass)
+    if confirm("Do you want to add this password (Y/N): "):
+        add_credential(generated_pass)
 
 
 def add_credential(user_password: str = None) -> None:
@@ -249,7 +249,7 @@ def add_credential(user_password: str = None) -> None:
             encrypted_password,
             encoded_salt
         )
-    print("\nPassword added successfully!")
+    print(f"{Fore.GREEN}\nPassword added successfully!{Fore.RESET}")
 
 
 def get_credential() -> None:
@@ -267,7 +267,7 @@ def get_credential() -> None:
         raw_cred = file_manager.get_credential(id)
 
     if raw_cred == None:
-        print("No credential with given id found!")
+        print(f"{Fore.YELLOW}No credential with given id found!{Fore.YELLOW}")
         return
 
     cred: Credential = raw_cred.get_credential(master_pass)
@@ -296,7 +296,7 @@ def filter_credentials() -> None:
         creds.extend(file_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
 
     if not creds:
-        print("No credentials meet your given filter.")
+        print(f"{Fore.YELLOW}No credentials meet your given filter.{Fore.RESET}")
         return
 
     print("Following credentials meet your given filters:")
@@ -314,7 +314,7 @@ def get_all_credentials() -> None:
         if file_manager:
             raw_creds.extend(file_manager.get_all_credentials())
         if not raw_creds:
-            print("No credentials stored yet.")
+            print(f"{Fore.YELLOW}No credentials stored yet.{Fore.RESET}")
             return
 
         print(f"{Fore.MAGENTA}Printing all credentials...{Fore.RESET}")
@@ -328,8 +328,8 @@ def get_all_credentials() -> None:
             lastCred.copy_pass()
 
     except Exception as e:
-        print("Could not get credentials due to the following error:", file=stderr)
-        print(e, file=stderr)
+        print(f"{Fore.RED}Could not get credentials due to the following error:", file=stderr)
+        print(e, Fore.RESET, file=stderr)
 
 
 def get_all_encrypted_credentials() -> None:
@@ -412,7 +412,7 @@ def modify_credential() -> None:
         b64encode(salt).decode("ascii")
     )
 
-    print("Modified credential successfully!")
+    print(f"{Fore.GREEN}Modified credential successfully!{Fore.RESET}")
 
 
 def remove_credential() -> None:
@@ -427,7 +427,7 @@ def remove_credential() -> None:
         return
 
     (db_manager or file_manager).remove_credential(id)
-    print("Removed password successfully!")
+    print(f"{Fore.GREEN}Removed password successfully!{Fore.GREEN}")
 
 
 def remove_all_credentials() -> None:
@@ -445,7 +445,7 @@ def remove_all_credentials() -> None:
     if file_manager:
         file_manager.remove_all_credentials()
 
-    print("Removed all passwords successfully!")
+    print(f"{Fore.GREEN}Removed all passwords successfully!{Fore.RESET}")
 
 
 def change_masterpass() -> None:
@@ -458,8 +458,10 @@ def change_masterpass() -> None:
         "Input new masterpassword (Should meet DB Password Requirements): "
     )
     if new_masterpass == master_pass:
-        print("New masterpassword is the same as the old one!")
+        print(f"{Fore.GREEN}New masterpassword is the same as the old one!{Fore.RESET}")
         return
+
+    # TODO: Move database password change before changing the credentials
 
     # Update credentials to use new masterpass
     raw_creds = (db_manager or file_manager).get_all_credentials()
@@ -548,6 +550,8 @@ def change_masterpass() -> None:
 
     master_pass = new_masterpass
 
+    print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
+
 
 def import_credentials() -> None:
     filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
@@ -557,6 +561,8 @@ def import_credentials() -> None:
         db_manager.import_from_file(master_pass, filename)
     if file_manager:
         file_manager.import_from_file(master_pass, filename)
+
+    print(f"{Fore.GREEN}Imported credentials successfully!{Fore.RESET}")
 
 
 def export_credentials() -> None:
@@ -571,6 +577,8 @@ def export_credentials() -> None:
         file_master_pass if file_master_pass else master_pass
     )
 
+    print(f"{Fore.GREEN}Exported credentials successfully!{Fore.RESET}")
+
 
 def clear_console() -> None:
     print("\033c", end="")
@@ -583,6 +591,7 @@ def signal_handler(signal, frame):
 
 def exit_app(exit_code=0) -> NoReturn:
     db_manager.close() if db_manager else None
+    file_manager.close() if file_manager else None
     exit(exit_code)
 
 
