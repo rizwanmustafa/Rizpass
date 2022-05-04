@@ -461,45 +461,6 @@ def change_masterpass() -> None:
         print(f"{Fore.GREEN}New masterpassword is the same as the old one!{Fore.RESET}")
         return
 
-    # TODO: Move database password change before changing the credentials
-
-    # Update credentials to use new masterpass
-    raw_creds = (db_manager or file_manager).get_all_credentials()
-
-    # Decrypt passwords and encrypt them with new salt and masterpassword
-    for raw_cred in raw_creds:
-        old_cred = raw_cred.get_credential(master_pass)
-        salt = os.urandom(16)
-        new_pass = encrypt_and_encode(
-            new_masterpass,
-            old_cred.password,
-            salt
-        )
-        new_title = encrypt_and_encode(
-            new_masterpass,
-            old_cred.title,
-            salt
-        )
-        new_email = encrypt_and_encode(
-            new_masterpass,
-            old_cred.email,
-            salt
-        )
-        new_username = encrypt_and_encode(
-            new_masterpass,
-            old_cred.username,
-            salt
-        )
-
-        (db_manager or file_manager).modify_credential(
-            raw_cred.id,
-            new_title,
-            new_username,
-            new_email,
-            new_pass,
-            b64encode(salt).decode("ascii")
-        )
-
     # Change database password
     if db_manager:
         # TODO: Implement input validation
@@ -533,7 +494,7 @@ def change_masterpass() -> None:
 
             db_client.close()
 
-            print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
+            print(f"{Fore.GREEN}Changed database user's password successfully!{Fore.RESET}")
 
         db_manager.close()
 
@@ -548,9 +509,45 @@ def change_masterpass() -> None:
             )
         )
 
-    master_pass = new_masterpass
 
-    print(f"{Fore.GREEN}Changed masterpassword successfully!{Fore.RESET}")
+    # Decrypt passwords and encrypt them with new salt and masterpassword
+    raw_creds = (db_manager or file_manager).get_all_credentials()
+    for raw_cred in raw_creds:
+        old_cred = raw_cred.get_credential(master_pass)
+        salt = os.urandom(16)
+        new_pass = encrypt_and_encode(
+            new_masterpass,
+            old_cred.password,
+            salt
+        )
+        new_title = encrypt_and_encode(
+            new_masterpass,
+            old_cred.title,
+            salt
+        )
+        new_email = encrypt_and_encode(
+            new_masterpass,
+            old_cred.email,
+            salt
+        )
+        new_username = encrypt_and_encode(
+            new_masterpass,
+            old_cred.username,
+            salt
+        )
+
+        (db_manager or file_manager).modify_credential(
+            raw_cred.id,
+            new_title,
+            new_username,
+            new_email,
+            new_pass,
+            b64encode(salt).decode("ascii")
+        )
+
+    print(f"{Fore.GREEN}Changed credential's masterpassword successfully!{Fore.RESET}")
+
+    master_pass = new_masterpass
 
 
 def import_credentials() -> None:
