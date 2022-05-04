@@ -16,11 +16,11 @@ from .schemas import get_config_schema
 from .passwords import generate_password as generate_random_password, encrypt_and_encode
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
-from .setup_lpass import setup_password_manager
+from .setup_rizpass import setup_password_manager
 from .file_manager import FileManager
 
-CONFIG_FILE_PATH = os.path.expanduser("~/.lpass.json")
-VERSION_NUMBER = 'v1.0.0'
+CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
+VERSION_NUMBER = 'v0.0.1-alpha'
 
 master_pass:  str = None
 db_manager: DatabaseManager = None
@@ -46,7 +46,7 @@ def get_mode() -> str:
 
 def print_menu():
     print(Fore.BLUE + "-------------------------------" + Fore.RESET)
-    print(Fore.BLUE + f"LPass {VERSION_NUMBER}" + Fore.RESET)
+    print(Fore.BLUE + f"Rizpass {VERSION_NUMBER}" + Fore.RESET)
     print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
     print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
     print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
@@ -111,7 +111,7 @@ def load_config() -> bool:
     global config
 
     if not os.path.isfile(CONFIG_FILE_PATH):
-        print("It looks like you haven't set LPass up.", file=stderr)
+        print("It looks like you haven't set Rizpass up.", file=stderr)
         print("You can do so by using the --setup flag", file=stderr)
         exit(1)
 
@@ -587,7 +587,7 @@ def exit_app(exit_code=0) -> NoReturn:
 
 
 def print_version():
-    print("LPass " + VERSION_NUMBER)
+    print("Rizpass " + VERSION_NUMBER)
 
 
 def get_list_item_safely(list: List[str], index: str) -> str | None:

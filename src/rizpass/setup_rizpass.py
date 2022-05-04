@@ -16,7 +16,7 @@ color_init()
 config = dict()
 master_pass: str | None = None
 
-CONFIG_FILE_PATH = path.expanduser("~/.lpass.json")
+CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
 # TODO: Setup input validation
 
@@ -92,7 +92,7 @@ def setup_mongodb():
 
         access_control_setup = input("Have you set up access control? (Y/N) ").lower()
         if access_control_setup != "y":
-            print("Please setup access control to setup LPass!")
+            print("Please setup access control to setup Rizpass!")
             print("Exiting!")
             exit(1)
 
@@ -172,7 +172,7 @@ def write_settings():
 
 
 def setup_password_manager():
-    print("Setting up LPass...")
+    print("Setting up Rizpass...")
 
     setup_masterpass()
 
