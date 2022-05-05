@@ -32,12 +32,17 @@ def setup_mysql():
     db_host = input("MySQL host: ")
     db_root_user = input("MySQL root username: ")
     db_root_pass = getpass("MySQL root password: ")
-    db_port = int(input("MySQL port (Optional): "))
+    db_port = input("MySQL port (Optional): ")
+    if db_port.isnumeric():
+        db_port = int(db_port)
+    else:
+        print(f"{Fore.YELLOW}Using default port 3306{Fore.RESET}")
+        db_port = 3306
     db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
         host=db_host,
         user=db_root_user,
         password=db_root_pass,
-        port=db_port if db_port else 3306,
+        port=db_port,
         connection_timeout=3
     )
 
@@ -100,7 +105,12 @@ def setup_mongodb():
         db_host = input("MongoDB host: ")
         db_root_user = input("MongoDB root username: ")
         db_root_pass = getpass("MongoDB root password: ")
-        db_port = int(input("MongoDB port (Optional): "))
+        db_port = input("MongoDB port (Optional): ")
+        if db_port.isnumeric():
+            db_port = int(db_port)
+        else:
+            db_port = 27017
+            print(f"{Fore.YELLOW}Using default port 27017{Fore.RESET}")
         db_client = MongoClient(
             db_host,
             username=quote_plus(db_root_user),
