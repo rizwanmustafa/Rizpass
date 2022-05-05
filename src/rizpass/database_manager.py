@@ -298,34 +298,59 @@ class DatabaseManager:
         if not file_creds:
             print("There are no credentials in the file.")
 
+        print("\nBegin importing file credentials...")
+
         for file_cred in file_creds:
             salt = b64decode(file_cred["salt"])
-            temp_cred = {"id": file_cred["id"], "salt": file_cred["salt"]}
 
-            for i in file_cred:
-                if i == "salt" or i == "id":
-                    continue
+            # TODO: Rather than decrypting them manually, use the RawCredential class to get_credential. This will give more output to user
 
-                decrypted_prop: str = decode_and_decrypt(
-                    file_master_pass,
-                    file_cred[i],
-                    salt
-                )
-                temp_cred[i] = encrypt_and_encode(
-                    master_pass,
-                    decrypted_prop,
-                    salt
-                )
-
-            self.add_credential(
-                temp_cred["title"],
-                temp_cred["username"],
-                temp_cred["email"],
-                temp_cred["password"],
-                temp_cred["salt"]
+            raw_cred = RawCredential(
+                id=file_cred["id"],
+                title=file_cred["title"],
+                username=file_cred["username"],
+                email=file_cred["email"],
+                password=file_cred["password"],
+                salt=file_cred["salt"],
             )
 
-        print("All credentials have been successfully added!")
+            temp_cred = raw_cred.get_credential(file_master_pass)
+
+            self.add_credential(
+                encrypt_and_encode(master_pass, temp_cred.title, salt),
+                encrypt_and_encode(master_pass, temp_cred.username, salt),
+                encrypt_and_encode(master_pass, temp_cred.email, salt),
+                encrypt_and_encode(master_pass, temp_cred.password, salt),
+                file_cred["salt"],
+            )
+
+            print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
+            print()
+
+            # temp_cred = {"id": file_cred["id"], "salt": file_cred["salt"]}
+
+            # for i in file_cred:
+            #     if i == "salt" or i == "id":
+            #         continue
+
+            #     decrypted_prop: str = decode_and_decrypt(
+            #         file_master_pass,
+            #         file_cred[i],
+            #         salt
+            #     )
+            #     temp_cred[i] = encrypt_and_encode(
+            #         master_pass,
+            #         decrypted_prop,
+            #         salt
+            #     )
+
+            # self.add_credential(
+            #     temp_cred["title"],
+            #     temp_cred["username"],
+            #     temp_cred["email"],
+            #     temp_cred["password"],
+            #     temp_cred["salt"]
+            # )
 
     def close(self):
         try:
