@@ -5,7 +5,7 @@ import pyperclip
 import json
 from getpass import getpass
 from sys import exit, argv, stderr
-from typing import List, Dict, NoReturn
+from typing import Callable, List, Dict, NoReturn, Tuple
 from cerberus import Validator as SchemaValidator
 from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
@@ -44,26 +44,6 @@ def get_mode() -> str:
         return "mysql"
 
 
-def print_menu():
-    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
-    print(Fore.BLUE + f"Rizpass {VERSION_NUMBER}" + Fore.RESET)
-    print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
-    print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
-    print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
-    print(f"{Fore.BLUE}3{Fore.RESET}  Retrieve credential using id")
-    print(f"{Fore.BLUE}4{Fore.RESET}  Filter credentials")
-    print(f"{Fore.BLUE}5{Fore.RESET}  List all credentials")
-    print(f"{Fore.BLUE}6{Fore.RESET}  Modify credential")
-    print(f"{Fore.BLUE}7{Fore.RESET}  Remove credential")
-    print(f"{Fore.BLUE}8{Fore.RESET}  Remove all credentials")
-    print(f"{Fore.BLUE}9{Fore.RESET}  Change master password")
-    print(f"{Fore.BLUE}10{Fore.RESET} Export credentials to a JSON file")
-    print(f"{Fore.BLUE}11{Fore.RESET} Import credentials from a JSON file")
-    print(f"{Fore.BLUE}12{Fore.RESET} List all credentials (encrypted and encoded)")
-    print(f"{Fore.BLUE}13{Fore.RESET} Exit")
-    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
-
-
 def perform_tasks() -> None:
     max_limit = 13
     user_choice = better_input(
@@ -77,34 +57,13 @@ def perform_tasks() -> None:
     if user_choice == None:
         return
 
-    print()
+    # print()
+    clear_console()
 
-    if user_choice == 1:
-        generate_password()
-    elif user_choice == 2:
-        add_credential()
-    elif user_choice == 3:
-        get_credential()
-    elif user_choice == 4:
-        filter_credentials()
-    elif user_choice == 5:
-        get_all_credentials()
-    elif user_choice == 6:
-        modify_credential()
-    elif user_choice == 7:
-        remove_credential()
-    elif user_choice == 8:
-        remove_all_credentials()
-    elif user_choice == 9:
-        change_masterpass()
-    elif user_choice == 10:
-        export_credentials()
-    elif user_choice == 11:
-        import_credentials()
-    elif user_choice == 12:
-        get_all_encrypted_credentials()
-    elif user_choice == 13:
-        exit_app()
+    menu_items[user_choice][1]()
+
+    print()
+    input("Press enter to continue...")
 
 
 def load_config() -> bool:
@@ -509,7 +468,6 @@ def change_masterpass() -> None:
             )
         )
 
-
     # Decrypt passwords and encrypt them with new salt and master password
     raw_creds = (db_manager or file_manager).get_all_credentials()
     for raw_cred in raw_creds:
@@ -632,6 +590,48 @@ def handle_args(args: List[str]) -> None:
 # Handle interruptions
 signal.signal(signal.SIGINT, signal_handler)
 
+menu_items: Dict[str, Tuple[str, Callable]] = {
+    1: ("Generate a password", generate_password),
+    2: ("Add a credential", add_credential),
+    3: ("Retrieve credential using id", get_credential),
+    4: ("Filter credentials", filter_credentials),
+    5: ("List all credentials", get_all_credentials),
+    6: ("Modify credential", modify_credential),
+    7: ("Remove credential", remove_credential),
+    8: ("Remove all credentials", remove_all_credentials),
+    9: ("Change master password", change_masterpass),
+    10: ("Export credentials to a JSON file", export_credentials),
+    11: ("Import credentials from a JSON file", import_credentials),
+    12: ("List all credentials (encrypted and encoded)", get_all_encrypted_credentials),
+    13: ("Exit", exit_app),
+}
+
+
+def print_menu():
+    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
+    print(Fore.BLUE + f"Rizpass {VERSION_NUMBER}" + Fore.RESET)
+    print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
+    print()
+    # print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
+    # print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
+    # print(f"{Fore.BLUE}3{Fore.RESET}  Retrieve credential using id")
+    # print(f"{Fore.BLUE}4{Fore.RESET}  Filter credentials")
+    # print(f"{Fore.BLUE}5{Fore.RESET}  List all credentials")
+    # print(f"{Fore.BLUE}6{Fore.RESET}  Modify credential")
+    # print(f"{Fore.BLUE}7{Fore.RESET}  Remove credential")
+    # print(f"{Fore.BLUE}8{Fore.RESET}  Remove all credentials")
+    # print(f"{Fore.BLUE}9{Fore.RESET}  Change master password")
+    # print(f"{Fore.BLUE}10{Fore.RESET} Export credentials to a JSON file")
+    # print(f"{Fore.BLUE}11{Fore.RESET} Import credentials from a JSON file")
+    # print(f"{Fore.BLUE}12{Fore.RESET} List all credentials (encrypted and encoded)")
+    # print(f"{Fore.BLUE}13{Fore.RESET} Exit")
+
+    for key in menu_items:
+        print(Fore.BLUE + str(key).ljust(2) + Fore.RESET + "  " + menu_items[key][0])
+        pass
+
+    print(Fore.BLUE + "-------------------------------" + Fore.RESET)
+
 
 def init():
     handle_args(argv)
@@ -641,7 +641,6 @@ def init():
     while True:
         print_menu()
         perform_tasks()
-        input("\nPress Enter to continue...")
         clear_console()
 
 
