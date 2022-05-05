@@ -267,15 +267,16 @@ class DatabaseManager:
         cred_objs = []
 
         for raw_cred in raw_creds:
+            salt = b64decode(raw_cred.salt)
             cred = raw_cred.get_credential(master_pass)
 
             cred_objs.append({
                 "id": cred.id,
-                "title": encrypt_and_encode(file_master_pass, cred.title, raw_cred.salt),
-                "username": encrypt_and_encode(file_master_pass, cred.username, raw_cred.salt),
-                "email": encrypt_and_encode(file_master_pass, cred.email, raw_cred.salt),
-                "password": encrypt_and_encode(file_master_pass, cred.password, raw_cred.salt),
-                "salt": b64encode(raw_cred.salt).decode('ascii'),
+                "title": encrypt_and_encode(file_master_pass, cred.title, salt),
+                "username": encrypt_and_encode(file_master_pass, cred.username, salt),
+                "email": encrypt_and_encode(file_master_pass, cred.email, salt),
+                "password": encrypt_and_encode(file_master_pass, cred.password, salt),
+                "salt": raw_cred.salt,
             })
 
         dump(cred_objs, open(file_path, "w"))

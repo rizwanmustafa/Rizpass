@@ -13,7 +13,7 @@ from .validator import ensure_type
 def __get_custom_fernet_object(master_pass: str, salt: bytes) -> Fernet:
     master_pass = bytes(master_pass, "utf-8")
 
-    # Get custom key for Fernet using user's masterpassword
+    # Get custom key for Fernet using user's master password
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,

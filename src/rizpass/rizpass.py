@@ -149,7 +149,7 @@ def load_config() -> bool:
 
 def login() -> None:
     global master_pass, db_manager, creds_file_path, file_manager
-    master_pass = getpass("Masterpassword: ")
+    master_pass = getpass("Master Password: ")
     if creds_file_path != None:
         file_manager = FileManager(creds_file_path)
     else:
@@ -451,14 +451,14 @@ def remove_all_credentials() -> None:
 def change_masterpass() -> None:
     global db_manager, master_pass
 
-    if not confirm("Are you sure you want to change your masterpassword (Y/N): "):
+    if not confirm("Are you sure you want to change your master password (Y/N): "):
         return
 
     new_masterpass = getpass(
-        "Input new masterpassword (Should meet DB Password Requirements): "
+        "Input new master password (Should meet DB Password Requirements): "
     )
     if new_masterpass == master_pass:
-        print(f"{Fore.GREEN}New masterpassword is the same as the old one!{Fore.RESET}")
+        print(f"{Fore.GREEN}New master password is the same as the old one!{Fore.RESET}")
         return
 
     # Change database password
@@ -510,7 +510,7 @@ def change_masterpass() -> None:
         )
 
 
-    # Decrypt passwords and encrypt them with new salt and masterpassword
+    # Decrypt passwords and encrypt them with new salt and master password
     raw_creds = (db_manager or file_manager).get_all_credentials()
     for raw_cred in raw_creds:
         old_cred = raw_cred.get_credential(master_pass)
@@ -545,7 +545,7 @@ def change_masterpass() -> None:
             b64encode(salt).decode("ascii")
         )
 
-    print(f"{Fore.GREEN}Changed credential's masterpassword successfully!{Fore.RESET}")
+    print(f"{Fore.GREEN}Changed credential's master password successfully!{Fore.RESET}")
 
     master_pass = new_masterpass
 
