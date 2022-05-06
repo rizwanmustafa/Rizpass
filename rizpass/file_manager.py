@@ -1,14 +1,11 @@
 from os import path
 from sys import stderr
-from base64 import b64encode, b64decode
 from json import load as load_json, dump as dump_json
 from typing import List
-from getpass import getpass
 from colorama import Fore, init as colorama_init
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
-from .passwords import encrypt_and_encode, generate_salt
 
 # TODO: Convert credentials from an array to an object with id as key
 
