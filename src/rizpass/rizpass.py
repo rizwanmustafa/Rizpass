@@ -72,6 +72,7 @@ def load_config() -> bool:
     if not os.path.isfile(CONFIG_FILE_PATH):
         print("It looks like you haven't set Rizpass up.", file=stderr)
         print("You can do so by using the --setup flag", file=stderr)
+        print("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
         exit(1)
 
     try:
