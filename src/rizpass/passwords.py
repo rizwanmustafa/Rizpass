@@ -1,3 +1,4 @@
+import secrets
 from sys import stderr
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -155,3 +156,8 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, numbers: bo
     print("Could not generate password", file=stderr)
     print(f"Tried {tries + 1} times", file=stderr)
     return None
+
+def generate_salt(length: int) -> bytes | None:
+    # Exception handling
+    ensure_type(length, int, "length", "int")
+    return  secrets.token_bytes(length)

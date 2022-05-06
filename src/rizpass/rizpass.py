@@ -13,7 +13,7 @@ import signal
 
 from .better_input import confirm, better_input, even_better_input, pos_int_input
 from .schemas import get_config_schema
-from .passwords import generate_password as generate_random_password, encrypt_and_encode
+from .passwords import generate_password as generate_random_password, encrypt_and_encode, generate_salt
 from .credentials import RawCredential, Credential
 from .database_manager import DatabaseManager, DbConfig
 from .setup_rizpass import setup_password_manager
@@ -184,7 +184,7 @@ def add_credential(user_password: str = None) -> None:
     if not confirm("Are you sure you want to add this password (Y/N): ", loose=True):
         return
 
-    salt = os.urandom(16)
+    salt = generate_salt(16)
     encrypted_title = encrypt_and_encode(master_pass, title, salt)
     encrypted_username = encrypt_and_encode(master_pass, username, salt)
     encrypted_email = encrypt_and_encode(master_pass, email, salt)
@@ -338,7 +338,7 @@ def modify_credential() -> None:
     if new_title == new_username == new_email == new_password == "":
         return
 
-    salt = os.urandom(16)
+    salt = generate_salt(16)
 
     new_pass = encrypt_and_encode(
         master_pass,
@@ -471,7 +471,7 @@ def change_masterpass() -> None:
     raw_creds = (db_manager or file_manager).get_all_credentials()
     for raw_cred in raw_creds:
         old_cred = raw_cred.get_credential(master_pass)
-        salt = os.urandom(16)
+        salt = generate_salt(16)
         new_pass = encrypt_and_encode(
             new_masterpass,
             old_cred.password,
