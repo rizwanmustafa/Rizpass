@@ -2,7 +2,7 @@ from getpass import getpass
 from sys import exit, stderr
 from os import path
 from json import dump, load
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from typing import List
 from pymongo.database import Database as MongoDatabase
 from pymongo.collection import Collection as MongoCollection
@@ -14,7 +14,7 @@ from colorama import Fore
 
 
 from .credentials import RawCredential, Credential
-from .passwords import decode_and_decrypt, encrypt_and_encode
+from .passwords import encrypt_and_encode, generate_salt
 from .validator import ensure_type
 
 
@@ -301,8 +301,6 @@ class DatabaseManager:
         print("\nBegin importing file credentials...")
 
         for file_cred in file_creds:
-            salt = b64decode(file_cred["salt"])
-
             # TODO: Rather than decrypting them manually, use the RawCredential class to get_credential. This will give more output to user
 
             raw_cred = RawCredential(
@@ -314,14 +312,16 @@ class DatabaseManager:
                 salt=file_cred["salt"],
             )
 
-            temp_cred = raw_cred.get_credential(file_master_pass)
+            salt = generate_salt(16)
+
+            new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
 
             self.add_credential(
-                encrypt_and_encode(master_pass, temp_cred.title, salt),
-                encrypt_and_encode(master_pass, temp_cred.username, salt),
-                encrypt_and_encode(master_pass, temp_cred.email, salt),
-                encrypt_and_encode(master_pass, temp_cred.password, salt),
-                file_cred["salt"],
+                new_cred.title,
+                new_cred.username,
+                new_cred.email,
+                new_cred.password,
+                new_cred.salt,
             )
 
             print(f"{Fore.GREEN}Credential added.{Fore.RESET}")

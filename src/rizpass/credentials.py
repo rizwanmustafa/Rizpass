@@ -1,9 +1,9 @@
 from sys import stderr
-from base64 import b64decode
+from base64 import b64decode, b64encode
 import pyperclip
 from colorama import Fore
 
-from .passwords import decode_and_decrypt
+from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
 
 
@@ -117,6 +117,45 @@ class Credential:
         string += f"{Fore.BLUE}Password:{Fore.RESET} {self.password}\n"
         string += f"{Fore.BLUE}-------------------------------{Fore.RESET}"
         return string
+
+    def get_raw_credential(self, master_pass: str, salt: bytes) -> RawCredential:
+        ensure_type(master_pass, str, "master_pass", "string")
+        ensure_type(salt, bytes, "salt", "bytes")
+
+        title = encrypt_and_encode(
+            master_pass,
+            self.title,
+            salt
+        )
+        username = encrypt_and_encode(
+
+            master_pass,
+            self.username,
+            salt
+        )
+        email = encrypt_and_encode(
+            master_pass,
+            self.email,
+            salt
+
+
+        )
+        password = encrypt_and_encode(
+            master_pass,
+            self.password,
+            salt
+        )
+        if title != None and username != None and email != None and password != None:
+            print(f"{Fore.GREEN}Encryption sucessful!{Fore.RESET}")
+
+        return RawCredential(
+            self.id,
+            title,
+            username,
+            email,
+            password,
+            b64encode(salt).decode()
+        )
 
     def copy_pass(self):
         try:

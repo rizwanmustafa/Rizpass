@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .better_input import confirm, better_input, even_better_input, pos_int_input
+from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
 from .passwords import generate_password as generate_random_password, encrypt_and_encode, generate_salt
 from .credentials import RawCredential, Credential

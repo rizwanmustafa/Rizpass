@@ -8,7 +8,7 @@ from colorama import Fore, init as colorama_init
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
-from .passwords import decode_and_decrypt, encrypt_and_encode
+from .passwords import encrypt_and_encode, generate_salt
 
 # TODO: Convert credentials from an array to an object with id as key
 
@@ -209,32 +209,33 @@ class FileManager:
         if not file_creds:
             print("There are no credentials in the file.")
 
+        # TODO: Try and remove the import/export methods as they are doing what they are not supposed to do which is encryption and decryption.
+
         for file_cred in file_creds:
-            salt = b64decode(file_cred["salt"])
-            temp_cred = {"id": file_cred["id"], "salt": file_cred["salt"]}
 
-            for i in file_cred:
-                if i == "salt" or i == "id":
-                    continue
+            raw_cred = RawCredential(
+                id=file_cred["id"],
+                title=file_cred["title"],
+                username=file_cred["username"],
+                email=file_cred["email"],
+                password=file_cred["password"],
+                salt=file_cred["salt"],
+            )
 
-                decrypted_prop: str = decode_and_decrypt(
-                    file_master_pass,
-                    file_cred[i],
-                    salt
-                )
-                temp_cred[i] = encrypt_and_encode(
-                    master_pass,
-                    decrypted_prop,
-                    salt
-                )
+            salt = generate_salt(16)
+
+            new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
 
             self.add_credential(
-                temp_cred["title"],
-                temp_cred["username"],
-                temp_cred["email"],
-                temp_cred["password"],
-                temp_cred["salt"]
+                new_cred.title,
+                new_cred.username,
+                new_cred.email,
+                new_cred.password,
+                new_cred.salt,
             )
+
+            print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
+            print()
 
         print("All credentials have been successfully added!")
 
