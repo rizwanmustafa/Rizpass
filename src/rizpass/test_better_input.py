@@ -4,7 +4,7 @@ from unittest.mock import patch
 from .better_input import pos_int_input, better_input, confirm
 
 
-class TestValidator(unittest.TestCase):
+class TestBetterInput(unittest.TestCase):
     @patch("builtins.input")
     def test_better_input(self, mock_input):
         # Test normal input
