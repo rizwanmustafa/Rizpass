@@ -79,7 +79,7 @@ def confirm(prompt: str, loose: bool = False):
     ensure_type(prompt, str, "prompt", "string")
     ensure_type(loose, bool, "loose", "boolean")
 
-    user_input = input(prompt).lower()
+    user_input = input(prompt).lower().strip()
     if not loose:
         return user_input == 'y'
     else:
