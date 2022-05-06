@@ -15,7 +15,7 @@ from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
 from .passwords import generate_password as generate_random_password, encrypt_and_encode, generate_salt
 from .credentials import RawCredential, Credential
-from .database_manager import DatabaseManager, DbConfig
+from .database_manager import DbConfig, MysqlManager, MongoManager
 from .setup_rizpass import setup_password_manager
 from .file_manager import FileManager
 
@@ -23,7 +23,7 @@ CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
 VERSION_NUMBER = 'v0.0.1-alpha'
 
 master_pass:  str = None
-db_manager: DatabaseManager = None
+db_manager:  MysqlManager | MongoManager = None
 
 creds_file_path: str = None
 file_manager: FileManager = None
@@ -109,20 +109,22 @@ def load_config() -> bool:
 
 def login() -> None:
     global master_pass, db_manager, creds_file_path, file_manager
+
     master_pass = getpass("Master Password: ")
     if creds_file_path != None:
         file_manager = FileManager(creds_file_path)
     else:
-        db_manager = DatabaseManager(
-            config["db_type"],
-            DbConfig(
-                config["db_host"],
-                config["db_user"],
-                master_pass,
-                config["db_name"],
-                config.get("db_port", None)
-            )
+        db_config = DbConfig(
+            config["db_host"],
+            config["db_user"],
+            master_pass,
+            config["db_name"],
+            config.get("db_port", None)
         )
+        if config["db_type"] == "mysql":
+            db_manager = MysqlManager(db_config)
+        elif config["db_type"] == "mongo":
+            db_manager = MongoManager(db_config)
 
 
 def generate_password() -> None:
@@ -426,7 +428,7 @@ def change_masterpass() -> None:
         if config["db_type"] == "mysql":
             root_user = better_input("Input mysql root username: ")
             root_pass = better_input("Input mysql root password: ", password=True)  # Implement a better_pass method later using the getpass
-            temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
+            temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
             temp_db_manager.mysql_cursor.execute(
                 "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
                 (config["db_user"],  new_masterpass, )
@@ -457,16 +459,17 @@ def change_masterpass() -> None:
 
         db_manager.close()
 
-        db_manager = DatabaseManager(
-            config.get("db_type", "mysql"),
-            DbConfig(
-                config["db_host"],
-                config["db_user"],
-                new_masterpass,
-                config["db_name"],
-                config.get("db_port", None)
-            )
+        db_config = DbConfig(
+            config["db_host"],
+            config["db_user"],
+            new_masterpass,
+            config["db_name"],
+            config.get("db_port", None)
         )
+        if config["db_type"] == "mysql":
+            db_manager = MysqlManager(db_config)
+        elif config["db_type"] == "mongo":
+            db_manager = MongoManager(db_config)
 
     # Decrypt passwords and encrypt them with new salt and master password
     raw_creds = (db_manager or file_manager).get_all_credentials()
