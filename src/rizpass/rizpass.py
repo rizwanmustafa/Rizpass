@@ -11,6 +11,8 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
+from rizpass.validator import ensure_type
+
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
 from .passwords import generate_password as generate_random_password, encrypt_and_encode, generate_salt
@@ -166,6 +168,8 @@ def generate_password() -> None:
 
 
 def add_credential(user_password: str = None) -> None:
+    ensure_type(user_password, str, "user_password", "string")
+
     title = better_input("Title: ")
     if title == None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
@@ -614,14 +618,19 @@ def print_version():
     print("Rizpass " + VERSION_NUMBER)
 
 
-def get_list_item_safely(list: List[str], index: str) -> str | None:
-    if len(list) <= index:
+def get_list_item_safely(array: List[str], index: str) -> str | None:
+    ensure_type(array, list, "array", "list")
+    ensure_type(index, str)
+
+    if len(array) <= index:
         return None
     else:
-        return list[index]
+        return array[index]
 
 
 def handle_args(args: List[str]) -> None:
+    ensure_type(args, list, "args", "list")
+
     global creds_file_path
     ignore_args = {0}
 

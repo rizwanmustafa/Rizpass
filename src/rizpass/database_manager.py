@@ -1,8 +1,4 @@
-from getpass import getpass
 from sys import exit, stderr
-from os import path
-from json import dump, load
-from base64 import b64decode
 from typing import List
 from pymongo.database import Database as MongoDatabase
 from pymongo.collection import Collection as MongoCollection
@@ -14,12 +10,17 @@ from colorama import Fore
 
 
 from .credentials import RawCredential, Credential
-from .passwords import encrypt_and_encode, generate_salt
 from .validator import ensure_type
 
 
 class DbConfig:
     def __init__(self, host: str, user: str, password: str, db: str, port: int | None = None):
+        ensure_type(host, str, "host", "string")
+        ensure_type(user, str, "user", "string")
+        ensure_type(password, str, "password", "string")
+        ensure_type(db, str, "db", "string")
+        ensure_type(port, int | None, "port", "int | None")
+
         self.host = host
         self.user = user
         self.password = password
@@ -32,6 +33,8 @@ class MysqlManager:
     mysql_cursor: any = None
 
     def __init__(self,  db_config: DbConfig):
+        ensure_type(db_config, DbConfig, "db_config", "DbConfig")
+
         try:
             self.mysql_db: mysql.connector.MySQLConnection = mysql.connector.connect(
                 host=db_config.host,
@@ -184,6 +187,8 @@ class MongoManager:
     mongo_collection: MongoCollection | None = None
 
     def __init__(self,  db_config: DbConfig):
+        ensure_type(db_config, DbConfig, "db_config", "DbConfig")
+
         try:
             self.mongo_client = MongoClient(
                 host=quote_plus(db_config.host),
