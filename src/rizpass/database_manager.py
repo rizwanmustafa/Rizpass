@@ -93,7 +93,8 @@ class MysqlManager:
             query_result[1],
             query_result[2],
             query_result[3],
-            query_result[4]
+            query_result[4],
+            query_result[5]
         )
 
     def remove_credential(self, id: int) -> None:
