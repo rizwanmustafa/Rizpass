@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .better_input import better_input,  confirm, pos_int_input, str_input
+from .better_input import confirm, better_input, even_better_input, pos_int_input
 from .schemas import get_config_schema
 from .passwords import generate_password as generate_random_password, encrypt_and_encode
 from .credentials import RawCredential, Credential
@@ -46,16 +46,16 @@ def get_mode() -> str:
 
 def perform_tasks() -> None:
     max_limit = 13
+
     user_choice = better_input(
-        prompt="Choice: ",
-        allow_empty=False,
-        type_converter=int,
-        pre_validator=lambda x: x.isnumeric(),
-        post_validator=lambda x: x <= max_limit and x > 0
+        "Choice: ",
+        validator=lambda x:  True if x.isnumeric() and int(x) <= max_limit and int(x) > 0 else "Choice must be <= 13 and >= 1"
     )
 
     if user_choice == None:
         return
+
+    user_choice = int(user_choice)
 
     # print()
     clear_console()
@@ -125,16 +125,15 @@ def login() -> None:
 
 
 def generate_password() -> None:
-    # Integrating new method. Delete this comment later
+
     pass_len = better_input(
-        prompt="Password length (Min: 4): ",
-        allow_empty=False,
-        type_converter=int,
-        pre_validator=lambda x: x.isnumeric(),
-        post_validator=lambda x: x >= 4
+        "Password length (Min: 4): ",
+        validator=lambda x:  True if x.isnumeric() and int(x) >= 4 else "Password length must be >= 4 ",
     )
+
     if pass_len == None:
         return
+    pass_len = int(pass_len)
 
     # uppercase, lowercase, numbers, specials
     uppercase = confirm("Uppercase letters? (Y/N): ")
@@ -164,20 +163,20 @@ def generate_password() -> None:
 
 
 def add_credential(user_password: str = None) -> None:
-    title = str_input("Title: ")
+    title = better_input("Title: ")
     if title == None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
 
-    username = str_input("(Optional) Username: ", optional=True)
+    username = better_input("(Optional) Username: ", optional=True)
     if username == None:
         username = ""
 
-    email = str_input("(Optional) Email: ", optional=True)
+    email = better_input("(Optional) Email: ", optional=True)
     if email == None:
         email = ""
 
-    password = user_password if user_password else str_input("Password: ", password=True)
+    password = user_password if user_password else better_input("Password: ", password=True)
     if password == None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
@@ -235,15 +234,15 @@ def get_credential() -> None:
 
 
 def filter_credentials() -> None:
-    title_filter = str_input("(Optional) Title should contain: ", optional=True)
+    title_filter = better_input("(Optional) Title should contain: ", optional=True)
     if title_filter == None:
         title_filter = ""
 
-    username_filter = str_input("(Optional) Username should contain: ", optional=True)
+    username_filter = better_input("(Optional) Username should contain: ", optional=True)
     if username_filter == None:
         username_filter = ""
 
-    email_filter = str_input("(Optional) Email should contain: ", optional=True)
+    email_filter = better_input("(Optional) Email should contain: ", optional=True)
     if email_filter == None:
         email_filter = ""
 
@@ -317,19 +316,19 @@ def modify_credential() -> None:
         return
 
     print("Leave any field empty if you do not wish to change it")
-    new_title = str_input("(Optional) Title: ", optional=True)
+    new_title = better_input("(Optional) Title: ", optional=True)
     if new_title == None or not new_title.strip():
         new_title = ""
 
-    new_username = str_input("(Optional) Username: ", optional=True)
+    new_username = better_input("(Optional) Username: ", optional=True)
     if new_username == None or not new_username.strip():
         new_username = ""
 
-    new_email = str_input("(Optional) Email: ", optional=True)
+    new_email = better_input("(Optional) Email: ", optional=True)
     if new_email == None or not new_email.strip():
         new_email = ""
 
-    new_password = str_input("(Optional) Password: ", password=True, optional=True)
+    new_password = better_input("(Optional) Password: ", password=True, optional=True)
     if new_password == None or not new_password.strip():
         new_password = ""
 
@@ -424,8 +423,8 @@ def change_masterpass() -> None:
     if db_manager:
         # TODO: Implement input validation
         if config["db_type"] == "mysql":
-            root_user = better_input(prompt="Input mysql root username: ", allow_empty=False)
-            root_pass = getpass("Input mysql root password: ")  # Implement a better_pass method later using the getpass
+            root_user = better_input("Input mysql root username: ")
+            root_pass = better_input("Input mysql root password: ", password=True)  # Implement a better_pass method later using the getpass
             temp_db_manager = DatabaseManager("mysql", DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
             temp_db_manager.mysql_cursor.execute(
                 "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
@@ -433,8 +432,8 @@ def change_masterpass() -> None:
             )
 
         elif config["db_type"] == "mongo":
-            root_user = better_input(prompt="Input MongoDB root username: ", allow_empty=False)
-            root_pass = getpass("Input MongoDB root password: ")
+            root_user = better_input("Input MongoDB root username: ")
+            root_pass = better_input("Input MongoDB root password: ", password=True)
 
             db_client = MongoClient(
                 config["db_host"],
@@ -509,7 +508,7 @@ def change_masterpass() -> None:
 
 
 def import_credentials() -> None:
-    filename = better_input(prompt="Filename: ", allow_empty=False, pre_validator=lambda x: os.path.isfile(x))
+    filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
         return
     if db_manager:
@@ -521,7 +520,7 @@ def import_credentials() -> None:
 
 
 def export_credentials() -> None:
-    file_path = better_input(prompt="File Path: ", allow_empty=False)
+    file_path = better_input("File Path: ")
     file_master_pass = getpass("File Master Password (Optional): ")
 
     if file_path == None:
