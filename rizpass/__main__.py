@@ -1,3 +1,3 @@
-from rizpass.rizpass import init
+from .rizpass import init
 
 init()
