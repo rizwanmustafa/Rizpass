@@ -25,6 +25,8 @@ class DbConfig:
         self.password = password
         self.db = db
         self.port = port
+
+
 class MysqlManager:
     mysql_db: mysql.connector.MySQLConnection | None = None
     mysql_cursor: any = None
@@ -161,82 +163,6 @@ class MysqlManager:
             print("Exiting!")
             exit(1)
 
-    def export_to_file(self, file_path: str, master_pass: str, file_master_pass: str) -> None:
-        ensure_type(file_path, str, "filename", "string")
-        ensure_type(master_pass, str, "master_pass", "string")
-        ensure_type(file_master_pass, str, "file_master_pass", "string")
-
-        if not file_path:
-            raise ValueError("Invalid value provided for parameter 'filename'")
-
-        raw_creds: List[RawCredential] = self.get_all_credentials()
-        if not raw_creds:
-            print("No credentials to export.")
-            return
-
-        cred_objs = []
-
-        for raw_cred in raw_creds:
-            salt = b64decode(raw_cred.salt)
-            cred = raw_cred.get_credential(master_pass)
-
-            cred_objs.append({
-                "id": cred.id,
-                "title": encrypt_and_encode(file_master_pass, cred.title, salt),
-                "username": encrypt_and_encode(file_master_pass, cred.username, salt),
-                "email": encrypt_and_encode(file_master_pass, cred.email, salt),
-                "password": encrypt_and_encode(file_master_pass, cred.password, salt),
-                "salt": raw_cred.salt,
-            })
-
-        dump(cred_objs, open(file_path, "w"))
-
-    def import_from_file(self, master_pass, filename: str) -> None:
-        ensure_type(master_pass, str, "master_password", "string")
-        ensure_type(filename, str, "filename", "string")
-
-        if not filename:
-            raise ValueError("Invalid value provided for parameter 'filename'")
-
-        if not path.isfile(filename):
-            print(f"{filename} does not exist!")
-            raise Exception
-
-        file_master_pass: str = getpass("Input master password for file: ")
-        file_creds = load(open(filename, "r"))
-
-        if not file_creds:
-            print("There are no credentials in the file.")
-
-        print("\nBegin importing file credentials...")
-
-        for file_cred in file_creds:
-            # TODO: Rather than decrypting them manually, use the RawCredential class to get_credential. This will give more output to user
-
-            raw_cred = RawCredential(
-                id=file_cred["id"],
-                title=file_cred["title"],
-                username=file_cred["username"],
-                email=file_cred["email"],
-                password=file_cred["password"],
-                salt=file_cred["salt"],
-            )
-
-            salt = generate_salt(16)
-
-            new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
-
-            self.add_credential(
-                new_cred.title,
-                new_cred.username,
-                new_cred.email,
-                new_cred.password,
-                new_cred.salt,
-            )
-
-            print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
-            print()
-
     def close(self):
         try:
             if self.mysql_cursor:
@@ -250,6 +176,8 @@ class MysqlManager:
 
     def __del__(self):
         self.close()
+
+
 class MongoManager:
     mongo_db: MongoDatabase | None = None
     mongo_client: MongoClient | None = None
@@ -385,82 +313,6 @@ class MongoManager:
                 filtered_creds.append(cred)
 
         return filtered_creds
-
-    def export_to_file(self, file_path: str, master_pass: str, file_master_pass: str) -> None:
-        ensure_type(file_path, str, "filename", "string")
-        ensure_type(master_pass, str, "master_pass", "string")
-        ensure_type(file_master_pass, str, "file_master_pass", "string")
-
-        if not file_path:
-            raise ValueError("Invalid value provided for parameter 'filename'")
-
-        raw_creds: List[RawCredential] = self.get_all_credentials()
-        if not raw_creds:
-            print("No credentials to export.")
-            return
-
-        cred_objs = []
-
-        for raw_cred in raw_creds:
-            salt = b64decode(raw_cred.salt)
-            cred = raw_cred.get_credential(master_pass)
-
-            cred_objs.append({
-                "id": cred.id,
-                "title": encrypt_and_encode(file_master_pass, cred.title, salt),
-                "username": encrypt_and_encode(file_master_pass, cred.username, salt),
-                "email": encrypt_and_encode(file_master_pass, cred.email, salt),
-                "password": encrypt_and_encode(file_master_pass, cred.password, salt),
-                "salt": raw_cred.salt,
-            })
-
-        dump(cred_objs, open(file_path, "w"))
-
-    def import_from_file(self, master_pass, filename: str) -> None:
-        ensure_type(master_pass, str, "master_password", "string")
-        ensure_type(filename, str, "filename", "string")
-
-        if not filename:
-            raise ValueError("Invalid value provided for parameter 'filename'")
-
-        if not path.isfile(filename):
-            print(f"{filename} does not exist!")
-            raise Exception
-
-        file_master_pass: str = getpass("Input master password for file: ")
-        file_creds = load(open(filename, "r"))
-
-        if not file_creds:
-            print("There are no credentials in the file.")
-
-        print("\nBegin importing file credentials...")
-
-        for file_cred in file_creds:
-            # TODO: Rather than decrypting them manually, use the RawCredential class to get_credential. This will give more output to user
-
-            raw_cred = RawCredential(
-                id=file_cred["id"],
-                title=file_cred["title"],
-                username=file_cred["username"],
-                email=file_cred["email"],
-                password=file_cred["password"],
-                salt=file_cred["salt"],
-            )
-
-            salt = generate_salt(16)
-
-            new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
-
-            self.add_credential(
-                new_cred.title,
-                new_cred.username,
-                new_cred.email,
-                new_cred.password,
-                new_cred.salt,
-            )
-
-            print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
-            print()
 
     def close(self):
         try:

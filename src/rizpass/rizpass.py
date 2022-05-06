@@ -427,10 +427,10 @@ def change_masterpass() -> None:
         # TODO: Implement input validation
         if config["db_type"] == "mysql":
             root_user = better_input("Input mysql root username: ")
-            root_pass = better_input("Input mysql root password: ", password=True)  # Implement a better_pass method later using the getpass
+            root_pass = better_input("Input mysql root password: ", password=True)
             temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
             temp_db_manager.mysql_cursor.execute(
-                "ALTER USER '%s'@'%' IDENTIFIED BY %s;",
+                "ALTER USER %s@'%' IDENTIFIED BY %s;",
                 (config["db_user"],  new_masterpass, )
             )
 
@@ -514,11 +514,49 @@ def change_masterpass() -> None:
 def import_credentials() -> None:
     filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
-    if db_manager:
-        db_manager.import_from_file(master_pass, filename)
-    if file_manager:
-        file_manager.import_from_file(master_pass, filename)
+
+    if not os.path.isfile(filename):
+        print(f"{Fore.RED}\"{filename}\" does not exist!{Fore.RESET}", file=stderr)
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        return
+
+    file_master_pass: str = getpass("Input master password for file: ")
+    file_creds = json.load(open(filename, "r"))
+
+    if not file_creds:
+        print("There are no credentials in the file.")
+
+    print("\nBegin importing file credentials...")
+
+    for file_cred in file_creds:
+
+        raw_cred = RawCredential(
+            id=file_cred["id"],
+            title=file_cred["title"],
+            username=file_cred["username"],
+            email=file_cred["email"],
+            password=file_cred["password"],
+            salt=file_cred["salt"],
+        )
+
+        salt = generate_salt(16)
+
+        new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
+
+        manager = (db_manager or file_manager)
+
+        manager.add_credential(
+            new_cred.title,
+            new_cred.username,
+            new_cred.email,
+            new_cred.password,
+            new_cred.salt,
+        )
+
+        print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
+        print()
 
     print(f"{Fore.GREEN}Imported credentials successfully!{Fore.RESET}")
 
@@ -528,12 +566,31 @@ def export_credentials() -> None:
     file_master_pass = getpass("File Master Password (Optional): ")
 
     if file_path == None:
+        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
-    (db_manager or file_manager).export_to_file(
-        file_path,
-        master_pass,
-        file_master_pass if file_master_pass else master_pass
-    )
+
+    manager = (db_manager or file_manager)
+    raw_creds: List[RawCredential] = manager.get_all_credentials()
+    if not raw_creds:
+        print("No credentials to export.")
+        return
+
+    cred_objs = []
+
+    for raw_cred in raw_creds:
+        salt = generate_salt(16)
+        cred = raw_cred.get_credential(master_pass).get_raw_credential(file_master_pass, salt)
+
+        cred_objs.append({
+            "id": cred.id,
+            "title": cred.title,
+            "username": cred.username,
+            "email": cred.email,
+            "password": cred.password,
+            "salt": b64encode(salt).decode('ascii'),
+        })
+
+    json.dump(cred_objs, open(file_path, "w"))
 
     print(f"{Fore.GREEN}Exported credentials successfully!{Fore.RESET}")
 
