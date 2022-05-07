@@ -619,7 +619,7 @@ def print_version():
 
 def get_list_item_safely(array: List[str], index: str) -> str | None:
     ensure_type(array, list, "array", "list")
-    ensure_type(index, str)
+    ensure_type(index, str, "index", "str")
 
     if len(array) <= index:
         return None
