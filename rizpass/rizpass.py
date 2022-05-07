@@ -68,7 +68,10 @@ def perform_tasks() -> None:
 
 
 def load_config() -> bool:
-    global config
+    global config, creds_file_path
+
+    if creds_file_path != None:
+        return
 
     if not os.path.isfile(CONFIG_FILE_PATH):
         print("It looks like you haven't set Rizpass up.", file=stderr)
