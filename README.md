@@ -11,6 +11,15 @@
 - Mariadb / MySQL / MongoDB (Optional)
 
 # Installation
+If you want to install Rizpass for personal use, you can either install it as a pip package or use the source code / binary provided with the latest release
+
+
+## Installation through PyPi (Recommended)
+```bash
+pip install rizpass
+```
+
+## Installation through Github
 
 1. Clone this repository
 ```bash
@@ -50,6 +59,28 @@ source venv/bin/activate
 pip install .
 python3 -m rizpass
 ```
+
+## But I really really need a binary (Potentially Dangerous)
+So you want to use Rizpass on the go. 
+Since python doesn't have an official compiler we are going to rely on one of it's module called `PyInstaller`.
+
+1. Follow the steps in the [Installation through Github](#installation-through-github)
+
+2. Install `PyInstaller`:
+```bash
+pip install PyInstaller
+```
+
+3. In the same virtual environment that we created, run the following command while in the root directory of the package:
+```
+python3 -m PyInstaller --onefile rizpass.py
+```
+
+4. Upon completion, this will create a binary file for your OS which will be located in  `dist/`
+
+Congratulations, you now have a huge sized binary. Please be careful while using it and the package in general
+
+
 
 # Configuration
 
