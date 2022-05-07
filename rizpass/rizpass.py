@@ -296,7 +296,7 @@ def get_all_credentials() -> None:
         print(e, Fore.RESET, file=stderr)
 
 
-def get_all_encrypted_credentials() -> None:
+def get_all_raw_credentials() -> None:
     raw_creds = (db_manager or file_manager).get_all_credentials()
     if not raw_creds:
         print(f"{Fore.RED}No credentials stored yet.{Fore.RESET}", file=stderr)
@@ -670,7 +670,7 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
     9: ("Change master password", change_masterpass),
     10: ("Export credentials to a JSON file", export_credentials),
     11: ("Import credentials from a JSON file", import_credentials),
-    12: ("List all credentials (encrypted and encoded)", get_all_encrypted_credentials),
+    12: ("List all raw credentials", get_all_raw_credentials),
     13: ("Exit", exit_app),
 }
 
