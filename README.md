@@ -1,10 +1,20 @@
 **This project is still under construction**
+
 # Table of Contents
+- [Motivation](#motivation)
 - [Requirements](#requirements)
 - [Installation](#installation)
+  * [Installation through PyPi (Recommended)](#installation-through-pypi--recommended-)
+  * [Installation through Github](#installation-through-github)
+  * [But I really really need a binary](#but-i-really-really-need-a-binary)
 - [Configuration](#configuration)
   * [Configuration File](#configuration-file)
       - [Sample Configuration File](#sample-configuration-file)
+
+# Motivation
+
+The motivation behind this project was to create a password manager that could get up and running without much setup while still providing features to the enduser.
+This is in fact the sole reason behind the file mode which allows you to safely store and retrieve your credentials using a json file.
 
 # Requirements
 - Python3 
@@ -60,7 +70,7 @@ pip install .
 python3 -m rizpass
 ```
 
-## But I really really need a binary (Potentially Dangerous)
+## But I really really need a binary
 So you want to use Rizpass on the go. 
 Since python doesn't have an official compiler we are going to rely on one of it's module called `PyInstaller`.
 
@@ -78,7 +88,7 @@ python3 -m PyInstaller --onefile rizpass.py
 
 4. Upon completion, this will create a binary file for your OS which will be located in  `dist/`
 
-Congratulations, you now have a huge sized binary. Please be careful while using it and the package in general
+Congratulations, you now have a huge sized binary
 
 
 
