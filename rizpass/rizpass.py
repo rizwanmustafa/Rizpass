@@ -238,7 +238,7 @@ def generate_password() -> None:
 
 
 def add_credential(user_password: str = None) -> None:
-    ensure_type(user_password, str, "user_password", "string")
+    ensure_type(user_password, str | None, "user_password", "string | None")
 
     title = better_input("Title: ")
     if title == None:
@@ -796,6 +796,7 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
 
 
 def print_menu():
+    clear_console()
     print(Fore.BLUE + "-------------------------------" + Fore.RESET)
     print(Fore.BLUE + f"Rizpass {VERSION_NUMBER}" + Fore.RESET)
     print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
@@ -818,7 +819,6 @@ def init():
     while True:
         print_menu()
         perform_tasks()
-        clear_console()
 
 
 if __name__ == "__main__":
