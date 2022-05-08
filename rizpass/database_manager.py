@@ -29,8 +29,6 @@ class DbConfig:
 
 
 class MysqlManager:
-    mysql_db: mysql.connector.MySQLConnection | None = None
-    mysql_cursor: any = None
 
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
@@ -182,9 +180,6 @@ class MysqlManager:
 
 
 class MongoManager:
-    mongo_db: MongoDatabase | None = None
-    mongo_client: MongoClient | None = None
-    mongo_collection: MongoCollection | None = None
 
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
