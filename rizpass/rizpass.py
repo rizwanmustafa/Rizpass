@@ -4,7 +4,7 @@ import os
 import pyperclip
 import json
 from getpass import getpass
-from sys import exit, argv, stderr
+from sys import exit, argv, stderr, stdout
 from typing import Callable, List, Dict, NoReturn, Tuple
 from cerberus import Validator as SchemaValidator
 from pymongo.mongo_client import MongoClient
@@ -628,6 +628,21 @@ def get_list_item_safely(array: List[str], index: str) -> str | None:
         return None
     else:
         return array[index]
+
+
+def print_help(error: bool = False) -> None:
+    file = stderr if error else stdout
+    HELP_ITEMS = [
+        "Usage: rizpass [options]",
+        "Options:",
+        "   -h, --help            Prints this help message",
+        "   -v, --version         Prints the version number",
+        "   -s, --setup           Setup rizpass",
+        "   -f, --file <file>     Use file as credential storage",
+    ]
+
+    for item in HELP_ITEMS:
+        print(item, file=file)
 
 
 def process_args(args: List[str]) -> Dict[str, str]:
