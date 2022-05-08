@@ -166,9 +166,9 @@ class MysqlManager:
 
     def close(self):
         try:
-            if self.mysql_cursor:
+            if hasattr(self, "mysql_cursor"):
                 self.mysql_cursor.close()
-            if self.mysql_db:
+            if hasattr(self, "mysql_db"):
                 self.mysql_db.close()
 
         except Exception as e:
@@ -316,7 +316,7 @@ class MongoManager:
 
     def close(self):
         try:
-            if self.mongo_client:
+            if hasattr(self, "mongo_client"):
                 self.mongo_client.close()
         except Exception as e:
             print("There was an error while closing connection with MongoDB:", file=stderr)
