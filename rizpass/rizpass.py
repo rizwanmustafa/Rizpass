@@ -630,7 +630,49 @@ def get_list_item_safely(array: List[str], index: str) -> str | None:
         return array[index]
 
 
+def process_args(args: List[str]) -> Dict[str, str]:
+    """Processes command line arguments and returns a dictionary of the arguments with their values if possible."""
+    ensure_type(args, list, "args", "list")
+
+    ignore_args = {0}
+
+    args_dict = dict({
+        "print_version": False,
+        "print_help": False,
+        "init_setup": False,
+        "file_mode": False,
+        "file_path": None,
+    })
+
+    for index, arg in enumerate(args):
+        if index in ignore_args:
+            continue
+
+        if arg == "--version" or arg == "-v":
+            args_dict["print_version"] = True
+            break
+
+        if arg == "--help" or arg == "-h":
+            args_dict["print_help"] = True
+            break
+
+        if arg == "--file" or arg == "-f":
+            args_dict["file_mode"] = True
+            args_dict["file_path"] = get_list_item_safely(args, index + 1)
+            if args_dict["file_path"] == None:
+                print(f"{Fore.RED}Invalid file path!{Fore.RESET}", file=stderr)
+                exit_app(1)
+            ignore_args.add(index + 1)
+
+        if arg == "--setup" or arg == "-s":
+            args_dict["init_setup"] = True
+            break
+
+    return args_dict
+
+
 def handle_args(args: List[str]) -> None:
+    """Handles command line arguments given a dictionary of the arguments with their values."""
     ensure_type(args, list, "args", "list")
 
     global creds_file_path
