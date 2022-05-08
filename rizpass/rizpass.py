@@ -228,8 +228,8 @@ def generate_password() -> None:
     try:
         pyperclip.copy(generated_pass)
     except Exception as e:
-        print(f"{Fore.RED}The generated password could not be copied to your clipboard due to the following error:", file=stderr)
-        print(e, Fore.RESET, file=stderr)
+        print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
+        print_red(e, file=stderr)
     else:
         print("The generated password has been copied to your clipboard.")
 
@@ -242,7 +242,7 @@ def add_credential(user_password: str = None) -> None:
 
     title = better_input("Title: ")
     if title == None:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     username = better_input("(Optional) Username: ", optional=True)
@@ -255,7 +255,7 @@ def add_credential(user_password: str = None) -> None:
 
     password = user_password if user_password else better_input("Password: ", password=True)
     if password == None:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     if not confirm("Are you sure you want to add this password (Y/N): ", loose=True):
@@ -283,7 +283,7 @@ def get_credential() -> None:
     # id = int(input("ID: "))
     id = pos_int_input("ID: ")
     if not id:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     raw_cred = None
@@ -346,14 +346,14 @@ def get_all_credentials() -> None:
             lastCred.copy_pass()
 
     except Exception as e:
-        print(f"{Fore.RED}Could not get credentials due to the following error:", file=stderr)
-        print(e, Fore.RESET, file=stderr)
+        print_red("Could not get credentials due to the following error:", file=stderr)
+        print_red(e, file=stderr)
 
 
 def get_all_raw_credentials() -> None:
     raw_creds = creds_manager.get_all_credentials()
     if not raw_creds:
-        print(f"{Fore.RED}No credentials stored yet.{Fore.RESET}", file=stderr)
+        print_red("No credentials stored yet.", file=stderr)
         return
 
     print(f"{Fore.MAGENTA}Printing all credentials(encrypted and encoded)...{Fore.RESET}")
@@ -366,13 +366,13 @@ def modify_credential() -> None:
     # id = int(input("ID: "))
     id = pos_int_input("ID: ")
     if not id:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     old_cred = creds_manager.get_credential(id).get_credential(master_pass)
 
     if old_cred == None:
-        print(f"{Fore.RED}No credential with given id exists!{Fore.RESET}", file=stderr)
+        print_red("No credential with given id exists!", file=stderr)
         return
 
     print("Leave any field empty if you do not wish to change it")
@@ -437,11 +437,11 @@ def remove_credential() -> None:
     # id = int(input("ID: "))
     id = pos_int_input("ID: ")
     if not id:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     if creds_manager.get_credential(id) == None:
-        print(f"{Fore.RED}No credential with id: {id} exists!{Fore.RESET}", file=stderr)
+        print_red(f"No credential with id: {id} exists!", file=stderr)
         return
 
     creds_manager.remove_credential(id)
@@ -568,12 +568,12 @@ def change_masterpass() -> None:
 def import_credentials() -> None:
     filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print("Aborting operation due to invalid input!", file=stderr)
         return
 
     if not os.path.isfile(filename):
-        print(f"{Fore.RED}\"{filename}\" does not exist!{Fore.RESET}", file=stderr)
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red(f"\"{filename}\" does not exist!", file=stderr)
+        print_red(f"Aborting operation due to invalid input!", file=stderr)
         return
 
     file_master_pass: str = getpass("Input master password for file: ")
@@ -618,7 +618,7 @@ def export_credentials() -> None:
     file_master_pass = getpass("File Master Password (Optional): ")
 
     if file_path == None:
-        print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
+        print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
     raw_creds: List[RawCredential] = creds_manager.get_all_credentials()
@@ -714,7 +714,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["file_mode"] = True
             args_dict["file_path"] = get_list_item_safely(args, index + 1)
             if args_dict["file_path"] == None:
-                print(f"{Fore.RED}Invalid file path!{Fore.RESET}", file=stderr)
+                print_red("Invalid file path!", file=stderr)
                 exit_app(129)
             ignore_args.add(index + 1)
 
