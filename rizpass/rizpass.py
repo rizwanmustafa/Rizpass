@@ -11,6 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
+from .output import print_red, set_colored_output
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -24,12 +25,18 @@ CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
 VERSION_NUMBER = 'v0.0.1-alpha'
 
 master_pass:  str = None
-db_manager:  MysqlManager | MongoManager = None
-
 creds_file_path: str = None
-file_manager: FileManager = None
+creds_manager:  MysqlManager | MongoManager | FileManager = None
 
-config: Dict[str, str] = dict()
+config: Dict[str, str] = {
+    "file_path": None,
+    "db_type": None,
+    "db_host": None,
+    "db_user": None,
+    "db_name": None,
+    "db_port": None
+}
+
 
 # TODO: Add requirements for master password
 
@@ -37,12 +44,12 @@ color_init()
 
 
 def get_mode() -> str:
-    if file_manager:
+    if isinstance(creds_manager, FileManager):
         return "file"
-    elif config["db_type"] == "mongo":
-        return "mongo"
-    else:
+    elif isinstance(creds_manager, MysqlManager):
         return "mysql"
+    elif isinstance(creds_manager, MongoManager):
+        return "mongo"
 
 
 def perform_tasks() -> None:
@@ -65,6 +72,66 @@ def perform_tasks() -> None:
 
     print()
     input("Press enter to continue...")
+
+
+def load_db_config(
+    db_host: str | None = None,
+    db_type: str | None = None,
+    db_user: str | None = None,
+    db_name: str | None = None,
+    db_port: int | None = None
+) -> bool:
+    ensure_type(db_host, str | None, "db_host", "string | None")
+    ensure_type(db_type, str | None, "db_type", "string | None")
+    ensure_type(db_user, str | None, "db_user", "string | None")
+    ensure_type(db_name, str | None, "db_name", "string | None")
+    ensure_type(db_port, int | None, "db_port", "int | None")
+
+    global config
+
+    if not os.path.isfile(CONFIG_FILE_PATH):
+        return False
+
+    try:
+        config_file = open(CONFIG_FILE_PATH, "r+")
+        file_content = config_file.readlines()
+    except Exception as e:
+        print_red("Could not load configuration file due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return False
+
+    if not file_content or len(file_content) == 0:
+        print_red("Configuration file is empty!", file=stderr)
+        print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
+        return False
+
+    config_file.seek(0, 0)
+    try:
+        user_settings: Dict[str, str] = json.load(config_file)
+    except Exception as e:
+        print_red("Could not load configuration file due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return False
+
+    config_schema = get_config_schema()
+    validator = SchemaValidator(config_schema)
+
+    if not validator.validate(user_settings):
+        print_red("Invalid configuration file!", file=stderr)
+        for key in validator.errors:
+            print(f"- {key}:", file=stderr)
+            for error in validator.errors[key]:
+                print("  ", error, file=stderr)
+        print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
+        exit(1)
+
+    config["db_host"] = db_host or user_settings["db_host"]
+    config["db_user"] = db_user or user_settings["db_user"]
+    config["db_name"] = db_name or user_settings["db_name"]
+    config["db_port"] = db_port or user_settings["db_port"]
+    config["db_type"] = db_type or user_settings["db_type"]
+
+    return True
 
 
 def load_config() -> bool:
@@ -111,24 +178,25 @@ def load_config() -> bool:
         exit(1)
 
 
-def login() -> None:
-    global master_pass, db_manager, creds_file_path, file_manager
+# def login() -> None:
+#     global master_pass, creds_manager, creds_file_path
 
-    master_pass = getpass("Master Password: ")
-    if creds_file_path != None:
-        file_manager = FileManager(creds_file_path)
-    else:
-        db_config = DbConfig(
-            config["db_host"],
-            config["db_user"],
-            master_pass,
-            config["db_name"],
-            config.get("db_port", None)
-        )
-        if config["db_type"] == "mysql":
-            db_manager = MysqlManager(db_config)
-        elif config["db_type"] == "mongo":
-            db_manager = MongoManager(db_config)
+#     master_pass = getpass("Master Password: ")
+#     if creds_file_path != None:
+#         creds_manager = FileManager(creds_file_path)
+#         return
+
+#     db_config = DbConfig(
+#         config["db_host"],
+#         config["db_user"],
+#         master_pass,
+#         config["db_name"],
+#         config["db_port"]
+#     )
+#     if config["db_type"] == "mysql":
+#         creds_manager = MysqlManager(db_config)
+#     elif config["db_type"] == "mongo":
+#         creds_manager = MongoManager(db_config)
 
 
 def generate_password() -> None:
@@ -200,22 +268,14 @@ def add_credential(user_password: str = None) -> None:
     encrypted_password = encrypt_and_encode(master_pass, password, salt)
     encoded_salt = b64encode(salt).decode("ascii")
 
-    if db_manager:
-        db_manager.add_credential(
-            encrypted_title,
-            encrypted_username,
-            encrypted_email,
-            encrypted_password,
-            encoded_salt
-        )
-    if file_manager:
-        file_manager.add_credential(
-            encrypted_title,
-            encrypted_username,
-            encrypted_email,
-            encrypted_password,
-            encoded_salt
-        )
+    creds_manager.add_credential(
+        encrypted_title,
+        encrypted_username,
+        encrypted_email,
+        encrypted_password,
+        encoded_salt
+    )
+
     print(f"{Fore.GREEN}\nPassword added successfully!{Fore.RESET}")
 
 
@@ -228,10 +288,7 @@ def get_credential() -> None:
 
     raw_cred = None
 
-    if db_manager:
-        raw_cred = db_manager.get_credential(id)
-    if file_manager:
-        raw_cred = file_manager.get_credential(id)
+    raw_cred = creds_manager.get_credential(id)
 
     if raw_cred == None:
         print(f"{Fore.YELLOW}No credential with given id found!{Fore.YELLOW}")
@@ -257,10 +314,7 @@ def filter_credentials() -> None:
 
     creds: List[RawCredential] = []
 
-    if db_manager:
-        creds.extend(db_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
-    if file_manager:
-        creds.extend(file_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
+    creds.extend(creds_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
 
     if not creds:
         print(f"{Fore.YELLOW}No credentials meet your given filter.{Fore.RESET}")
@@ -276,10 +330,7 @@ def filter_credentials() -> None:
 def get_all_credentials() -> None:
     try:
         raw_creds: List[RawCredential] = []
-        if db_manager:
-            raw_creds.extend(db_manager.get_all_credentials())
-        if file_manager:
-            raw_creds.extend(file_manager.get_all_credentials())
+        raw_creds.extend(creds_manager.get_all_credentials())
         if not raw_creds:
             print(f"{Fore.YELLOW}No credentials stored yet.{Fore.RESET}")
             return
@@ -300,7 +351,7 @@ def get_all_credentials() -> None:
 
 
 def get_all_raw_credentials() -> None:
-    raw_creds = (db_manager or file_manager).get_all_credentials()
+    raw_creds = creds_manager.get_all_credentials()
     if not raw_creds:
         print(f"{Fore.RED}No credentials stored yet.{Fore.RESET}", file=stderr)
         return
@@ -318,7 +369,7 @@ def modify_credential() -> None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
 
-    old_cred = (db_manager or file_manager).get_credential(id).get_credential(master_pass)
+    old_cred = creds_manager.get_credential(id).get_credential(master_pass)
 
     if old_cred == None:
         print(f"{Fore.RED}No credential with given id exists!{Fore.RESET}", file=stderr)
@@ -370,7 +421,7 @@ def modify_credential() -> None:
         salt
     )
 
-    (db_manager or file_manager).modify_credential(
+    creds_manager.modify_credential(
         id,
         new_title,
         new_username,
@@ -389,11 +440,11 @@ def remove_credential() -> None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
 
-    if (db_manager or file_manager).get_credential(id) == None:
+    if creds_manager.get_credential(id) == None:
         print(f"{Fore.RED}No credential with id: {id} exists!{Fore.RESET}", file=stderr)
         return
 
-    (db_manager or file_manager).remove_credential(id)
+    creds_manager.remove_credential(id)
     print(f"{Fore.GREEN}Removed password successfully!{Fore.GREEN}")
 
 
@@ -407,16 +458,13 @@ def remove_all_credentials() -> None:
         print("Exiting...")
         exit_app()
 
-    if db_manager:
-        db_manager.remove_all_credentials()
-    if file_manager:
-        file_manager.remove_all_credentials()
+    creds_manager.remove_all_credentials()
 
     print(f"{Fore.GREEN}Removed all passwords successfully!{Fore.RESET}")
 
 
 def change_masterpass() -> None:
-    global db_manager, master_pass
+    global creds_manager, master_pass
 
     if not confirm("Are you sure you want to change your master password (Y/N): "):
         return
@@ -429,7 +477,7 @@ def change_masterpass() -> None:
         return
 
     # Change database password
-    if db_manager:
+    if creds_manager:
         # TODO: Implement input validation
         if config["db_type"] == "mysql":
             root_user = better_input("Input mysql root username: ")
@@ -463,7 +511,7 @@ def change_masterpass() -> None:
 
             print(f"{Fore.GREEN}Changed database user's password successfully!{Fore.RESET}")
 
-        db_manager.close()
+        creds_manager.close()
 
         db_config = DbConfig(
             config["db_host"],
@@ -473,12 +521,12 @@ def change_masterpass() -> None:
             config.get("db_port", None)
         )
         if config["db_type"] == "mysql":
-            db_manager = MysqlManager(db_config)
+            creds_manager = MysqlManager(db_config)
         elif config["db_type"] == "mongo":
-            db_manager = MongoManager(db_config)
+            creds_manager = MongoManager(db_config)
 
     # Decrypt passwords and encrypt them with new salt and master password
-    raw_creds = (db_manager or file_manager).get_all_credentials()
+    raw_creds = creds_manager.get_all_credentials()
     for raw_cred in raw_creds:
         old_cred = raw_cred.get_credential(master_pass)
         salt = generate_salt(16)
@@ -503,7 +551,7 @@ def change_masterpass() -> None:
             salt
         )
 
-        (db_manager or file_manager).modify_credential(
+        creds_manager.modify_credential(
             raw_cred.id,
             new_title,
             new_username,
@@ -551,9 +599,7 @@ def import_credentials() -> None:
 
         new_cred = raw_cred.get_credential(file_master_pass).get_raw_credential(master_pass, salt)
 
-        manager = (db_manager or file_manager)
-
-        manager.add_credential(
+        creds_manager.add_credential(
             new_cred.title,
             new_cred.username,
             new_cred.email,
@@ -575,8 +621,7 @@ def export_credentials() -> None:
         print(f"{Fore.RED}Aborting operation due to invalid input!{Fore.RESET}", file=stderr)
         return
 
-    manager = (db_manager or file_manager)
-    raw_creds: List[RawCredential] = manager.get_all_credentials()
+    raw_creds: List[RawCredential] = creds_manager.get_all_credentials()
     if not raw_creds:
         print("No credentials to export.")
         return
@@ -611,8 +656,7 @@ def signal_handler(signal, frame):
 
 
 def exit_app(exit_code=0) -> NoReturn:
-    db_manager.close() if db_manager else None
-    file_manager.close() if file_manager else None
+    creds_manager.close() if creds_manager else None
     exit(exit_code)
 
 
@@ -632,17 +676,13 @@ def get_list_item_safely(array: List[str], index: str) -> str | None:
 
 def print_help(error: bool = False) -> None:
     file = stderr if error else stdout
-    HELP_ITEMS = [
-        "Usage: rizpass [options]",
-        "Options:",
-        "   -h, --help            Prints this help message",
-        "   -v, --version         Prints the version number",
-        "   -s, --setup           Setup rizpass",
-        "   -f, --file <file>     Use file as credential storage",
-    ]
-
-    for item in HELP_ITEMS:
-        print(item, file=file)
+    print("Usage: rizpass [options]", file=file)
+    print("Options:", file=file)
+    print("   -h, --help            Prints this help message", file=file)
+    print("   -v, --version         Prints the version number", file=file)
+    print("   -s, --setup           Setup rizpass", file=file)
+    print("   -f, --file <file>     Use file as credential storage", file=file)
+    print("   --nocolor             Disable color output", file=file)
 
 
 def process_args(args: List[str]) -> Dict[str, str]:
@@ -657,62 +697,82 @@ def process_args(args: List[str]) -> Dict[str, str]:
         "init_setup": False,
         "file_mode": False,
         "file_path": None,
+        "color_mode": True,
     })
 
     for index, arg in enumerate(args):
         if index in ignore_args:
             continue
 
-        if arg == "--version" or arg == "-v":
+        elif arg == "--version" or arg == "-v":
             args_dict["print_version"] = True
-            break
 
-        if arg == "--help" or arg == "-h":
+        elif arg == "--help" or arg == "-h":
             args_dict["print_help"] = True
-            break
 
-        if arg == "--file" or arg == "-f":
+        elif arg == "--file" or arg == "-f":
             args_dict["file_mode"] = True
             args_dict["file_path"] = get_list_item_safely(args, index + 1)
             if args_dict["file_path"] == None:
                 print(f"{Fore.RED}Invalid file path!{Fore.RESET}", file=stderr)
-                exit_app(1)
+                exit_app(129)
             ignore_args.add(index + 1)
 
-        if arg == "--setup" or arg == "-s":
+        elif arg == "--setup" or arg == "-s":
             args_dict["init_setup"] = True
-            break
+
+        elif arg == "--nocolor":
+            args_dict["color_mode"] = False
+
+        else:
+            print_red(f"Invalid argument: {arg}", file=stderr)
+            print_help(True)
+            exit_app(129)
 
     return args_dict
 
 
-def handle_args(args: List[str]) -> None:
-    """Handles command line arguments given a dictionary of the arguments with their values."""
-    ensure_type(args, list, "args", "list")
+def handle_processed_args(options: Dict[str, str]) -> None:
+    if options.get("print_help"):
+        print_help()
+        exit_app(0)
+    if options.get("print_version"):
+        print_version()
+        exit_app(0)
 
-    global creds_file_path
-    ignore_args = {0}
+    if options.get("init_setup"):
+        setup_password_manager()
+        exit_app(0)
 
-    for index, arg in enumerate(args):
-        if index in ignore_args:
-            continue
+    # Load config
 
-        if "--version" == arg or "-V" == arg:
-            print_version()
-            exit_app(0)
-        elif "--setup" == arg or "-S" == arg:
-            setup_password_manager()
-            exit_app(0)
-        elif "--file" == arg or "-F" == arg:
-            creds_file_path = get_list_item_safely(args, index + 1)
-            if creds_file_path == None:
-                print("Filename cannot be empty!", file=stderr)
-                exit_app(129)
-            print(f"Using file: {creds_file_path}")
-            ignore_args.add(index + 1)
-        else:
-            print("Unknown argument: " + arg)
-            exit_app(129)
+    set_colored_output(options.get("color_mode"))
+
+    global config
+
+    if options.get("file_mode"):
+        config["file_path"] = options.get("file_path")
+    else:
+        exit(1) if not load_db_config() else None
+
+    # Login
+    global master_pass, creds_manager
+
+    master_pass = getpass("Master Password: ")
+
+    if config.get("file_path"):
+        creds_manager = FileManager(config.get("file_path"))
+        return
+
+    db_config = DbConfig(
+        config.get("db_host"),
+        config.get("db_user"),
+        master_pass,
+        config.get("db_name"),
+        config.get("db_port")
+    )
+
+    creds_manager = MysqlManager(db_config) if config.get("db_type") == "mysql" else MongoManager(db_config)
 
 
 # Handle interruptions
@@ -740,19 +800,6 @@ def print_menu():
     print(Fore.BLUE + f"Rizpass {VERSION_NUMBER}" + Fore.RESET)
     print(Fore.BLUE + "Mode: " + Fore.RESET + Fore.YELLOW + get_mode() + Fore.RESET)
     print()
-    # print(f"{Fore.BLUE}1{Fore.RESET}  Generate a password")
-    # print(f"{Fore.BLUE}2{Fore.RESET}  Add a credential")
-    # print(f"{Fore.BLUE}3{Fore.RESET}  Retrieve credential using id")
-    # print(f"{Fore.BLUE}4{Fore.RESET}  Filter credentials")
-    # print(f"{Fore.BLUE}5{Fore.RESET}  List all credentials")
-    # print(f"{Fore.BLUE}6{Fore.RESET}  Modify credential")
-    # print(f"{Fore.BLUE}7{Fore.RESET}  Remove credential")
-    # print(f"{Fore.BLUE}8{Fore.RESET}  Remove all credentials")
-    # print(f"{Fore.BLUE}9{Fore.RESET}  Change master password")
-    # print(f"{Fore.BLUE}10{Fore.RESET} Export credentials to a JSON file")
-    # print(f"{Fore.BLUE}11{Fore.RESET} Import credentials from a JSON file")
-    # print(f"{Fore.BLUE}12{Fore.RESET} List all credentials (encrypted and encoded)")
-    # print(f"{Fore.BLUE}13{Fore.RESET} Exit")
 
     for key in menu_items:
         print(Fore.BLUE + str(key).ljust(2) + Fore.RESET + "  " + menu_items[key][0])
@@ -762,9 +809,11 @@ def print_menu():
 
 
 def init():
-    handle_args(argv)
-    load_config()
-    login()
+    handle_processed_args(process_args(argv))
+    # load_config()
+    # if not load_db_config():
+    # exit_app(1)
+    # login()
 
     while True:
         print_menu()
