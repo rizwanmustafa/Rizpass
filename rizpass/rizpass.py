@@ -11,6 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
+from .misc import print_license, VERSION_NUMBER
 from .output import print_green, print_red, set_colored_output, get_colored_output, print_yellow, print_magenta
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
@@ -22,7 +23,6 @@ from .setup_rizpass import setup_password_manager
 from .file_manager import FileManager
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
-VERSION_NUMBER = 'v0.0.1-alpha'
 
 master_pass:  str = None
 creds_file_path: str = None
@@ -665,12 +665,6 @@ def exit_app(exit_code=0) -> NoReturn:
     exit(exit_code)
 
 
-def print_version():
-    print("Rizpass " + VERSION_NUMBER)
-    print("This program comes with ABSOLUTELY NO WARRANTY;")
-    print("This is free software, and you are welcome to redistribute it under certain conditions.")
-
-
 def get_list_item_safely(array: List[str], index: str) -> str | None:
     ensure_type(array, list, "array", "list")
     ensure_type(index, int, "index", "int")
@@ -747,7 +741,7 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         print_help()
         exit_app(0)
     if options.get("print_version"):
-        print_version()
+        print_license()
         exit_app(0)
 
     if options.get("init_setup"):

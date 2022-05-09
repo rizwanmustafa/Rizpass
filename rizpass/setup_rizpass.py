@@ -9,6 +9,7 @@ from colorama import init as color_init, Fore
 import mysql.connector
 
 from rizpass.output import print_red, print_selective_colored, print_green
+from rizpass.rizpass import print_license
 
 color_init()
 
@@ -187,8 +188,7 @@ def write_settings():
 
 
 def setup_password_manager():
-    print("This program comes with ABSOLUTELY NO WARRANTY;")
-    print("This is free software, and you are welcome to redistribute it under certain conditions.")
+    print_license()
     print()
     print("Setting up Rizpass...")
 
