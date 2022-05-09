@@ -90,6 +90,9 @@ def load_db_config(
     global config
 
     if not os.path.isfile(CONFIG_FILE_PATH):
+        print_red("It looks like you haven't set Rizpass up.", file=stderr)
+        print_red("You can do so by using the --setup flag", file=stderr)
+        print_red("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
         return False
 
     try:
