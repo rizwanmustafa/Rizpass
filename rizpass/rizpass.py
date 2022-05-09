@@ -667,6 +667,8 @@ def exit_app(exit_code=0) -> NoReturn:
 
 def print_version():
     print("Rizpass " + VERSION_NUMBER)
+    print("This program comes with ABSOLUTELY NO WARRANTY;")
+    print("This is free software, and you are welcome to redistribute it under certain conditions.")
 
 
 def get_list_item_safely(array: List[str], index: str) -> str | None:
@@ -808,7 +810,8 @@ def print_menu():
     print()
 
     for key in menu_items:
-        print((Fore.BLUE if get_colored_output() else '') + str(key).ljust(2) + (Fore.RESET if get_colored_output() else '') + "  " + menu_items[key][0])
+        print((Fore.BLUE if get_colored_output() else '') + str(key).ljust(2) +
+              (Fore.RESET if get_colored_output() else '') + "  " + menu_items[key][0])
         pass
 
     print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))

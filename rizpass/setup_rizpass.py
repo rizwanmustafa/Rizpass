@@ -187,6 +187,9 @@ def write_settings():
 
 
 def setup_password_manager():
+    print("This program comes with ABSOLUTELY NO WARRANTY;")
+    print("This is free software, and you are welcome to redistribute it under certain conditions.")
+    print()
     print("Setting up Rizpass...")
 
     setup_masterpass()
