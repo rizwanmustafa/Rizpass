@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .output import print_green, print_red, set_colored_output, get_colored_output
+from .output import print_green, print_red, set_colored_output, get_colored_output, print_yellow, print_magenta
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -291,7 +291,7 @@ def get_credential() -> None:
     raw_cred = creds_manager.get_credential(id)
 
     if raw_cred == None:
-        print(f"{Fore.YELLOW}No credential with given id found!{Fore.RESET}")
+        print_yellow("No credential with given id found!")
         return
 
     cred: Credential = raw_cred.get_credential(master_pass)
@@ -317,7 +317,7 @@ def filter_credentials() -> None:
     creds.extend(creds_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
 
     if not creds:
-        print(f"{Fore.YELLOW}No credentials meet your given filter.{Fore.RESET}")
+        print_yellow("No credentials meet your given filter.")
         return
 
     print("Following credentials meet your given filters:")
@@ -332,10 +332,10 @@ def get_all_credentials() -> None:
         raw_creds: List[RawCredential] = []
         raw_creds.extend(creds_manager.get_all_credentials())
         if not raw_creds:
-            print(f"{Fore.YELLOW}No credentials stored yet.{Fore.RESET}")
+            print_yellow("No credentials stored yet.")
             return
 
-        print(f"{Fore.MAGENTA}Printing all credentials...{Fore.RESET}")
+        print_magenta("Printing all credentials...")
         lastCred = None
         for raw_cred in raw_creds:
             lastCred = raw_cred.get_credential(master_pass)
@@ -356,7 +356,7 @@ def get_all_raw_credentials() -> None:
         print_red("No credentials stored yet.", file=stderr)
         return
 
-    print(f"{Fore.MAGENTA}Printing all credentials(encrypted and encoded)...{Fore.RESET}")
+    print_magenta("Printing all credentials(encrypted and encoded)...")
     for raw_cred in raw_creds:
         print(raw_cred)
 

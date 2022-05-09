@@ -38,7 +38,7 @@ def setup_mysql():
     if db_port.isnumeric():
         db_port = int(db_port)
     else:
-        print(f"{Fore.YELLOW}Using default port 3306{Fore.RESET}")
+        print_yellow("Using default port 3306")
         db_port = 3306
     db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
         host=db_host,
@@ -114,7 +114,7 @@ def setup_mongodb():
             db_port = int(db_port)
         else:
             db_port = 27017
-            print(f"{Fore.YELLOW}Using default port 27017{Fore.RESET}")
+            print_yellow("Using default port 27017")
         db_client = MongoClient(
             db_host,
             username=quote_plus(db_root_user),
@@ -175,7 +175,7 @@ def setup_masterpass():
 
 def write_settings():
     if path.isfile(CONFIG_FILE_PATH):
-        print(f"{Fore.YELLOW}Overwriting existing file: {CONFIG_FILE_PATH}{Fore.RESET}")
+        print_yellow("Overwriting existing file: {CONFIG_FILE_PATH}")
     else:
         print(f"Creating file: {CONFIG_FILE_PATH}")
 
