@@ -42,3 +42,7 @@ def print_selective_colored(object: str, end='\n', file=None):
 def set_colored_output(color: bool):
     global colored_output
     colored_output = color
+
+
+def get_colored_output():
+    return colored_output

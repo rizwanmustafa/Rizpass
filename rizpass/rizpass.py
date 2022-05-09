@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .output import print_green, print_red, set_colored_output, colored_output
+from .output import print_green, print_red, set_colored_output, get_colored_output
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -801,17 +801,17 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
 
 def print_menu():
     clear_console()
-    print((Fore.BLUE if colored_output else '') + "-------------------------------" + (Fore.RESET if colored_output else ''))
-    print((Fore.BLUE if colored_output else '') + f"Rizpass {VERSION_NUMBER}" + (Fore.RESET if colored_output else ''))
-    print((Fore.BLUE if colored_output else '') + "Mode: " + (Fore.RESET if colored_output else '') +
-          (Fore.YELLOW if colored_output else '') + get_mode() + (Fore.RESET if colored_output else ''))
+    print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))
+    print((Fore.BLUE if get_colored_output() else '') + f"Rizpass {VERSION_NUMBER}" + (Fore.RESET if get_colored_output() else ''))
+    print((Fore.BLUE if get_colored_output() else '') + "Mode: " + (Fore.RESET if get_colored_output() else '') +
+          (Fore.YELLOW if get_colored_output() else '') + get_mode() + (Fore.RESET if get_colored_output() else ''))
     print()
 
     for key in menu_items:
-        print((Fore.BLUE if colored_output else '') + str(key).ljust(2) + (Fore.RESET if colored_output else '') + "  " + menu_items[key][0])
+        print((Fore.BLUE if get_colored_output() else '') + str(key).ljust(2) + (Fore.RESET if get_colored_output() else '') + "  " + menu_items[key][0])
         pass
 
-    print((Fore.BLUE if colored_output else '') + "-------------------------------" + (Fore.RESET if colored_output else ''))
+    print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))
 
 
 def init():

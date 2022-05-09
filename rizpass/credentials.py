@@ -5,7 +5,7 @@ from colorama import Fore
 
 from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
-from .output import print_red, print_green, colored_output
+from .output import print_red, print_green, get_colored_output
 
 
 class RawCredential:
@@ -28,14 +28,14 @@ class RawCredential:
 
     def __str__(self):
         output = "\n"
-        output += f"{Fore.BLUE if colored_output else ''}-------------------------------{Fore.RESET if colored_output else ''}\n"
-        output += f"{Fore.BLUE if colored_output else ''}ID:{Fore.RESET if colored_output else ''} {self.id}\n"
-        output += f"{Fore.BLUE if colored_output else ''}Title:{Fore.RESET if colored_output else ''} {self.title}\n"
-        output += f"{Fore.BLUE if colored_output else ''}Username:{Fore.RESET if colored_output else ''} {self.username}\n"
-        output += f"{Fore.BLUE if colored_output else ''}Email:{Fore.RESET if colored_output else ''} {self.email}\n"
-        output += f"{Fore.BLUE if colored_output else ''}Password:{Fore.RESET if colored_output else ''} {self.password}\n"
-        output += f"{Fore.BLUE if colored_output else ''}Salt:{Fore.RESET if colored_output else ''} {self.salt}\n"
-        output += f"{Fore.BLUE if colored_output else ''}-------------------------------{Fore.RESET if colored_output else ''}"
+        output += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}ID:{Fore.RESET if get_colored_output() else ''} {self.id}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}Title:{Fore.RESET if get_colored_output() else ''} {self.title}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}Username:{Fore.RESET if get_colored_output() else ''} {self.username}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}Email:{Fore.RESET if get_colored_output() else ''} {self.email}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}Password:{Fore.RESET if get_colored_output() else ''} {self.password}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}Salt:{Fore.RESET if get_colored_output() else ''} {self.salt}\n"
+        output += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}"
         return output
 
     def get_credential(self, master_password: str):
@@ -110,13 +110,13 @@ class Credential:
 
     def __str__(self):
         string = "\n"
-        string += f"{Fore.BLUE if colored_output else ''}-------------------------------{Fore.RESET if colored_output else ''}\n"
-        string += f"{Fore.BLUE if colored_output else ''}ID:{Fore.RESET if colored_output else ''} {self.id}\n"
-        string += f"{Fore.BLUE if colored_output else ''}Title:{Fore.RESET if colored_output else ''} {self.title}\n"
-        string += f"{Fore.BLUE if colored_output else ''}Username:{Fore.RESET if colored_output else ''} {self.username}\n"
-        string += f"{Fore.BLUE if colored_output else ''}Email:{Fore.RESET if colored_output else ''} {self.email}\n"
-        string += f"{Fore.BLUE if colored_output else ''}Password:{Fore.RESET if colored_output else ''} {self.password}\n"
-        string += f"{Fore.BLUE if colored_output else ''}-------------------------------{Fore.RESET if colored_output else ''}"
+        string += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}ID:{Fore.RESET if get_colored_output() else ''} {self.id}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}Title:{Fore.RESET if get_colored_output() else ''} {self.title}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}Username:{Fore.RESET if get_colored_output() else ''} {self.username}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}Email:{Fore.RESET if get_colored_output() else ''} {self.email}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}Password:{Fore.RESET if get_colored_output() else ''} {self.password}\n"
+        string += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}"
         return string
 
     def get_raw_credential(self, master_pass: str, salt: bytes) -> RawCredential:
