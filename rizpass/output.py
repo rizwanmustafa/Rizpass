@@ -24,6 +24,21 @@ def print_magenta(object, end='\n', file=None):
     print(f"{Fore.MAGENTA if colored_output else ''}{object}{Fore.RESET if colored_output else ''}", end=end, file=file)
 
 
+def print_selective_colored(object: str, end='\n', file=None):
+    print(
+        object.format(
+            red=Fore.RED if colored_output else '',
+            green=Fore.GREEN if colored_output else '',
+            yellow=Fore.YELLOW if colored_output else '',
+            blue=Fore.BLUE if colored_output else '',
+            magenta=Fore.MAGENTA if colored_output else '',
+            reset=Fore.RESET if colored_output else ''
+        ),
+        end=end,
+        file=file
+    )
+
+
 def set_colored_output(color: bool):
     global colored_output
     colored_output = color

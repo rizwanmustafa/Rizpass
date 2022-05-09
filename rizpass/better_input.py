@@ -1,9 +1,9 @@
 from typing import Callable
 from getpass import getpass
 from sys import stderr
-from colorama import Fore
 
 from .validator import ensure_type
+from .output import print_red
 
 
 def better_input(
@@ -44,13 +44,13 @@ def better_input(
         if optional:
             return None
 
-        suppress_output or print(
-            f"{Fore.RED}{valid_input if type(valid_input) == str else 'Invalid input!'}{Fore.RESET}",
+        suppress_output or print_red(
+            valid_input if type(valid_input) == str else 'Invalid input!',
             file=stderr,
             end="\n\n"
         )
 
-    suppress_output or print(f"{Fore.RED}Failed to get a valid input!{Fore.RESET}", file=stderr)
+    suppress_output or print_red("Failed to get a valid input!", file=stderr)
 
     return None
 

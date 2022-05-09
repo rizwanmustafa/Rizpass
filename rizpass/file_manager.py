@@ -6,6 +6,7 @@ from colorama import Fore, init as colorama_init
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
+from .output import print_red
 
 # TODO: Convert credentials from an array to an object with id as key
 
@@ -114,7 +115,7 @@ class FileManager:
                 self.credentials.pop(index)
                 break
         else:
-            print(f"{Fore.RED}Credential with id {id} not found{Fore.RESET}", file=stderr)
+            print_red(f"Credential with id {id} not found", file=stderr)
 
         self.__dump_creds()
 

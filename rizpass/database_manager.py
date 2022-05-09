@@ -11,6 +11,7 @@ from colorama import Fore
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
+from .output import print_red
 
 
 class DbConfig:
@@ -45,10 +46,10 @@ class MysqlManager:
             self.mysql_cursor = self.mysql_db.cursor()
         except Exception as e:
             print()
-            print(f"{Fore.RED}There was an error while connecting with MySQL:", file=stderr)
-            print(str(e), file=stderr)
+            print_red("There was an error while connecting with MySQL:", file=stderr)
+            print_red(e, file=stderr)
             print()
-            print(f"Exiting with code 1!{Fore.RESET}", file=stderr)
+            print_red("Exiting with code 1!", file=stderr)
             exit(1)
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
@@ -202,10 +203,10 @@ class MongoManager:
             self.mongo_collection.create_index([("id", ASCENDING)], unique=True)
         except Exception as e:
             print()
-            print(f"{Fore.RED}There was an error while connecting with MongoDB:", file=stderr)
-            print(str(e), file=stderr)
-            print()
-            print(f"Exiting with code 1!{Fore.RESET}", file=stderr)
+            print_red("There was an error while connecting with MongoDB:", file=stderr)
+            print_red(e, file=stderr)
+            print_red()
+            print_red("Exiting with code 1!", file=stderr)
             exit(1)
 
     def __gen_id(self) -> int | None:

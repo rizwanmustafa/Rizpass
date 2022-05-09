@@ -5,6 +5,7 @@ from colorama import Fore
 
 from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
+from .output import print_red
 
 
 class RawCredential:
@@ -63,7 +64,7 @@ class RawCredential:
         if title != None and username != None and email != None and password != None:
             print(f"{Fore.GREEN}Decryption sucessful!{Fore.RESET}")
         else:
-            print(f"{Fore.RED}Decryption failed!{Fore.RESET}")
+            print_red("Decryption failed!", file=stderr)
 
         return Credential(self.id, title, username, email, password)
 
@@ -87,8 +88,8 @@ class RawCredential:
         try:
             pyperclip.copy(decrypted_password)
         except Exception as e:
-            print(f"{Fore.RED}This password could not be copied to your clipboard due to the following error: {Fore.RESET}", file=stderr)
-            print(f"{Fore.RED}{e}{Fore.RESET}", file=stderr)
+            print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
+            print_red(e, file=stderr)
         else:
             print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")
 
@@ -161,7 +162,7 @@ class Credential:
         try:
             pyperclip.copy(self.password)
         except Exception as e:
-            print(f"{Fore.RED}This password could not be copied to your clipboard due to the following error: {Fore.RESET}", file=stderr)
-            print(f"{Fore.RED}{e}{Fore.RESET}", file=stderr)
+            print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
+            print_red(e, file=stderr)
         else:
             print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")

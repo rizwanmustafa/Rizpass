@@ -8,6 +8,8 @@ from urllib.parse import quote_plus
 from colorama import init as color_init, Fore
 import mysql.connector
 
+from rizpass.output import print_red, print_selective_colored
+
 color_init()
 
 # TODO: Flag all errror output to stderr
@@ -49,12 +51,14 @@ def setup_mysql():
     db_cursor = db_manager.cursor()
 
     # Create new database
-    db_name = input(f"New database name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+    print_selective_colored("New database name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+    db_name = input()
     db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
     db_cursor.execute(f"CREATE DATABASE {db_name}")
     print(f"{Fore.GREEN}Database created!{Fore.RESET}")
 
-    db_user = input(f"New MySQL user name {Fore.RED}(Note: It will drop it if it already exists){Fore.RESET}: ")
+    print_selective_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+    db_user = input()
     db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
     db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
     print(f"{Fore.GREEN}Database user created!{Fore.RESET}")
@@ -124,7 +128,8 @@ def setup_mongodb():
         print(f"{Fore.GREEN}Connection successful!{Fore.RESET}")
 
         # Create a new database
-        db_name = input(f"New database name {Fore.RED}(Note: It will drop it and its users){Fore.RESET}: ")
+        print_selective_colored("New database name {red}(Note: It will drop it and its users){reset}: ", end="")
+        db_name = input()
         db_client.drop_database(db_name)
         db_db = db_client[db_name]
         db_db.command({"dropAllUsersFromDatabase": 1})
@@ -156,8 +161,8 @@ def setup_mongodb():
 
         print(f"{Fore.GREEN}Database setup successful!{Fore.RESET}")
     except Exception as e:
-        print(f"{Fore.RED}Database setup failed!{Fore.RESET}", file=stderr)
-        print(f"{Fore.RED}Error: {e}{Fore.RESET}", file=stderr)
+        print_red("Database setup failed!", file=stderr)
+        print_red(e, file=stderr)
         print("Exiting!")
         exit(1)
 

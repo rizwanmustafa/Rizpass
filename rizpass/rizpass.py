@@ -733,6 +733,9 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
 
 def handle_processed_args(options: Dict[str, str]) -> None:
+    # Load config from arguments
+    set_colored_output(options.get("color_mode"))
+
     if options.get("print_help"):
         print_help()
         exit_app(0)
@@ -744,9 +747,7 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         setup_password_manager()
         exit_app(0)
 
-    # Load config
 
-    set_colored_output(options.get("color_mode"))
 
     global config
 
