@@ -5,7 +5,7 @@ from colorama import Fore
 
 from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
-from .output import print_red
+from .output import print_red, print_green
 
 
 class RawCredential:
@@ -62,7 +62,7 @@ class RawCredential:
             salt
         )
         if title != None and username != None and email != None and password != None:
-            print(f"{Fore.GREEN}Decryption sucessful!{Fore.RESET}")
+            print_green("Decryption successful!")
         else:
             print_red("Decryption failed!", file=stderr)
 
@@ -91,7 +91,7 @@ class RawCredential:
             print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
             print_red(e, file=stderr)
         else:
-            print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")
+            print_green(f"This password has been copied to your clipboard!")
 
 
 class Credential:
@@ -147,7 +147,7 @@ class Credential:
             salt
         )
         if title != None and username != None and email != None and password != None:
-            print(f"{Fore.GREEN}Encryption sucessful!{Fore.RESET}")
+            print_green(f"Encryption sucessful!")
 
         return RawCredential(
             self.id,
@@ -165,4 +165,4 @@ class Credential:
             print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
             print_red(e, file=stderr)
         else:
-            print(f"{Fore.GREEN}This password has been copied to your clipboard!{Fore.RESET}")
+            print_green("This password has been copied to your clipboard!")

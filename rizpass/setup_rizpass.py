@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 from colorama import init as color_init, Fore
 import mysql.connector
 
-from rizpass.output import print_red, print_selective_colored
+from rizpass.output import print_red, print_selective_colored, print_green
 
 color_init()
 
@@ -55,17 +55,17 @@ def setup_mysql():
     db_name = input()
     db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
     db_cursor.execute(f"CREATE DATABASE {db_name}")
-    print(f"{Fore.GREEN}Database created!{Fore.RESET}")
+    print_green("Database created!")
 
     print_selective_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
     db_user = input()
     db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
     db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
-    print(f"{Fore.GREEN}Database user created!{Fore.RESET}")
+    print_green("Database user created!")
 
     db_cursor.execute(f"GRANT ALL ON {db_name}.* TO '{db_user}'@'%';")
     db_cursor.execute("FLUSH PRIVILEGES;")
-    print(f"{Fore.GREEN}Privileges granted to the new database user!{Fore.RESET}")
+    print_green("Privileges granted to the new database user!")
 
     db_manager.database = db_name
     createTableQuery = """CREATE TABLE credentials(
@@ -77,7 +77,7 @@ def setup_mysql():
         salt VARCHAR(25) NOT NULL,
         PRIMARY KEY( id ));"""
     db_cursor.execute(createTableQuery)
-    print(f"{Fore.GREEN}Database table created!{Fore.RESET}")
+    print_green("Database table created!")
 
     # Close the connection to database with root login
     db_cursor.close()
@@ -90,7 +90,7 @@ def setup_mysql():
     config["db_name"] = db_name
     config["db_port"] = db_port
 
-    print(f"{Fore.GREEN}Database setup successfull!{Fore.RESET}")
+    print_green("Database setup successfull!")
 
 
 def setup_mongodb():
@@ -125,7 +125,7 @@ def setup_mongodb():
             socketTimeoutMS=3000
         )
         db_client.server_info()  # Check if connection is successful
-        print(f"{Fore.GREEN}Connection successful!{Fore.RESET}")
+        print_green("Connection successful!")
 
         # Create a new database
         print_selective_colored("New database name {red}(Note: It will drop it and its users){reset}: ", end="")
@@ -133,7 +133,7 @@ def setup_mongodb():
         db_client.drop_database(db_name)
         db_db = db_client[db_name]
         db_db.command({"dropAllUsersFromDatabase": 1})
-        print(f"{Fore.GREEN}Database and its users dropped!{Fore.RESET}")
+        print_green("Database and its users dropped!")
 
         # Create new user
         db_user = quote_plus(input("New MongoDB user name: "))
@@ -144,10 +144,10 @@ def setup_mongodb():
             "pwd": "{0}".format(db_pass),
             "roles": [{"role": "readWrite", "db": db_name}]
         })
-        print(f"{Fore.GREEN}New database user created!{Fore.RESET}")
+        print_green("New database user created!")
 
         db_db.create_collection("credentials")
-        print(f"{Fore.GREEN}New database collection 'credentials' created!{Fore.RESET}")
+        print_green("New database collection 'credentials' created!")
 
         # Close the connection to database with root login
         db_client.close()
@@ -159,7 +159,7 @@ def setup_mongodb():
         config["db_name"] = db_name
         config["db_port"] = db_port
 
-        print(f"{Fore.GREEN}Database setup successful!{Fore.RESET}")
+        print_green("Database setup successful!")
     except Exception as e:
         print_red("Database setup failed!", file=stderr)
         print_red(e, file=stderr)
@@ -199,7 +199,7 @@ def setup_password_manager():
 
     write_settings()
 
-    print(f"{Fore.GREEN}Setup complete!{Fore.RESET}")
+    print_green("Setup complete!")
 
 
 if __name__ == "__main__":

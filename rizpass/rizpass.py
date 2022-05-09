@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 from colorama import init as color_init, Fore
 import signal
 
-from .output import print_red, set_colored_output
+from .output import print_green, print_red, set_colored_output
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -275,8 +275,8 @@ def add_credential(user_password: str = None) -> None:
         encrypted_password,
         encoded_salt
     )
-
-    print(f"{Fore.GREEN}\nPassword added successfully!{Fore.RESET}")
+    print()
+    print("Password added successfully!")
 
 
 def get_credential() -> None:
@@ -291,7 +291,7 @@ def get_credential() -> None:
     raw_cred = creds_manager.get_credential(id)
 
     if raw_cred == None:
-        print(f"{Fore.YELLOW}No credential with given id found!{Fore.YELLOW}")
+        print(f"{Fore.YELLOW}No credential with given id found!{Fore.RESET}")
         return
 
     cred: Credential = raw_cred.get_credential(master_pass)
@@ -430,7 +430,8 @@ def modify_credential() -> None:
         b64encode(salt).decode("ascii")
     )
 
-    print(f"{Fore.GREEN}Modified credential successfully!{Fore.RESET}")
+    print()
+    print_green("Modified credential successfully!")
 
 
 def remove_credential() -> None:
@@ -445,7 +446,9 @@ def remove_credential() -> None:
         return
 
     creds_manager.remove_credential(id)
-    print(f"{Fore.GREEN}Removed password successfully!{Fore.GREEN}")
+
+    print()
+    print_green("Removed password successfully!")
 
 
 def remove_all_credentials() -> None:
@@ -460,7 +463,8 @@ def remove_all_credentials() -> None:
 
     creds_manager.remove_all_credentials()
 
-    print(f"{Fore.GREEN}Removed all passwords successfully!{Fore.RESET}")
+    print()
+    print_green("Removed all passwords successfully!")
 
 
 def change_masterpass() -> None:
@@ -473,7 +477,7 @@ def change_masterpass() -> None:
         "Input new master password (Should meet DB Password Requirements): "
     )
     if new_masterpass == master_pass:
-        print(f"{Fore.GREEN}New master password is the same as the old one!{Fore.RESET}")
+        print_red("New master password is the same as the old one!", file=stderr)
         return
 
     # Change database password
@@ -509,7 +513,7 @@ def change_masterpass() -> None:
 
             db_client.close()
 
-            print(f"{Fore.GREEN}Changed database user's password successfully!{Fore.RESET}")
+            print_green("Changed database user's password successfully!")
 
         creds_manager.close()
 
@@ -560,7 +564,7 @@ def change_masterpass() -> None:
             b64encode(salt).decode("ascii")
         )
 
-    print(f"{Fore.GREEN}Changed credential's master password successfully!{Fore.RESET}")
+    print_green("Changed credential's master password successfully!")
 
     master_pass = new_masterpass
 
@@ -607,10 +611,10 @@ def import_credentials() -> None:
             new_cred.salt,
         )
 
-        print(f"{Fore.GREEN}Credential added.{Fore.RESET}")
+        print_green("Credential added.")
         print()
 
-    print(f"{Fore.GREEN}Imported credentials successfully!{Fore.RESET}")
+    print_green("Imported credentials successfully!")
 
 
 def export_credentials() -> None:
@@ -643,7 +647,8 @@ def export_credentials() -> None:
 
     json.dump(cred_objs, open(file_path, "w"))
 
-    print(f"{Fore.GREEN}Exported credentials successfully!{Fore.RESET}")
+    print()
+    print_green("Exported credentials successfully!")
 
 
 def clear_console() -> None:
@@ -746,8 +751,6 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     if options.get("init_setup"):
         setup_password_manager()
         exit_app(0)
-
-
 
     global config
 
