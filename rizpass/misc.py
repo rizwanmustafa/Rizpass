@@ -1,4 +1,4 @@
-VERSION_NUMBER = 'v0.0.1-alpha'
+VERSION_NUMBER = 'v0.0.2-alpha'
 
 def print_license():
     print(f"Rizpass {VERSION_NUMBER} - An open source password manager")
