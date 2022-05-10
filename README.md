@@ -4,7 +4,7 @@
 - [Motivation](#motivation)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  * [Installation through PyPi (Recommended)](#installation-through-pypi--recommended-)
+  * [Installation through PyPi (Recommended)](#installation-through-pypi-recommended)
   * [Installation through Github](#installation-through-github)
   * [But I really really need a binary](#but-i-really-really-need-a-binary)
 - [Configuration](#configuration)
