@@ -5,13 +5,11 @@ from os import path
 from sys import stderr
 from json import dump as dump_json
 from urllib.parse import quote_plus
-from colorama import init as color_init, Fore
 import mysql.connector
 
-from rizpass.output import print_red, print_selective_colored, print_green
+from rizpass.output import print_red, print_selective_colored, print_green, print_yellow
 from rizpass.rizpass import print_license
 
-color_init()
 
 # TODO: Flag all errror output to stderr
 # TODO: Create a class with all the config variables to be used throughout the program
