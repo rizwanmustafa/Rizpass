@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 import mysql.connector
 
 from rizpass.output import print_red, print_selective_colored, print_green, print_yellow
-from rizpass.rizpass import print_license
+from rizpass.misc import print_license
 
 
 # TODO: Flag all errror output to stderr
