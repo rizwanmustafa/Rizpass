@@ -226,7 +226,7 @@ def generate_password() -> None:
         print("Could not generate a password! Try again later!")
         return
 
-    print("Generated Password: ", Fore.BLUE + generated_pass + Fore.RESET)
+    print("Generated Password: ", (Fore.BLUE if get_colored_output() else '') + generated_pass + (Fore.RESET if get_colored_output() else ''))
 
     try:
         pyperclip.copy(generated_pass)
