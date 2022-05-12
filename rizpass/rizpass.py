@@ -223,7 +223,7 @@ def generate_password() -> None:
     generated_pass = generate_random_password(pass_len, uppercase, lowercase, numbers, specials)
 
     if not generated_pass:
-        print("Could not generate a password! Try again later!")
+        print_red("Could not generate a password! Try again later!", file=stderr)
         return
 
     print("Generated Password: ", (Fore.BLUE if get_colored_output() else '') + generated_pass + (Fore.RESET if get_colored_output() else ''))
@@ -271,15 +271,20 @@ def add_credential(user_password: str = None) -> None:
     encrypted_password = encrypt_and_encode(master_pass, password, salt)
     encoded_salt = b64encode(salt).decode("ascii")
 
-    creds_manager.add_credential(
-        encrypted_title,
-        encrypted_username,
-        encrypted_email,
-        encrypted_password,
-        encoded_salt
-    )
     print()
-    print("Password added successfully!")
+    try:
+        creds_manager.add_credential(
+            encrypted_title,
+            encrypted_username,
+            encrypted_email,
+            encrypted_password,
+            encoded_salt
+        )
+    except Exception as e:
+        print_red("Could not add credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+    else:
+        print_green("Password added successfully!")
 
 
 def get_credential() -> None:
@@ -297,7 +302,13 @@ def get_credential() -> None:
         print_yellow("No credential with given id found!")
         return
 
-    cred: Credential = raw_cred.get_credential(master_pass)
+    try:
+        cred: Credential = raw_cred.get_credential(master_pass)
+    except Exception as e:
+        print_red("Could not get credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
+
     print(cred)
     cred.copy_pass()
 
@@ -317,7 +328,12 @@ def filter_credentials() -> None:
 
     creds: List[RawCredential] = []
 
-    creds.extend(creds_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
+    try:
+        creds.extend(creds_manager.filter_credentials(title_filter, username_filter, email_filter, master_pass))
+    except Exception as e:
+        print_red("Could not filter credentials due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
 
     if not creds:
         print_yellow("No credentials meet your given filter.")
@@ -331,30 +347,43 @@ def filter_credentials() -> None:
 
 
 def get_all_credentials() -> None:
+    raw_creds: List[RawCredential] = []
     try:
-        raw_creds: List[RawCredential] = []
         raw_creds.extend(creds_manager.get_all_credentials())
-        if not raw_creds:
-            print_yellow("No credentials stored yet.")
-            return
-
-        print_magenta("Printing all credentials...")
-        lastCred = None
-        for raw_cred in raw_creds:
-            lastCred = raw_cred.get_credential(master_pass)
-            print(lastCred)
-            print()
-
-        if lastCred:
-            lastCred.copy_pass()
-
     except Exception as e:
-        print_red("Could not get credentials due to the following error:", file=stderr)
+        print_red("Could not get all credentials due to the following error:", file=stderr)
         print_red(e, file=stderr)
+        return
+
+    if not raw_creds:
+        print_yellow("No credentials stored yet.")
+        return
+
+    print_magenta("Printing all credentials...")
+    lastCred = None
+    for raw_cred in raw_creds:
+        try:
+            lastCred = raw_cred.get_credential(master_pass)
+        except Exception as e:
+            print_red("Could not get credential due to the following error:", file=stderr)
+            print_red(e, file=stderr)
+            continue
+
+        print(lastCred)
+        print()
+
+    if lastCred:
+        lastCred.copy_pass()
 
 
 def get_all_raw_credentials() -> None:
-    raw_creds = creds_manager.get_all_credentials()
+    try:
+        raw_creds = creds_manager.get_all_credentials()
+    except Exception as e:
+        print_red("Could not get all credentials due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
+
     if not raw_creds:
         print_red("No credentials stored yet.", file=stderr)
         return
@@ -372,7 +401,12 @@ def modify_credential() -> None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
-    old_cred = creds_manager.get_credential(id).get_credential(master_pass)
+    try:
+        old_cred = creds_manager.get_credential(id).get_credential(master_pass)
+    except Exception as e:
+        print_red("Could not get credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
 
     if old_cred == None:
         print_red("No credential with given id exists!", file=stderr)
@@ -424,14 +458,19 @@ def modify_credential() -> None:
         salt
     )
 
-    creds_manager.modify_credential(
-        id,
-        new_title,
-        new_username,
-        new_email,
-        new_pass,
-        b64encode(salt).decode("ascii")
-    )
+    try:
+        creds_manager.modify_credential(
+            id,
+            new_title,
+            new_username,
+            new_email,
+            new_pass,
+            b64encode(salt).decode("ascii")
+        )
+    except Exception as e:
+        print_red("Could not modify credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
 
     print()
     print_green("Modified credential successfully!")
@@ -444,11 +483,23 @@ def remove_credential() -> None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
-    if creds_manager.get_credential(id) == None:
+    try:
+        cred = creds_manager.get_credential(id)
+    except Exception as e:
+        print_red("Could not get credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
+
+    if cred == None:
         print_red(f"No credential with id: {id} exists!", file=stderr)
         return
 
-    creds_manager.remove_credential(id)
+    try:
+        creds_manager.remove_credential(id)
+    except Exception as e:
+        print_red("Could not remove credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
 
     print()
     print_green("Removed password successfully!")
@@ -464,7 +515,13 @@ def remove_all_credentials() -> None:
         print("Exiting...")
         exit_app()
 
-    creds_manager.remove_all_credentials()
+    try:
+        creds_manager.remove_all_credentials()
+    except Exception as e:
+        print_red("Could not remove all credentials due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
+
 
     print()
     print_green("Removed all passwords successfully!")
