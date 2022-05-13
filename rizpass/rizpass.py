@@ -8,11 +8,10 @@ from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple
 from cerberus import Validator as SchemaValidator
 from pymongo.mongo_client import MongoClient
-from colorama import init as color_init, Fore
 import signal
 
 from .misc import print_license, VERSION_NUMBER
-from .output import print_green, print_red, set_colored_output, get_colored_output, print_yellow, print_magenta
+from .output import print_colored, print_green, print_red, set_colored_output, get_colored_output, print_yellow, print_magenta
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -40,8 +39,6 @@ config: Dict[str, str] = {
 
 
 # TODO: Add requirements for master password
-
-color_init()
 
 
 def get_mode() -> str:
@@ -161,7 +158,7 @@ def generate_password() -> None:
         print_red("Could not generate a password! Try again later!", file=stderr)
         return
 
-    print("Generated Password: ", (Fore.BLUE if get_colored_output() else '') + generated_pass + (Fore.RESET if get_colored_output() else ''))
+    print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
     try:
         pyperclip.copy(generated_pass)
@@ -770,18 +767,15 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
 
 def print_menu():
     clear_console()
-    print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))
-    print((Fore.BLUE if get_colored_output() else '') + f"Rizpass {VERSION_NUMBER}" + (Fore.RESET if get_colored_output() else ''))
-    print((Fore.BLUE if get_colored_output() else '') + "Mode: " + (Fore.RESET if get_colored_output() else '') +
-          (Fore.YELLOW if get_colored_output() else '') + get_mode() + (Fore.RESET if get_colored_output() else ''))
+    print_colored("{blue}" + "-------------------------------" + "{reset}")
+    print_colored("{blue}" + f"Rizpass {VERSION_NUMBER}" + "{reset}")
+    print_colored("{blue}" + "Mode: " + "{reset}" + '{yellow}' + get_mode() + "{reset}")
     print()
 
     for key in menu_items:
-        print((Fore.BLUE if get_colored_output() else '') + str(key).ljust(2) +
-              (Fore.RESET if get_colored_output() else '') + "  " + menu_items[key][0])
-        pass
+        print_colored("{blue}" + str(key).ljust(2) + "{reset}  " + menu_items[key][0])
 
-    print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))
+    print_colored("{blue}" + "-------------------------------" + '{reset}')
 
 
 def init_interactive():

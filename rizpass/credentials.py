@@ -5,7 +5,7 @@ from colorama import Fore
 
 from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
-from .output import print_red, print_green, get_colored_output
+from .output import print_red, print_green, get_colored_output, format_colors
 
 
 class RawCredential:
@@ -28,15 +28,15 @@ class RawCredential:
 
     def __str__(self):
         output = "\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}ID:{Fore.RESET if get_colored_output() else ''} {self.id}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}Title:{Fore.RESET if get_colored_output() else ''} {self.title}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}Username:{Fore.RESET if get_colored_output() else ''} {self.username}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}Email:{Fore.RESET if get_colored_output() else ''} {self.email}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}Password:{Fore.RESET if get_colored_output() else ''} {self.password}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}Salt:{Fore.RESET if get_colored_output() else ''} {self.salt}\n"
-        output += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}"
-        return output
+        output += f"{{blue}}-------------------------------{{reset}}\n"
+        output += f"{{blue}}ID:{{reset}} {self.id}\n"
+        output += f"{{blue}}Title:{{reset}} {self.title}\n"
+        output += f"{{blue}}Username:{{reset}} {self.username}\n"
+        output += f"{{blue}}Email:{{reset}} {self.email}\n"
+        output += f"{{blue}}Password:{{reset}} {self.password}\n"
+        output += f"{{blue}}Salt:{{reset}} {self.salt}\n"
+        output += f"{{blue}}-------------------------------{{reset}}"
+        return format_colors(output)
 
     def get_credential(self, master_password: str):
         print(f"Decrypting password with id {self.id}...")
@@ -110,14 +110,14 @@ class Credential:
 
     def __str__(self):
         string = "\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}ID:{Fore.RESET if get_colored_output() else ''} {self.id}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}Title:{Fore.RESET if get_colored_output() else ''} {self.title}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}Username:{Fore.RESET if get_colored_output() else ''} {self.username}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}Email:{Fore.RESET if get_colored_output() else ''} {self.email}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}Password:{Fore.RESET if get_colored_output() else ''} {self.password}\n"
-        string += f"{Fore.BLUE if get_colored_output() else ''}-------------------------------{Fore.RESET if get_colored_output() else ''}"
-        return string
+        string += f"{{blue}}-------------------------------{{reset}}\n"
+        string += f"{{blue}}ID:{{reset}} {self.id}\n"
+        string += f"{{blue}}Title:{{reset}} {self.title}\n"
+        string += f"{{blue}}Username:{{reset}} {self.username}\n"
+        string += f"{{blue}}Email:{{reset}} {self.email}\n"
+        string += f"{{blue}}Password:{{reset}} {self.password}\n"
+        string += f"{{blue}}-------------------------------{{reset}}"
+        return format_colors(string)
 
     def get_raw_credential(self, master_pass: str, salt: bytes) -> RawCredential:
         ensure_type(master_pass, str, "master_pass", "string")

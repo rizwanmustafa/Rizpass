@@ -7,7 +7,7 @@ from json import dump as dump_json
 from urllib.parse import quote_plus
 import mysql.connector
 
-from rizpass.output import print_red, print_selective_colored, print_green, print_yellow
+from rizpass.output import print_red, print_colored, print_green, print_yellow
 from rizpass.misc import print_license
 
 
@@ -50,13 +50,13 @@ def setup_mysql():
     db_cursor = db_manager.cursor()
 
     # Create new database
-    print_selective_colored("New database name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+    print_colored("New database name {red}(Note: It will drop it if it already exists){reset}: ", end="")
     db_name = input()
     db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
     db_cursor.execute(f"CREATE DATABASE {db_name}")
     print_green("Database created!")
 
-    print_selective_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+    print_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
     db_user = input()
     db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
     db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
@@ -127,7 +127,7 @@ def setup_mongodb():
         print_green("Connection successful!")
 
         # Create a new database
-        print_selective_colored("New database name {red}(Note: It will drop it and its users){reset}: ", end="")
+        print_colored("New database name {red}(Note: It will drop it and its users){reset}: ", end="")
         db_name = input()
         db_client.drop_database(db_name)
         db_db = db_client[db_name]

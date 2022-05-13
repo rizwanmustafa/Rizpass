@@ -12,8 +12,6 @@ class TestBetterInput(unittest.TestCase):
         return_val = better_input("", suppress_output=True)
         self.assertEqual(return_val, "1")
 
-        pass
-
     @patch("builtins.input")
     def test_pos_int_input_1(self, mock_input: MagicMock):
         # Test valid input on 3rd attempt
