@@ -5,6 +5,7 @@ from .validator import ensure_type
 
 VERSION_NUMBER = 'v0.0.2-alpha'
 
+
 def print_help(error: bool = False) -> None:
     file = stderr if error else stdout
     print("Usage: rizpass [options]", file=file)
@@ -14,6 +15,7 @@ def print_help(error: bool = False) -> None:
     print("   -s, --setup           Setup rizpass", file=file)
     print("   -f, --file <file>     Use file as credential storage", file=file)
     print("   --nocolor             Disable color output", file=file)
+
 
 def print_license():
     print(f"Rizpass {VERSION_NUMBER} - An open source password manager")
@@ -30,6 +32,19 @@ def print_license():
     print("")
     print("You should have received a copy of the GNU Affero General Public License")
     print("along with this program.  If not, see <https://www.gnu.org/licenses/>.")
+
+
+def print_strong_pass_guidelines():
+    print("Please follow the following guidelines when creating your master password:")
+    print(" - Contains at least 16 characters")
+    print(" - Contains at least 3 uppercase characters")
+    print(" - Contains at least 3 lowercase characters")
+    print(" - Contains at least 2 digits")
+    print(" - Contains at least 2 special character")
+    print(" - Don’t use words from a dictionary")
+    print(" - Don’t reuse passwords")
+    print(" - Don’t use personal information")
+    print(" - Don't use variations of the common passwords e.g 'password' and 'passw0rd'")
 
 
 def get_list_item_safely(array: List[str], index: str) -> str | None:

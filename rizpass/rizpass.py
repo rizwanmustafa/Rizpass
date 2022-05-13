@@ -145,14 +145,14 @@ def generate_password() -> None:
         return
     pass_len = int(pass_len)
 
-    # uppercase, lowercase, numbers, specials
+    # uppercase, lowercase, digits, specials
     uppercase = confirm("Uppercase letters? (Y/N): ")
     lowercase = confirm("Lowercase letters? (Y/N): ")
-    numbers = confirm("Numbers? (Y/N): ")
+    digits = confirm("Digits? (Y/N): ")
     specials = confirm("Special characters? (Y/N): ")
     print()
 
-    generated_pass = generate_random_password(pass_len, uppercase, lowercase, numbers, specials)
+    generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
 
     if not generated_pass:
         print_red("Could not generate a password! Try again later!", file=stderr)

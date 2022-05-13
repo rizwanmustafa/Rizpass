@@ -42,7 +42,7 @@ class TestBetterInput(unittest.TestCase):
 
     @patch("builtins.input")
     def test_pos_int_input_5(self, mock_input: MagicMock):
-        # Test if spaced numbers are working
+        # Test if spaced digits are working
         mock_input.side_effect = [" 4 "]
         return_val = pos_int_input("", suppress_output=True)
         self.assertEqual(return_val, 4)
