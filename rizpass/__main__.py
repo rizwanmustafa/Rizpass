@@ -1,3 +1,3 @@
-from .rizpass import init
+from .rizpass import init_interactive
 
-init()
+init_interactive()

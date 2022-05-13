@@ -4,7 +4,7 @@ import os
 import pyperclip
 import json
 from getpass import getpass
-from sys import exit, argv, stderr, stdout
+from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple
 from cerberus import Validator as SchemaValidator
 from pymongo.mongo_client import MongoClient
@@ -21,6 +21,7 @@ from .credentials import RawCredential, Credential
 from .database_manager import DbConfig, MysqlManager, MongoManager
 from .setup_rizpass import setup_password_manager
 from .file_manager import FileManager
+from .misc import get_list_item_safely, print_help
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
 
@@ -65,7 +66,6 @@ def perform_tasks() -> None:
 
     user_choice = int(user_choice)
 
-    # print()
     clear_console()
 
     menu_items[user_choice][1]()
@@ -135,71 +135,6 @@ def load_db_config(
     config["db_type"] = db_type or user_settings["db_type"]
 
     return True
-
-
-def load_config() -> bool:
-    global config, creds_file_path
-
-    if creds_file_path != None:
-        return
-
-    if not os.path.isfile(CONFIG_FILE_PATH):
-        print("It looks like you haven't set Rizpass up.", file=stderr)
-        print("You can do so by using the --setup flag", file=stderr)
-        print("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
-        exit(1)
-
-    try:
-        config_file = open(CONFIG_FILE_PATH, "r+")
-        file_content = config_file.readlines()
-        if not file_content or len(file_content) == 0:
-            print("Invalid config file!", file=stderr)
-            print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
-            exit(1)
-        else:
-            config_file.seek(0, 0)
-        user_settings: Dict[str, str] = json.load(config_file)
-
-        config_schema = get_config_schema()
-        validator = SchemaValidator(config_schema)
-
-        if not validator.validate(user_settings):
-            print("Invalid configuration file!", file=stderr)
-            for key in validator.errors:
-                print(f"- {key}:", file=stderr)
-                for error in validator.errors[key]:
-                    print("  ", error, file=stderr)
-            print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
-            exit(1)
-
-        config = dict(user_settings)
-
-        return True
-    except Exception as e:
-        print("Could not load configuration file due to the following error:", file=stderr)
-        print(e, file=stderr)
-        exit(1)
-
-
-# def login() -> None:
-#     global master_pass, creds_manager, creds_file_path
-
-#     master_pass = getpass("Master Password: ")
-#     if creds_file_path != None:
-#         creds_manager = FileManager(creds_file_path)
-#         return
-
-#     db_config = DbConfig(
-#         config["db_host"],
-#         config["db_user"],
-#         master_pass,
-#         config["db_name"],
-#         config["db_port"]
-#     )
-#     if config["db_type"] == "mysql":
-#         creds_manager = MysqlManager(db_config)
-#     elif config["db_type"] == "mongo":
-#         creds_manager = MongoManager(db_config)
 
 
 def generate_password() -> None:
@@ -522,7 +457,6 @@ def remove_all_credentials() -> None:
         print_red(e, file=stderr)
         return
 
-
     print()
     print_green("Removed all passwords successfully!")
 
@@ -725,27 +659,6 @@ def exit_app(exit_code=0) -> NoReturn:
     exit(exit_code)
 
 
-def get_list_item_safely(array: List[str], index: str) -> str | None:
-    ensure_type(array, list, "array", "list")
-    ensure_type(index, int, "index", "int")
-
-    if len(array) <= index:
-        return None
-    else:
-        return array[index]
-
-
-def print_help(error: bool = False) -> None:
-    file = stderr if error else stdout
-    print("Usage: rizpass [options]", file=file)
-    print("Options:", file=file)
-    print("   -h, --help            Prints this help message", file=file)
-    print("   -v, --version         Prints the version number", file=file)
-    print("   -s, --setup           Setup rizpass", file=file)
-    print("   -f, --file <file>     Use file as credential storage", file=file)
-    print("   --nocolor             Disable color output", file=file)
-
-
 def process_args(args: List[str]) -> Dict[str, str]:
     """Processes command line arguments and returns a dictionary of the arguments with their values if possible."""
     ensure_type(args, list, "args", "list")
@@ -871,12 +784,9 @@ def print_menu():
     print((Fore.BLUE if get_colored_output() else '') + "-------------------------------" + (Fore.RESET if get_colored_output() else ''))
 
 
-def init():
-    handle_processed_args(process_args(argv))
-    # load_config()
-    # if not load_db_config():
-    # exit_app(1)
-    # login()
+def init_interactive():
+    processed_args = process_args(argv)
+    handle_processed_args(processed_args)
 
     while True:
         print_menu()
@@ -884,4 +794,4 @@ def init():
 
 
 if __name__ == "__main__":
-    init()
+    init_interactive()
