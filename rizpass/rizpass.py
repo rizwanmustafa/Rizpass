@@ -663,6 +663,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
     ignore_args = {0}
 
     args_dict = dict({
+        "config_file": None,
         "print_version": False,
         "print_help": False,
         "init_setup": False,
@@ -692,7 +693,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
         elif arg == "--setup" or arg == "-s":
             args_dict["init_setup"] = True
 
-        elif arg == "--nocolor":
+        elif arg == "--no-color":
             args_dict["color_mode"] = False
 
         else:

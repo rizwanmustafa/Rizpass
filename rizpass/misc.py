@@ -14,7 +14,7 @@ def print_help(error: bool = False) -> None:
     print("   -v, --version         Prints the version number", file=file)
     print("   -s, --setup           Setup rizpass", file=file)
     print("   -f, --file <file>     Use file as credential storage", file=file)
-    print("   --nocolor             Disable color output", file=file)
+    print("   --no-color             Disable color output", file=file)
 
 
 def print_license():
