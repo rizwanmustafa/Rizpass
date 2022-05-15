@@ -663,7 +663,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
     ignore_args = {0}
 
     args_dict = dict({
-        "config_file": None,
+        "config_file_path": None,
         "print_version": False,
         "print_help": False,
         "init_setup": False,
@@ -687,6 +687,13 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["file_path"] = get_list_item_safely(args, index + 1)
             if args_dict["file_path"] == None:
                 print_red("Invalid file path!", file=stderr)
+                exit_app(129)
+            ignore_args.add(index + 1)
+
+        elif arg == "--config-file":
+            args_dict["config_file_path"] = get_list_item_safely(args, index + 1)
+            if args_dict["config_file_path"] == None:
+                print_red("Invalid config file path!", file=stderr)
                 exit_app(129)
             ignore_args.add(index + 1)
 
@@ -720,6 +727,10 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         exit_app(0)
 
     global config
+
+    if options.get("config_file_path"):
+        global CONFIG_FILE_PATH
+        CONFIG_FILE_PATH = options.get("config_file_path")
 
     if options.get("file_mode"):
         config["file_path"] = options.get("file_path")
