@@ -146,10 +146,10 @@ def generate_password() -> None:
     pass_len = int(pass_len)
 
     # uppercase, lowercase, digits, specials
-    uppercase = confirm("Uppercase letters? [y/N]: ")
-    lowercase = confirm("Lowercase letters? [y/N]: ")
-    digits = confirm("Digits? [y/N]: ")
-    specials = confirm("Special characters? [y/N]: ")
+    uppercase = confirm("Uppercase letters? [Y/n]: ", True)
+    lowercase = confirm("Lowercase letters? [Y/n]: ", True)
+    digits = confirm("Digits? [Y/n]: ", True)
+    specials = confirm("Special characters? [Y/n]: ", True)
     print()
 
     generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
