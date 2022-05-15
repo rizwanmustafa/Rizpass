@@ -146,10 +146,10 @@ def generate_password() -> None:
     pass_len = int(pass_len)
 
     # uppercase, lowercase, digits, specials
-    uppercase = confirm("Uppercase letters? (Y/N): ")
-    lowercase = confirm("Lowercase letters? (Y/N): ")
-    digits = confirm("Digits? (Y/N): ")
-    specials = confirm("Special characters? (Y/N): ")
+    uppercase = confirm("Uppercase letters? [y/N]: ")
+    lowercase = confirm("Lowercase letters? [y/N]: ")
+    digits = confirm("Digits? [y/N]: ")
+    specials = confirm("Special characters? [y/N]: ")
     print()
 
     generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
@@ -161,14 +161,14 @@ def generate_password() -> None:
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
     try:
-        pyperclip.copy(generated_pass)
+        confirm("Copy generated password to clipboard? [Y/n]", True) and pyperclip.copy(generated_pass)
     except Exception as e:
         print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
         print_red(e, file=stderr)
     else:
         print("The generated password has been copied to your clipboard.")
 
-    if confirm("Do you want to add this password (Y/N): "):
+    if confirm("Do you want to add this password [Y/n]: ", True):
         add_credential(generated_pass)
 
 
@@ -193,7 +193,7 @@ def add_credential(user_password: str = None) -> None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
-    if not confirm("Are you sure you want to add this password (Y/N): ", loose=True):
+    if not confirm("Are you sure you want to add this password [Y/n]: ", loose=True):
         return
 
     salt = generate_salt(16)
@@ -242,7 +242,7 @@ def get_credential() -> None:
         return
 
     print(cred)
-    cred.copy_pass()
+    confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
 
 
 def filter_credentials() -> None:
@@ -275,8 +275,6 @@ def filter_credentials() -> None:
     for credential in creds:
         print(credential)
 
-    credential.copy_pass()
-
 
 def get_all_credentials() -> None:
     raw_creds: List[RawCredential] = []
@@ -292,20 +290,17 @@ def get_all_credentials() -> None:
         return
 
     print_magenta("Printing all credentials...")
-    lastCred = None
     for raw_cred in raw_creds:
         try:
-            lastCred = raw_cred.get_credential(master_pass)
+            cred = raw_cred.get_credential(master_pass)
         except Exception as e:
             print_red("Could not get credential due to the following error:", file=stderr)
             print_red(e, file=stderr)
             continue
 
-        print(lastCred)
+        print(cred)
         print()
 
-    if lastCred:
-        lastCred.copy_pass()
 
 
 def get_all_raw_credentials() -> None:
@@ -361,7 +356,7 @@ def modify_credential() -> None:
     if new_password == None or not new_password.strip():
         new_password = ""
 
-    if not confirm("Are you sure you want to modify this password (Y/N): "):
+    if not confirm("Are you sure you want to modify this password [Y/n]: ", True):
         return
 
     if new_title == new_username == new_email == new_password == "":
@@ -439,7 +434,7 @@ def remove_credential() -> None:
 
 def remove_all_credentials() -> None:
     for _ in range(2):
-        if not confirm("Are you sure you want to remove all stored passwords (Y/N): "):
+        if not confirm("Are you sure you want to remove all stored passwords [y/N]: "):
             return
 
     if getpass("Re-enter master password: ") != master_pass:
@@ -461,7 +456,7 @@ def remove_all_credentials() -> None:
 def change_masterpass() -> None:
     global creds_manager, master_pass
 
-    if not confirm("Are you sure you want to change your master password (Y/N): "):
+    if not confirm("Are you sure you want to change your master password [y/N]: "):
         return
 
     new_masterpass = getpass(

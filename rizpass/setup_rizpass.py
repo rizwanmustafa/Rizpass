@@ -98,7 +98,7 @@ def setup_mongodb():
             print("You need to setup a master password before setting up the database!")
             setup_masterpass()
 
-        access_control_setup = input("Have you set up access control? (Y/N) ").lower()
+        access_control_setup = input("Have you set up access control? [Y/N] ").lower()
         if access_control_setup != "y":
             print("Please setup access control to setup Rizpass!")
             print("Exiting!")
