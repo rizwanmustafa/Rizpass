@@ -302,7 +302,6 @@ def get_all_credentials() -> None:
         print()
 
 
-
 def get_all_raw_credentials() -> None:
     try:
         raw_creds = creds_manager.get_all_credentials()
@@ -665,6 +664,8 @@ def process_args(args: List[str]) -> Dict[str, str]:
         "file_mode": False,
         "file_path": None,
         "color_mode": True,
+        "actions": {},
+        "clear_console": False,
     })
 
     for index, arg in enumerate(args):
@@ -697,6 +698,33 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
         elif arg == "--no-color":
             args_dict["color_mode"] = False
+
+        elif arg == "--generate":
+            args_dict["actions"][1] = True
+        elif arg == "--add":
+            args_dict["actions"][2] = True
+        elif arg == "--retrieve":
+            args_dict["actions"][3] = True
+        elif arg == "--filter":
+            args_dict["actions"][4] = True
+        elif arg == "--list-all":
+            args_dict["actions"][5] = True
+        elif arg == "--modify":
+            args_dict["actions"][6] = True
+        elif arg == "--remove":
+            args_dict["actions"][7] = True
+        elif arg == "--remove-all":
+            args_dict["actions"][8] = True
+        elif arg == "--change-master-pass":
+            args_dict["actions"][9] = True
+        elif arg == "--export":
+            args_dict["actions"][10] = True
+        elif arg == "--import":
+            args_dict["actions"][11] = True
+        elif arg == "--list-raw":
+            args_dict["actions"][12] = True
+        elif arg == "--clear":
+            args_dict["clear_console"] = True
 
         else:
             print_red(f"Invalid argument: {arg}", file=stderr)
@@ -732,6 +760,10 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     else:
         exit(1) if not load_db_config() else None
 
+    # Print license
+    print_license()
+    print()
+
     # Login
     global master_pass, creds_manager
 
@@ -750,6 +782,14 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     )
 
     creds_manager = MysqlManager(db_config) if config.get("db_type") == "mysql" else MongoManager(db_config)
+
+    if options.get("actions"):
+        for action in options.get("actions"):
+            menu_items[action][1]()
+
+        if options.get("clear_console"):
+            clear_console()
+        exit_app()
 
 
 # Handle interruptions

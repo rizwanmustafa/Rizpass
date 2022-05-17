@@ -16,6 +16,20 @@ def print_help(error: bool = False) -> None:
     print("   -f, --file <file>     Use file as credential storage", file=file)
     print("   --no-color            Disable color output", file=file)
     print("   --config-file         Specify alternative config file to use", file=file)
+    print()
+    print("   --generate            Generate a strong password", file=file)
+    print("   --add                 Add a credential", file=file)
+    print("   --retrieve            Get a credential", file=file)
+    print("   --filter              Filter credentials", file=file)
+    print("   --list-all            List all credentials", file=file)
+    print("   --modify              Modify a credential", file=file)
+    print("   --remove              Remove a credential", file=file)
+    print("   --remove-all          Remove all credentials", file=file)
+    print("   --change-master-pass  Change master password", file=file)
+    print("   --export              Export credentials to a JSON file", file=file)
+    print("   --import              Import credentials from a JSON file", file=file)
+    print("   --list-raw            List all credentials in their encrypted form", file=file)
+    print("   --clear               Clear the console after execution", file=file)
 
 
 def print_license():
