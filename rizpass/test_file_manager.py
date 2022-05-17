@@ -9,6 +9,12 @@ TEMP_FILE_PATH = f"{tempfile.gettempdir()}/rizpass_test_file_manager_{int(time()
 
 
 class TestFileManager(unittest.TestCase):
+    def read_from_file(self):
+        file = open(TEMP_FILE_PATH, "r")
+        contents = file.read()
+        file.close()
+        return contents
+
     def test_add_credential(self):
         manager = FileManager(TEMP_FILE_PATH)
         manager.add_credential("Test Title", "Test Username", "Test Email", "Test Password", "Test Salt")
@@ -21,6 +27,10 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(manager.credentials[0].salt, "Test Salt")
 
         manager.close()
+        self.assertEqual(
+            self.read_from_file(),
+            '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}]'
+        )
         os.remove(TEMP_FILE_PATH)
 
     def test_get_all_creds(self):
@@ -45,6 +55,10 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(all_creds[1].salt, "Test Salt 2")
 
         manager.close()
+        self.assertEqual(
+            self.read_from_file(),
+            '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}, {"id": 2, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'
+        )
         os.remove(TEMP_FILE_PATH)
 
     def test_get_credential(self):
@@ -57,6 +71,10 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(cred.title, "Test Title 2")
 
         manager.close()
+        self.assertEqual(
+            self.read_from_file(),
+            '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}, {"id": 2, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'
+        )
         os.remove(TEMP_FILE_PATH)
 
     def test_remove_credential(self):
@@ -67,6 +85,7 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(len(manager.credentials), 0)
 
         manager.close()
+        self.assertEqual(self.read_from_file(), "[]")
         os.remove(TEMP_FILE_PATH)
 
     def test_remove_all_credentials(self):
@@ -78,6 +97,7 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(len(manager.credentials), 0)
 
         manager.close()
+        self.assertEqual(self.read_from_file(), "[]")
         os.remove(TEMP_FILE_PATH)
 
     def test_modify_credential(self):
@@ -92,6 +112,10 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(manager.credentials[0].password, "Test Password 2")
 
         manager.close()
+        self.assertEqual(
+            self.read_from_file(),
+            '[{"id": 1, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'
+        )
         os.remove(TEMP_FILE_PATH)
 
     # TODO: Find some way of testing this
