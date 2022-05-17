@@ -25,8 +25,9 @@ If you want to install Rizpass for personal use, you can either install it as a 
 
 
 ## Installation through PyPi (Recommended)
+The following command will upgrade an existing installation of Rizpass if it is already installed else it will install Rizpass
 ```bash
-pip install rizpass
+pip install --upgrade rizpass
 ```
 
 ## Installation through Github
