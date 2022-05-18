@@ -160,13 +160,14 @@ def generate_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    try:
-        confirm("Copy generated password to clipboard? [Y/n]", True) and pyperclip.copy(generated_pass)
-    except Exception as e:
-        print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
-        print_red(e, file=stderr)
-    else:
-        print("The generated password has been copied to your clipboard.")
+    if confirm("Copy generated password to clipboard? [Y/n]", True):
+        try:
+            pyperclip.copy(generated_pass)
+        except Exception as e:
+            print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
+            print_red(e, file=stderr)
+        else:
+            print("The generated password has been copied to your clipboard.")
 
     if confirm("Do you want to add this password [Y/n]: ", True):
         add_credential(generated_pass)
