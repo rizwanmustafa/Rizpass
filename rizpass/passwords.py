@@ -166,7 +166,7 @@ def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
     return decrypted_data if decrypted_data else ""
 
 
-def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool) -> str | None:
+def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool, suppress_output : bool = False) -> str | None:
     # Exception handling
     ensure_type(length, int,  "length", "int")
     ensure_type(uppercase, bool, "uppercase", "bool")
@@ -175,7 +175,7 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
     ensure_type(specials, bool, "specials", "bool")
 
     if uppercase == lowercase == digits == specials == False:
-        print("All options cannot be false!")
+        suppress_output or print("All options cannot be false!")
         return None
 
     # Create a string collection to choose the characters from
@@ -220,8 +220,8 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
         ):
             return password
 
-    print("Could not generate password", file=stderr)
-    print(f"Tried {tries + 1} times", file=stderr)
+    suppress_output or print("Could not generate password", file=stderr)
+    suppress_output or print(f"Tried {tries + 1} times", file=stderr)
     return None
 
 
