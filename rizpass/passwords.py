@@ -166,7 +166,7 @@ def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
     return decrypted_data if decrypted_data else ""
 
 
-def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool, suppress_output : bool = False) -> str | None:
+def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool, suppress_output: bool = False) -> str | None:
     # Exception handling
     ensure_type(length, int,  "length", "int")
     ensure_type(uppercase, bool, "uppercase", "bool")
@@ -179,38 +179,38 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
         return None
 
     # Create a string collection to choose the characters from
-    str_collection: List[str] = []
+    str_collection: str = ""
 
     if uppercase:
-        str_collection.append(string.ascii_uppercase)
+        str_collection += string.ascii_uppercase
     if lowercase:
-        str_collection.append(string.ascii_lowercase)
+        str_collection += string.ascii_lowercase
     if digits:
-        str_collection.append(string.digits)
+        str_collection += string.digits
     if specials:
-        str_collection.append(string.punctuation)
+        str_collection += string.punctuation
 
-    for tries in range(3):
+    while True:
         password = ""
         upper_num = lower_num = number_num = special_num = 0
 
         for _ in range(length):
-            char_collection = choice(str_collection)
-            randomChar = choice(char_collection)
+            random_char = choice(str_collection)
+            print(random_char)
 
-            if char_collection == string.ascii_uppercase:
+            if random_char in string.ascii_uppercase:
                 upper_num += 1
 
-            elif char_collection == string.ascii_lowercase:
+            elif random_char in string.ascii_lowercase:
                 lower_num += 1
 
-            elif char_collection == string.digits:
+            elif random_char in string.digits:
                 number_num += 1
 
-            elif char_collection == string.punctuation:
+            elif random_char in string.punctuation:
                 special_num += 1
 
-            password += randomChar
+            password += random_char
 
         if (
             (upper_num > 0) == uppercase and
@@ -220,9 +220,10 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
         ):
             return password
 
-    suppress_output or print("Could not generate password", file=stderr)
-    suppress_output or print(f"Tried {tries + 1} times", file=stderr)
-    return None
+
+    # suppress_output or print("Could not generate password", file=stderr)
+    # suppress_output or print(f"Tried {tries + 1} times", file=stderr)
+    # return None
 
 
 def generate_salt(length: int) -> bytes | None:

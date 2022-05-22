@@ -171,15 +171,19 @@ class TestPasswords(unittest.TestCase):
     def test_generate_password_4(self):
         """Tests length of generated passwords"""
         gen_pass = generate_password(8, True, True, True, True, True)
+        self.assertNotEqual(gen_pass, None)
         self.assertEqual(len(gen_pass), 8)
 
         gen_pass = generate_password(16, True, True, True, True, True)
+        self.assertNotEqual(gen_pass, None)
         self.assertEqual(len(gen_pass), 16)
 
         gen_pass = generate_password(32, True, True, True, True, True)
+        self.assertNotEqual(gen_pass, None)
         self.assertEqual(len(gen_pass), 32)
 
         gen_pass = generate_password(48, True, True, True, True, True)
+        self.assertNotEqual(gen_pass, None)
         self.assertEqual(len(gen_pass), 48)
 
     def test_generate_salt(self):
