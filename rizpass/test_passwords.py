@@ -218,7 +218,7 @@ class TestPasswords(unittest.TestCase):
         self.assertEqual(type(encrypted_password), str)
 
         decrypted_password = decode_and_decrypt(master_pass, encrypted_password, salt)
-        self.assertEqual(type(encrypted_password), str)
+        self.assertEqual(type(decrypted_password), str)
 
         self.assertEqual(payload, decrypted_password)
 
