@@ -645,7 +645,12 @@ def copy_password() -> None:
 
     id = int(id)
 
-    raw_cred = creds_manager.get_credential(id)
+    try:
+        raw_cred = creds_manager.get_credential(id)
+    except Exception as e:
+        print_red(f"Could not get credential due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
 
     if not raw_cred:
         print_red("Credential not found!", file=stderr)
