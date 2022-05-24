@@ -20,6 +20,7 @@ def print_help(error: bool = False) -> None:
     print("   --generate            Generate a strong password", file=file)
     print("   --add                 Add a credential", file=file)
     print("   --retrieve            Get a credential", file=file)
+    print("   --copy                Copy a credential", file=file)
     print("   --filter              Filter credentials", file=file)
     print("   --list-all            List all credentials", file=file)
     print("   --modify              Modify a credential", file=file)

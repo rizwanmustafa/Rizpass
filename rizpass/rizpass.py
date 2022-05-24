@@ -51,11 +51,11 @@ def get_mode() -> str:
 
 
 def perform_tasks() -> None:
-    max_limit = 13
+    max_limit = len(menu_items.keys())
 
     user_choice = better_input(
         "Choice: ",
-        validator=lambda x:  True if x.isnumeric() and int(x) <= max_limit and int(x) > 0 else "Choice must be <= 13 and >= 1"
+        validator=lambda x:  True if x.isnumeric() and int(x) <= max_limit and int(x) > 0 else f"Choice must be <= {max_limit} and >= 1"
     )
 
     if user_choice == None:
@@ -637,6 +637,22 @@ def export_credentials() -> None:
     print_green("Exported credentials successfully!")
 
 
+def copy_password() -> None:
+    id = better_input("Credential ID: ")
+    if id == None:
+        print_red("Aborting operation due to invalid input!", file=stderr)
+        return
+
+    id = int(id)
+
+    raw_cred = creds_manager.get_credential(id)
+
+    if not raw_cred:
+        print_red("Credential not found!", file=stderr)
+        return
+
+    raw_cred.copy_pass(master_pass)
+
 def clear_console() -> None:
     print("\033c", end="")
 
@@ -706,24 +722,26 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["actions"][2] = True
         elif arg == "--retrieve":
             args_dict["actions"][3] = True
-        elif arg == "--filter":
+        elif arg == "--copy":
             args_dict["actions"][4] = True
-        elif arg == "--list-all":
+        elif arg == "--filter":
             args_dict["actions"][5] = True
-        elif arg == "--modify":
+        elif arg == "--list-all":
             args_dict["actions"][6] = True
-        elif arg == "--remove":
+        elif arg == "--modify":
             args_dict["actions"][7] = True
-        elif arg == "--remove-all":
+        elif arg == "--remove":
             args_dict["actions"][8] = True
-        elif arg == "--change-master-pass":
+        elif arg == "--remove-all":
             args_dict["actions"][9] = True
-        elif arg == "--export":
+        elif arg == "--change-master-pass":
             args_dict["actions"][10] = True
-        elif arg == "--import":
+        elif arg == "--export":
             args_dict["actions"][11] = True
-        elif arg == "--list-raw":
+        elif arg == "--import":
             args_dict["actions"][12] = True
+        elif arg == "--list-raw":
+            args_dict["actions"][13] = True
         elif arg == "--clear":
             args_dict["clear_console"] = True
 
@@ -800,16 +818,17 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
     1: ("Generate a password", generate_password),
     2: ("Add a credential", add_credential),
     3: ("Retrieve credential using id", get_credential),
-    4: ("Filter credentials", filter_credentials),
-    5: ("List all credentials", get_all_credentials),
-    6: ("Modify credential", modify_credential),
-    7: ("Remove credential", remove_credential),
-    8: ("Remove all credentials", remove_all_credentials),
-    9: ("Change master password", change_masterpass),
-    10: ("Export credentials to a JSON file", export_credentials),
-    11: ("Import credentials from a JSON file", import_credentials),
-    12: ("List all raw credentials", get_all_raw_credentials),
-    13: ("Exit", exit_app),
+    4: ("Copy credential to clipboard", copy_password),
+    5: ("Filter credentials", filter_credentials),
+    6: ("List all credentials", get_all_credentials),
+    7: ("Modify credential", modify_credential),
+    8: ("Remove credential", remove_credential),
+    9: ("Remove all credentials", remove_all_credentials),
+    10: ("Change master password", change_masterpass),
+    11: ("Export credentials to a JSON file", export_credentials),
+    12: ("Import credentials from a JSON file", import_credentials),
+    13: ("List all raw credentials", get_all_raw_credentials),
+    14: ("Exit", exit_app),
 }
 
 
