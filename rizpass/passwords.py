@@ -196,7 +196,6 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
 
         for _ in range(length):
             random_char = choice(str_collection)
-            print(random_char)
 
             if random_char in string.ascii_uppercase:
                 upper_num += 1
