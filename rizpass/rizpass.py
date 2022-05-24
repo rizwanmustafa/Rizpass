@@ -10,12 +10,12 @@ from cerberus import Validator as SchemaValidator
 from pymongo.mongo_client import MongoClient
 import signal
 
-from .misc import print_license, VERSION_NUMBER
-from .output import print_colored, print_green, print_red, set_colored_output, get_colored_output, print_yellow, print_magenta
+from .misc import print_license, VERSION_NUMBER, print_strong_pass_guidelines
+from .output import print_colored, print_green, print_red, set_colored_output, print_yellow, print_magenta
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
-from .passwords import generate_password as generate_random_password, encrypt_and_encode, generate_salt
+from .passwords import follows_password_requirements, generate_password as generate_random_password, encrypt_and_encode, generate_salt
 from .credentials import RawCredential, Credential
 from .database_manager import DbConfig, MysqlManager, MongoManager
 from .setup_rizpass import setup_password_manager
@@ -658,6 +658,71 @@ def copy_password() -> None:
 
     raw_cred.copy_pass(master_pass)
 
+
+def password_checkup() -> None:
+    try:
+        raw_creds = creds_manager.get_all_credentials()
+    except Exception as e:
+        print_red("Could not get all credentials due to the following error:", file=stderr)
+        print_red(e, file=stderr)
+        return
+
+    if not raw_creds:
+        print("No credentials to check.")
+        return
+
+    duplicate_passwords = dict()
+    weak_passwords = dict()
+
+    print_strong_pass_guidelines()
+    print()
+
+    duplicate_num = weak_num = 0
+
+    for raw_cred in raw_creds:
+        cred = raw_cred.get_credential(master_pass)
+        if cred.password in duplicate_passwords:
+            duplicate_num += 1
+            duplicate_passwords[cred.password].append(cred.id)
+        else:
+            duplicate_passwords[cred.password] = [cred.id]
+
+        if not follows_password_requirements(cred.password)[0]:
+            weak_num += 1
+            weak_passwords[cred.id] = cred.password
+
+    print()
+
+    for id in duplicate_passwords:
+        if len(duplicate_passwords[id]) == 1:
+            continue
+
+        creds_ids_str = ", ".join(str(id) for id in duplicate_passwords[id])
+        print_colored(f"Password {{red}}{id}{{reset}} is used by multiple credentials: {{red}}{creds_ids_str}{{reset}}")
+
+    for id in weak_passwords:
+        print_colored(f"Password {{red}}{weak_passwords[id]}{{reset}} for credential {{red}}{id}{{reset}} does not follow password guidelines.")
+
+    if weak_num == 0 and duplicate_num == 0:
+        print_green("Password checkup successful!")
+        return
+
+    print()
+
+    if duplicate_num == 0:
+        print_green("No duplicate passwords found!")
+    else:
+        print_colored(f"{{red}}{duplicate_num}{{reset}} duplicate passwords found!")
+
+    if weak_num == 0:
+        print_green("No weak passwords found!")
+    else:
+        print_colored(f"{{red}}{weak_num}{{reset}} weak passwords found!")
+
+    print("Please address these issues ASAP!")
+
+
+
 def clear_console() -> None:
     print("\033c", end="")
 
@@ -833,7 +898,8 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
     11: ("Export credentials to a JSON file", export_credentials),
     12: ("Import credentials from a JSON file", import_credentials),
     13: ("List all raw credentials", get_all_raw_credentials),
-    14: ("Exit", exit_app),
+    14: ("Password checkup", password_checkup),
+    15: ("Exit", exit_app),
 }
 
 

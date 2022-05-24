@@ -51,7 +51,7 @@ def print_license():
 
 
 def print_strong_pass_guidelines():
-    print("Please follow the following guidelines when creating your master password:")
+    print("Please use strong passwords. A strong password follows the following guidelines:")
     print(" - Contains at least 16 characters")
     print(" - Contains at least 3 uppercase characters")
     print(" - Contains at least 3 lowercase characters")
