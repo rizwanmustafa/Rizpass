@@ -7,6 +7,7 @@
   * [Installation through PyPi (Recommended)](#installation-through-pypi-recommended)
   * [Installation through Github](#installation-through-github)
   * [But I really really need a binary](#but-i-really-really-need-a-binary)
+  * [Running Tests](#running-tests)
 - [Configuration](#configuration)
   * [Configuration File](#configuration-file)
       - [Sample Configuration File](#sample-configuration-file)
@@ -91,6 +92,11 @@ python3 -m PyInstaller --onefile rizpass.py
 
 Congratulations, you now have a huge sized binary
 
+## Running tests
+It is recommended that you run tests after installation to ensure the best experience. You can run all unit tests through the following command:
+```bash
+python3 -m rizpass.tests
+```
 
 
 # Configuration
