@@ -614,8 +614,6 @@ def password_checkup() -> None:
 
 
 def init(master_pass_param: str, exit_app_param: Callable, config_param: dict, creds_manager_param: MysqlManager | MongoManager | FileManager) -> None:
-    print(type(master_pass_param))
-    print(master_pass_param)
     ensure_type(master_pass_param, str, "master_pass_param", "string")
     ensure_type(exit_app_param, Callable, "exit_app_param", "callable")
     ensure_type(config_param, dict, "config_param", "dict")
