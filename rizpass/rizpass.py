@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-from base64 import b64encode
 import os
-from re import U
-import pyperclip
 import json
 from getpass import getpass
 from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple
 from cerberus import Validator as SchemaValidator
-from pymongo.mongo_client import MongoClient
 import signal
 
-from .misc import print_license, VERSION_NUMBER, print_strong_pass_guidelines
-from .output import print_colored, print_green, print_red, set_colored_output, print_yellow, print_magenta, set_verbose_output
+from .misc import print_license, VERSION_NUMBER
+from .output import print_colored, print_red, set_colored_output, set_verbose_output
 from .validator import ensure_type
-from .better_input import confirm, better_input, pos_int_input
+from .better_input import better_input
 from .schemas import get_config_schema
-from .passwords import follows_password_requirements, generate_password as generate_random_password, encrypt_and_encode, generate_salt
-from .credentials import RawCredential, Credential
 from .database_manager import DbConfig, MysqlManager, MongoManager
 from .setup_rizpass import setup_password_manager
 from .file_manager import FileManager
@@ -140,9 +134,13 @@ def clear_console() -> None:
     print("\033c", end="")
 
 
-def signal_handler(signal, frame):
-    print("\n\nExiting due to manual intervention...")
+def signal_handler(signum, frame):
+    signal.signal(signum, signal.SIG_IGN)
+    print("\n\nExiting gracefully...")
     exit_app(130)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def exit_app(exit_code=0) -> NoReturn:
@@ -276,6 +274,22 @@ def handle_processed_args(options: Dict[str, str]) -> None:
 
     master_pass = getpass("Master Password: ")
 
+    setup_creds_manager()
+
+    user_functions.init(master_pass, exit_app, config, creds_manager)
+
+    if options.get("actions"):
+        for action in options.get("actions"):
+            menu_items[action][1]()
+
+        if options.get("clear_console"):
+            clear_console()
+        exit_app()
+
+
+def setup_creds_manager():
+    global creds_manager
+
     if config.get("file_path"):
         creds_manager = FileManager(config.get("file_path"))
         return
@@ -290,19 +304,6 @@ def handle_processed_args(options: Dict[str, str]) -> None:
 
     creds_manager = MysqlManager(db_config) if config.get("db_type") == "mysql" else MongoManager(db_config)
 
-    user_functions.init(master_pass, exit_app, config, creds_manager)
-
-    if options.get("actions"):
-        for action in options.get("actions"):
-            menu_items[action][1]()
-
-        if options.get("clear_console"):
-            clear_console()
-        exit_app()
-
-
-# Handle interruptions
-signal.signal(signal.SIGINT, signal_handler)
 
 menu_items: Dict[str, Tuple[str, Callable]] = {
     1: ("Generate a password", user_functions.generate_password),
