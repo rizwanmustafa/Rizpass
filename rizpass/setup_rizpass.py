@@ -174,7 +174,7 @@ def setup_masterpass():
 
 def write_settings():
     if path.isfile(CONFIG_FILE_PATH):
-        print_yellow("Overwriting existing file: {CONFIG_FILE_PATH}")
+        print_yellow(f"Overwriting existing file: {CONFIG_FILE_PATH}")
     else:
         print(f"Creating file: {CONFIG_FILE_PATH}")
 
