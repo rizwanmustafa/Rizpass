@@ -61,7 +61,7 @@ def print_strong_pass_guidelines():
     print(" - Don’t use words from a dictionary")
     print(" - Don’t reuse passwords")
     print(" - Don’t use personal information")
-    print(" - Don't use variations of the common passwords e.g 'password' and 'passw0rd'")
+    print(" - Don't use variations of the common passwords e.g 'password' and 'p@$$w0rd'")
 
 
 def get_list_item_safely(array: List[str], index: str) -> str | None:

@@ -6,9 +6,12 @@ from sys import stderr
 from json import dump as dump_json
 from urllib.parse import quote_plus
 import mysql.connector
+from rizpass.better_input import confirm
 
-from .output import print_red, print_colored, print_green, print_yellow
-from .misc import print_license
+from rizpass.passwords import follows_password_requirements
+
+from .output import format_colors, print_red, print_colored, print_green, print_yellow
+from .misc import print_license, print_strong_pass_guidelines
 
 
 # TODO: Flag all errror output to stderr
@@ -169,7 +172,24 @@ def setup_mongodb():
 def setup_masterpass():
     # TODO: Print some guidlines for the password to follow and make sure that the master password input is strong
     global config, master_pass
-    master_pass = getpass("New master password: ")
+    confirm_master_pass = ""
+
+    print()
+    print_strong_pass_guidelines()
+    print()
+
+    while master_pass != confirm_master_pass or not follows_password_requirements(master_pass or "")[0]:
+        master_pass = getpass("New master password: ")
+        confirm_master_pass = getpass("Confirm master password: ")
+        print()
+
+        if master_pass != confirm_master_pass:
+            print_red("Passwords do not match!")
+
+        elif not follows_password_requirements(master_pass)[0]:
+            print_red("Master password does not follow the guidelines!")
+            if confirm(format_colors("Are you {red}SURE{reset} you want to continue? [{red}y{reset}/{green}N{reset}] ")):
+                break
 
 
 def write_settings():
