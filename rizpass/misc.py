@@ -11,6 +11,7 @@ def print_help(error: bool = False) -> None:
     print("Usage: rizpass [options]", file=file)
     print("Options:", file=file)
     print("   -h, --help            Prints this help message", file=file)
+    print("   --verbose             Prints verbose output", file=file)
     print("   -v, --version         Prints the version number", file=file)
     print("   -s, --setup           Setup rizpass", file=file)
     print("   -f, --file <file>     Use file as credential storage", file=file)

@@ -72,7 +72,7 @@ def get_colored_output():
     return colored_output
 
 
-def set_verbose_output(verbose: bool = True):
+def set_verbose_output(verbose: bool = False):
     global verbose_output
     verbose_output = verbose
 

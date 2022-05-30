@@ -11,7 +11,7 @@ from pymongo.mongo_client import MongoClient
 import signal
 
 from .misc import print_license, VERSION_NUMBER, print_strong_pass_guidelines
-from .output import print_colored, print_green, print_red, set_colored_output, print_yellow, print_magenta
+from .output import print_colored, print_green, print_red, set_colored_output, print_yellow, print_magenta, set_verbose_output
 from .validator import ensure_type
 from .better_input import confirm, better_input, pos_int_input
 from .schemas import get_config_schema
@@ -160,7 +160,7 @@ def generate_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    if confirm("Copy generated password to clipboard? [Y/n]", True):
+    if confirm("Copy generated password to clipboard? [Y/n] ", True):
         try:
             pyperclip.copy(generated_pass)
         except Exception as e:
@@ -753,6 +753,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
         "color_mode": True,
         "actions": {},
         "clear_console": False,
+        "verbose": False,
     })
 
     for index, arg in enumerate(args):
@@ -814,7 +815,8 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["actions"][13] = True
         elif arg == "--clear":
             args_dict["clear_console"] = True
-
+        elif arg == "--verbose":
+            args_dict["verbose"] = True
         else:
             print_red(f"Invalid argument: {arg}", file=stderr)
             print_help(True)
@@ -843,6 +845,9 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     if options.get("config_file_path"):
         global CONFIG_FILE_PATH
         CONFIG_FILE_PATH = options.get("config_file_path")
+
+    if options.get("verbose"):
+        set_verbose_output(True)
 
     if options.get("file_mode"):
         config["file_path"] = options.get("file_path")
