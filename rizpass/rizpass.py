@@ -162,7 +162,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
         "file_mode": False,
         "file_path": None,
         "color_mode": True,
-        "actions": {},
+        "actions": [],
         "clear_console": False,
         "verbose": False,
     })
@@ -199,31 +199,31 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["color_mode"] = False
 
         elif arg == "--generate":
-            args_dict["actions"][1] = True
+            args_dict["actions"].append(1)
         elif arg == "--add":
-            args_dict["actions"][2] = True
+            args_dict["actions"].append(2)
         elif arg == "--retrieve":
-            args_dict["actions"][3] = True
+            args_dict["actions"].append(3)
         elif arg == "--copy":
-            args_dict["actions"][4] = True
+            args_dict["actions"].append(4)
         elif arg == "--filter":
-            args_dict["actions"][5] = True
+            args_dict["actions"].append(5)
         elif arg == "--list-all":
-            args_dict["actions"][6] = True
+            args_dict["actions"].append(6)
         elif arg == "--modify":
-            args_dict["actions"][7] = True
+            args_dict["actions"].append(7)
         elif arg == "--remove":
-            args_dict["actions"][8] = True
+            args_dict["actions"].append(8)
         elif arg == "--remove-all":
-            args_dict["actions"][9] = True
+            args_dict["actions"].append(9)
         elif arg == "--change-master-pass":
-            args_dict["actions"][10] = True
+            args_dict["actions"].append(10)
         elif arg == "--export":
-            args_dict["actions"][11] = True
+            args_dict["actions"].append(11)
         elif arg == "--import":
-            args_dict["actions"][12] = True
+            args_dict["actions"].append(12)
         elif arg == "--list-raw":
-            args_dict["actions"][13] = True
+            args_dict["actions"].append(13)
         elif arg == "--clear":
             args_dict["clear_console"] = True
         elif arg == "--verbose":
