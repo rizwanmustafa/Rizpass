@@ -2,6 +2,7 @@ from sys import stderr
 from typing import Callable, List
 from base64 import b64encode
 from getpass import getpass
+from pymongo.mongo_client import MongoClient
 import pyperclip
 import os
 import json
@@ -12,7 +13,7 @@ from .output import print_red, print_colored, print_green, print_yellow, print_m
 from .passwords import generate_password as generate_random_password, generate_salt, encrypt_and_encode, follows_password_requirements
 from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
-from .database_manager import MongoManager, MysqlManager, MongoClient, DbConfig
+from .database_manager import MongoManager, MysqlManager, DbConfig
 from .file_manager import FileManager
 
 config: dict = dict()
