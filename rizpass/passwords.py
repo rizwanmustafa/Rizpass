@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 import base64
 import string
 
-from .output import format_colors
+from .output import format_colors, print_red
 from .validator import ensure_type
 
 
@@ -113,8 +113,8 @@ def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> bytes | 
 
         return encryptedPassword
     except Exception as e:
-        print("There was an error encrypting the password:", file=stderr)
-        print(e, file=stderr)
+        print_red("There was an error encrypting the password:", file=stderr)
+        print_red(e, file=stderr)
         return None
 
 
@@ -138,8 +138,8 @@ def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> 
 
         return raw_password
     except Exception as e:
-        print("There was an error decrypting the password:", file=stderr)
-        print(e, file=stderr)
+        print_red("There was an error decrypting the password:", file=stderr)
+        print_red(e, file=stderr)
         return None
 
 

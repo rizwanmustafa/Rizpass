@@ -1,11 +1,10 @@
 from sys import stderr
 from base64 import b64decode, b64encode
 import pyperclip
-from colorama import Fore
 
 from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
-from .output import print_red, print_green, get_colored_output, format_colors
+from .output import print_red, print_green, format_colors, print_verbose
 
 
 class RawCredential:
@@ -39,7 +38,7 @@ class RawCredential:
         return format_colors(output)
 
     def get_credential(self, master_password: str):
-        print(f"Decrypting password with id {self.id}...")
+        print_verbose(f"Decrypting password with id {self.id}...")
         salt = b64decode(self.salt)
         title = decode_and_decrypt(
             master_password,

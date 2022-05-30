@@ -68,8 +68,8 @@ class MysqlManager:
             )
             self.mysql_db.commit()
         except Exception as e:
-            print("There was an error while adding the credential:", file=stderr)
-            print(e, file=stderr)
+            print_red("There was an error while adding the credential:", file=stderr)
+            print_red(e, file=stderr)
 
     def get_all_credentials(self) -> List[RawCredential] | None:
         try:
@@ -81,8 +81,8 @@ class MysqlManager:
 
             return raw_creds
         except Exception as e:
-            print("There was an error while getting the credentials:", file=stderr)
-            print(e)
+            print_red("There was an error while getting the credentials:", file=stderr)
+            print_red(e)
             return None
 
     def get_credential(self, id: int) -> RawCredential | None:
@@ -159,10 +159,10 @@ class MysqlManager:
             self.mysql_db.commit()
             return self.mysql_cursor.fetchall()
         except Exception as e:
-            print("There was an error while executing a query: ")
-            print("Query: ", query)
-            print("Error: ", e)
-            print("Exiting!")
+            print_red("There was an error while executing a query: ")
+            print_red("Query: ", query)
+            print_red("Error: ", e)
+            print_red("Exiting!")
             exit(1)
 
     def close(self):
@@ -173,8 +173,8 @@ class MysqlManager:
                 self.mysql_db.close()
 
         except Exception as e:
-            print("There was an error while closing the connection:", file=stderr)
-            print(e, file=stderr)
+            print_red("There was an error while closing the connection:", file=stderr)
+            print_red(e, file=stderr)
 
     def __del__(self):
         self.close()
@@ -238,8 +238,8 @@ class MongoManager:
                 "salt": salt
             })
         except Exception as e:
-            print("There was an error while adding the credential:", file=stderr)
-            print(e, file=stderr)
+            print_red("There was an error while adding the credential:", file=stderr)
+            print_red(e, file=stderr)
 
     def get_all_credentials(self) -> List[RawCredential] | None:
         try:
@@ -250,8 +250,8 @@ class MongoManager:
 
             return raw_creds
         except Exception as e:
-            print("There was an error while getting the credentials:", file=stderr)
-            print(e)
+            print_red("There was an error while getting the credentials:", file=stderr)
+            print_red(e)
             return None
 
     def get_credential(self, id: int) -> RawCredential | None:
@@ -320,8 +320,8 @@ class MongoManager:
             if hasattr(self, "mongo_client"):
                 self.mongo_client.close()
         except Exception as e:
-            print("There was an error while closing connection with MongoDB:", file=stderr)
-            print(e, file=stderr)
+            print_red("There was an error while closing connection with MongoDB:", file=stderr)
+            print_red(e, file=stderr)
 
     def __del__(self):
         self.close()

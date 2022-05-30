@@ -28,8 +28,8 @@ class FileManager:
             self.__load_creds()
 
         except Exception as e:
-            print(f"There was an error while opening the file \"{file_path}\":", file=stderr)
-            print(e, file=stderr)
+            print_red(f"There was an error while opening the file \"{file_path}\":", file=stderr)
+            print_red(e, file=stderr)
             exit(1)
 
     def __del__(self):
@@ -93,8 +93,8 @@ class FileManager:
 
             self.__dump_creds()
         except Exception as e:
-            print("There was an error while adding the credential:", file=stderr)
-            print(e, file=stderr)
+            print_red("There was an error while adding the credential:", file=stderr)
+            print_red(e, file=stderr)
 
     def get_all_credentials(self) -> List[RawCredential] | None:
         return self.credentials
