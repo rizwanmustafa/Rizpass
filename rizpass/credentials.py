@@ -61,9 +61,9 @@ class RawCredential:
             salt
         )
         if title != None and username != None and email != None and password != None:
-            print_green("Decryption successful!")
+            print_verbose("{green}Decryption successful!{reset}")
         else:
-            print_red("Decryption failed!", file=stderr)
+            print_verbose("{red}Decryption failed!{reset}", file=stderr)
 
         return Credential(self.id, title, username, email, password)
 
@@ -146,7 +146,7 @@ class Credential:
             salt
         )
         if title != None and username != None and email != None and password != None:
-            print_green(f"Encryption sucessful!")
+            print_verbose("{green}Encryption sucessful!{reset}")
 
         return RawCredential(
             self.id,
