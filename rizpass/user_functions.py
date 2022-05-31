@@ -9,7 +9,6 @@ import json
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
 from .output import print_red, print_colored, print_green, print_yellow, print_magenta
-from .passwords import generate_password as generate_random_password, generate_salt, encrypt_and_encode, follows_password_requirements
 from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
 
@@ -23,6 +22,7 @@ def exit_app():
 
 
 def generate_password() -> None:
+    from .passwords import generate_password as generate_random_password
 
     pass_len = better_input(
         "Password length (Min: 4): ",
@@ -63,6 +63,7 @@ def generate_password() -> None:
 
 def add_credential(user_password: str = None) -> None:
     ensure_type(user_password, str | None, "user_password", "string | None")
+    from . passwords import generate_salt, encrypt_and_encode
 
     title = better_input("Title: ")
     if title == None:
@@ -84,6 +85,7 @@ def add_credential(user_password: str = None) -> None:
 
     if not confirm("Are you sure you want to add this password [Y/n]: ", loose=True):
         return
+
 
     salt = generate_salt(16)
     encrypted_title = encrypt_and_encode(master_pass, title, salt)
@@ -211,6 +213,8 @@ def get_all_raw_credentials() -> None:
 def modify_credential() -> None:
     # Later add functionality for changing the password itself
     # id = int(input("ID: "))
+
+    from .passwords import generate_salt,  encrypt_and_encode
     id = pos_int_input("ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -342,6 +346,7 @@ def remove_all_credentials() -> None:
 
 
 def change_masterpass() -> None:
+    from .passwords import generate_salt, encrypt_and_encode
     global creds_manager, master_pass
 
     if not confirm("Are you sure you want to change your master password [y/N]: "):
@@ -449,6 +454,7 @@ def change_masterpass() -> None:
 
 
 def import_credentials() -> None:
+    from .passwords import generate_salt
     filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
         print("Aborting operation due to invalid input!", file=stderr)
@@ -497,6 +503,7 @@ def import_credentials() -> None:
 
 
 def export_credentials() -> None:
+    from .passwords import generate_salt
     file_path = better_input("File Path: ")
     file_master_pass = getpass("File Master Password (Optional): ")
 
@@ -553,6 +560,7 @@ def copy_password() -> None:
 
 
 def password_checkup() -> None:
+    from .passwords import follows_password_requirement
     try:
         raw_creds = creds_manager.get_all_credentials()
     except Exception as e:

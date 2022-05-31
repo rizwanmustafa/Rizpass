@@ -4,7 +4,6 @@ import json
 from getpass import getpass
 from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple
-from cerberus import Validator as SchemaValidator
 import signal
 
 from .misc import print_license, VERSION_NUMBER
@@ -12,7 +11,6 @@ from .output import print_colored, print_red, set_colored_output, set_verbose_ou
 from .validator import ensure_type
 from .better_input import better_input
 from .schemas import get_config_schema
-from .setup_rizpass import setup_password_manager
 from .misc import get_list_item_safely, print_help
 from . import user_functions
 
@@ -61,6 +59,7 @@ def load_db_config(
     db_name: str | None = None,
     db_port: int | None = None
 ) -> bool:
+    from cerberus import Validator as SchemaValidator
     ensure_type(db_host, str | None, "db_host", "string | None")
     ensure_type(db_type, str | None, "db_type", "string | None")
     ensure_type(db_user, str | None, "db_user", "string | None")
@@ -235,6 +234,7 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         exit_app(0)
 
     if options.get("init_setup"):
+        from .setup_rizpass import setup_password_manager
         setup_password_manager()
         exit_app(0)
 
