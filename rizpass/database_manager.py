@@ -176,6 +176,9 @@ class MysqlManager:
             print_red("There was an error while closing the connection:", file=stderr)
             print_red(e, file=stderr)
 
+    def get_mode(self) -> str:
+        return "mongo"
+
     def __del__(self):
         self.close()
 
@@ -322,6 +325,9 @@ class MongoManager:
         except Exception as e:
             print_red("There was an error while closing connection with MongoDB:", file=stderr)
             print_red(e, file=stderr)
+
+    def get_mode(self) -> str:
+        return "mongo"
 
     def __del__(self):
         self.close()

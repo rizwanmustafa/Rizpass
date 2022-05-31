@@ -2,7 +2,6 @@ from sys import stderr
 from typing import Callable, List
 from base64 import b64encode
 from getpass import getpass
-from pymongo.mongo_client import MongoClient
 import pyperclip
 import os
 import json
@@ -13,8 +12,6 @@ from .output import print_red, print_colored, print_green, print_yellow, print_m
 from .passwords import generate_password as generate_random_password, generate_salt, encrypt_and_encode, follows_password_requirements
 from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
-from .database_manager import MongoManager, MysqlManager, DbConfig
-from .file_manager import FileManager
 
 config: dict = dict()
 master_pass = ""
@@ -360,7 +357,9 @@ def change_masterpass() -> None:
     # Change database password
     if creds_manager:
         # TODO: Implement input validation
+        from .database_manager import DbConfig
         if config["db_type"] == "mysql":
+            from .database_manager import MysqlManager
             root_user = better_input("Input mysql root username: ")
             root_pass = better_input("Input mysql root password: ", password=True)
             temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
@@ -370,6 +369,9 @@ def change_masterpass() -> None:
             )
 
         elif config["db_type"] == "mongo":
+            from .database_manager import MongoManager
+            from pymongo.mongo_client import MongoClient
+
             root_user = better_input("Input MongoDB root username: ")
             root_pass = better_input("Input MongoDB root password: ", password=True)
 
@@ -613,12 +615,7 @@ def password_checkup() -> None:
     print("Please address these issues ASAP!")
 
 
-def init(master_pass_param: str, exit_app_param: Callable, config_param: dict, creds_manager_param: MysqlManager | MongoManager | FileManager) -> None:
-    ensure_type(master_pass_param, str, "master_pass_param", "string")
-    ensure_type(exit_app_param, Callable, "exit_app_param", "callable")
-    ensure_type(config_param, dict, "config_param", "dict")
-    ensure_type(creds_manager_param, MysqlManager | MongoManager | FileManager, "creds_manager_param", "MysqlManager | MongoManager | FileManager")
-
+def init(master_pass_param: str, exit_app_param: Callable, config_param: dict, creds_manager_param) -> None:
     global master_pass, exit_app, config, creds_manager
 
     master_pass = master_pass_param
