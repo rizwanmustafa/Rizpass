@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-from pymongo.mongo_client import MongoClient
 from getpass import getpass
 from os import path
 from sys import stderr
 from json import dump as dump_json
 from urllib.parse import quote_plus
-import mysql.connector
 from rizpass.better_input import confirm
 
 from rizpass.passwords import follows_password_requirements
@@ -26,6 +24,7 @@ CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
 
 def setup_mysql():
+    import mysql.connector
     global config
 
     if master_pass is None:
@@ -96,6 +95,7 @@ def setup_mysql():
 
 
 def setup_mongodb():
+    from pymongo import MongoClient
     try:
         if master_pass is None:
             print("You need to setup a master password before setting up the database!")
