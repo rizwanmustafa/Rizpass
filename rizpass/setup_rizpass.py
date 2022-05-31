@@ -27,71 +27,81 @@ def setup_mysql():
     import mysql.connector
     global config
 
-    if master_pass is None:
-        print("You need to setup a master password before setting up the database!")
-        setup_masterpass()
+    try:
+        if master_pass is None:
+            print("You need to setup a master password before setting up the database!")
+            setup_masterpass()
 
-    # Login to MySQL with root credentials
-    db_host = input("MySQL host: ")
-    db_root_user = input("MySQL root username: ")
-    db_root_pass = getpass("MySQL root password: ")
-    db_port = input("MySQL port (Optional): ")
-    if db_port.isnumeric():
-        db_port = int(db_port)
-    else:
-        print_yellow("Using default port 3306")
-        db_port = 3306
-    db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
-        host=db_host,
-        user=db_root_user,
-        password=db_root_pass,
-        port=db_port,
-        connection_timeout=3
-    )
+        # Get MySQL credentials
+        db_host = input("MySQL host: ")
+        db_root_user = input("MySQL root username: ")
+        db_root_pass = getpass("MySQL root password: ")
+        db_port = input("MySQL port (Optional): ")
+        if db_port.isnumeric():
+            db_port = int(db_port)
+        else:
+            print_yellow("Using default port 3306")
+            db_port = 3306
 
-    db_cursor = db_manager.cursor()
+        db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
+            host=db_host,
+            user=db_root_user,
+            password=db_root_pass,
+            port=db_port,
+            connection_timeout=3
+        )
 
-    # Create new database
-    print_colored("New database name {red}(Note: It will drop it if it already exists){reset}: ", end="")
-    db_name = input()
-    db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
-    db_cursor.execute(f"CREATE DATABASE {db_name}")
-    print_green("Database created!")
+        db_cursor = db_manager.cursor()
 
-    print_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
-    db_user = input()
-    db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
-    db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
-    print_green("Database user created!")
+        # Create new database
+        print_colored("New database name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+        db_name = input()
+        db_cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
+        db_cursor.execute(f"CREATE DATABASE {db_name}")
+        print_green("Database created!")
 
-    db_cursor.execute(f"GRANT ALL ON {db_name}.* TO '{db_user}'@'%';")
-    db_cursor.execute("FLUSH PRIVILEGES;")
-    print_green("Privileges granted to the new database user!")
+        # Create new user
+        print_colored("New MySQL user name {red}(Note: It will drop it if it already exists){reset}: ", end="")
+        db_user = input()
+        db_cursor.execute(f"DROP USER IF EXISTS '{db_user}'@'%'")
+        db_cursor.execute(f"CREATE USER '{db_user}'@'%' IDENTIFIED BY '{master_pass}'")
+        print_green("Database user created!")
 
-    db_manager.database = db_name
-    createTableQuery = """CREATE TABLE credentials(
-        id INT NOT NULL AUTO_INCREMENT,
-        title VARCHAR(300) NOT NULL,
-        username VARCHAR(300),
-        email VARCHAR(300),
-        password VARCHAR(300) NOT NULL,
-        salt VARCHAR(25) NOT NULL,
-        PRIMARY KEY( id ));"""
-    db_cursor.execute(createTableQuery)
-    print_green("Database table created!")
+        # Grant Privileges
+        db_cursor.execute(f"GRANT ALL ON {db_name}.* TO '{db_user}'@'%';")
+        db_cursor.execute("FLUSH PRIVILEGES;")
+        print_green("Privileges granted to the new database user!")
 
-    # Close the connection to database with root login
-    db_cursor.close()
-    db_manager.close()
+        # Create Table
+        db_manager.database = db_name
+        createTableQuery = """CREATE TABLE credentials(
+            id INT NOT NULL AUTO_INCREMENT,
+            title VARCHAR(300) NOT NULL,
+            username VARCHAR(300),
+            email VARCHAR(300),
+            password VARCHAR(300) NOT NULL,
+            salt VARCHAR(25) NOT NULL,
+            PRIMARY KEY( id ));"""
+        db_cursor.execute(createTableQuery)
+        print_green("Database table created!")
 
-    # Write the new credentials to the config
-    config["db_type"] = "mysql"
-    config["db_host"] = db_host
-    config["db_user"] = db_user
-    config["db_name"] = db_name
-    config["db_port"] = db_port
+        # Close the connection to database with root login
+        db_cursor.close()
+        db_manager.close()
 
-    print_green("Database setup successfull!")
+        # Write the new credentials to the config
+        config["db_type"] = "mysql"
+        config["db_host"] = db_host
+        config["db_user"] = db_user
+        config["db_name"] = db_name
+        config["db_port"] = db_port
+
+        print_green("Database setup successfull!")
+    except Exception as e:
+        print_red("Database setup failed!", file=stderr)
+        print_red(e, file=stderr)
+        print("Exiting!")
+        exit(1)
 
 
 def setup_mongodb():
