@@ -560,7 +560,7 @@ def copy_password() -> None:
 
 
 def password_checkup() -> None:
-    from .passwords import follows_password_requirement
+    from .passwords import follows_password_requirements
     try:
         raw_creds = creds_manager.get_all_credentials()
     except Exception as e:
