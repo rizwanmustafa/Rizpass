@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 from getpass import getpass
 from sys import stderr
 
@@ -10,10 +10,10 @@ def better_input(
     prompt: str,
     optional: bool = False,
     attempts: int = 3,
-    validator: Callable | None = None,
+    validator: Union[Callable,None] = None,
     password: bool = False,
     suppress_output: bool = False
-) -> str | None:
+) -> Union[str,None]:
     """
     A better input function that can be used to get input from the user.
     :param prompt: The prompt to display to the user.
@@ -26,7 +26,7 @@ def better_input(
     ensure_type(prompt, str, "prompt", "string")
     ensure_type(optional, bool, "optional", "boolean")
     ensure_type(attempts, int, "attempts", "integer")
-    ensure_type(validator, Callable | None, "validator", "callable or None")
+    ensure_type(validator, Union[Callable,None], "validator", "callable or None")
     ensure_type(password, bool, "password", "boolean")
 
     if validator == None:
@@ -60,7 +60,7 @@ def pos_int_input(
     optional: bool = False,
     attempts: int = 3,
     suppress_output: bool = False
-) -> int | None:
+) -> Union[int,None]:
     ret_val = better_input(
         prompt,
         optional,

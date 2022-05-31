@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from pymongo.mongo_client import MongoClient
 from getpass import getpass
+from typing import Union
 from os import path
 from sys import stderr
 from json import dump as dump_json
@@ -18,7 +19,7 @@ from .misc import print_license, print_strong_pass_guidelines
 # TODO: Create a class with all the config variables to be used throughout the program
 
 config = dict()
-master_pass: str | None = None
+master_pass: Union[str,None] = None
 
 CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 

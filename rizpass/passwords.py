@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from secrets import choice
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 import base64
 import string
 
@@ -93,7 +93,7 @@ def __get_custom_fernet_object(master_pass: str, salt: bytes) -> Fernet:
     return Fernet(key)
 
 
-def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> bytes | None:
+def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> Union[bytes,None]:
     try:
         ensure_type(master_pass, str, "master_pass", "str")
         ensure_type(raw_password, str, "raw_password", "str")
@@ -118,7 +118,7 @@ def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> bytes | 
         return None
 
 
-def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> str | None:
+def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> Union[str,None]:
     try:
         ensure_type(master_pass, str, "master_pass", "str")
         ensure_type(encrypted_password, bytes, "encrypted_password", "bytes")
@@ -143,7 +143,7 @@ def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> 
         return None
 
 
-def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> str | None:
+def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> Union[str,None]:
     if not data:
         return ''
 
@@ -154,7 +154,7 @@ def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> str | None:
     return base64.b64encode(encrypt_string(master_pass, data, salt)).decode("ascii")
 
 
-def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
+def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> Union[str,None]:
     if not data:
         return ''
 
@@ -166,7 +166,7 @@ def decode_and_decrypt(master_pass: str, data: str, salt: bytes) -> str | None:
     return decrypted_data if decrypted_data else ""
 
 
-def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool, suppress_output: bool = False) -> str | None:
+def generate_password(length: int, uppercase: bool, lowercase: bool, digits: bool, specials: bool, suppress_output: bool = False) -> Union[str,None]:
     # Exception handling
     ensure_type(length, int,  "length", "int")
     ensure_type(uppercase, bool, "uppercase", "bool")
@@ -225,7 +225,7 @@ def generate_password(length: int, uppercase: bool, lowercase: bool, digits: boo
     # return None
 
 
-def generate_salt(length: int) -> bytes | None:
+def generate_salt(length: int) -> Union[bytes,None]:
     # Exception handling
     ensure_type(length, int, "length", "int")
     return secrets.token_bytes(length)

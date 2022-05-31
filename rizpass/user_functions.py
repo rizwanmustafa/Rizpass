@@ -6,6 +6,7 @@ from pymongo.mongo_client import MongoClient
 import pyperclip
 import os
 import json
+from typing import Union
 
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
@@ -65,7 +66,7 @@ def generate_password() -> None:
 
 
 def add_credential(user_password: str = None) -> None:
-    ensure_type(user_password, str | None, "user_password", "string | None")
+    ensure_type(user_password, Union[str,None], "user_password", "string | None")
 
     title = better_input("Title: ")
     if title == None:

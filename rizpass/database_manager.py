@@ -1,12 +1,8 @@
 from sys import exit, stderr
-from typing import List
-from pymongo.database import Database as MongoDatabase
-from pymongo.collection import Collection as MongoCollection
-from pymongo.mongo_client import MongoClient
+from typing import List, Union
 from pymongo import ASCENDING
 import mysql.connector
 from urllib.parse import quote_plus
-from colorama import Fore
 
 
 from .credentials import RawCredential, Credential
@@ -15,12 +11,12 @@ from .output import print_red
 
 
 class DbConfig:
-    def __init__(self, host: str, user: str, password: str, db: str, port: int | None = None):
+    def __init__(self, host: str, user: str, password: str, db: str, port: Union[int,None] = None):
         ensure_type(host, str, "host", "string")
         ensure_type(user, str, "user", "string")
         ensure_type(password, str, "password", "string")
         ensure_type(db, str, "db", "string")
-        ensure_type(port, int | None, "port", "int | None")
+        ensure_type(port, Union[int,None], "port", "int | None")
 
         self.host = host
         self.user = user
@@ -85,7 +81,7 @@ class MysqlManager:
             print_red(e)
             return None
 
-    def get_credential(self, id: int) -> RawCredential | None:
+    def get_credential(self, id: int) -> Union[RawCredential,None]:
         ensure_type(id, int, "id", "int")
 
         self.mysql_cursor.execute("SELECT * FROM credentials WHERE id = %s", (id, ))
@@ -184,6 +180,7 @@ class MongoManager:
 
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
+        from pymongo.mongo_client import MongoClient
 
         try:
             self.mongo_client = MongoClient(
@@ -209,7 +206,7 @@ class MongoManager:
             print_red("Exiting with code 1!", file=stderr)
             exit(1)
 
-    def __gen_id(self) -> int | None:
+    def __gen_id(self) -> Union[int,None]:
         """This method will generate a unique id for the credential. Note: To be used only with MongoDB"""
         id = self.mongo_collection.estimated_document_count() + 1
         while self.get_credential(id):
@@ -254,7 +251,7 @@ class MongoManager:
             print_red(e)
             return None
 
-    def get_credential(self, id: int) -> RawCredential | None:
+    def get_credential(self, id: int) -> Union[RawCredential,None]:
         ensure_type(id, int, "id", "int")
 
         query_result = self.mongo_collection.find_one({"id": id})

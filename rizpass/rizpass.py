@@ -3,7 +3,7 @@ import os
 import json
 from getpass import getpass
 from sys import exit, argv, stderr
-from typing import Callable, List, Dict, NoReturn, Tuple
+from typing import Callable, List, Dict, NoReturn, Tuple, Union
 from cerberus import Validator as SchemaValidator
 import signal
 
@@ -68,17 +68,17 @@ def perform_tasks() -> None:
 
 
 def load_db_config(
-    db_host: str | None = None,
-    db_type: str | None = None,
-    db_user: str | None = None,
-    db_name: str | None = None,
-    db_port: int | None = None
+    db_host: Union[str,None] = None,
+    db_type: Union[str,None] = None,
+    db_user: Union[str,None] = None,
+    db_name: Union[str,None] = None,
+    db_port: Union[int,None] = None
 ) -> bool:
-    ensure_type(db_host, str | None, "db_host", "string | None")
-    ensure_type(db_type, str | None, "db_type", "string | None")
-    ensure_type(db_user, str | None, "db_user", "string | None")
-    ensure_type(db_name, str | None, "db_name", "string | None")
-    ensure_type(db_port, int | None, "db_port", "int | None")
+    ensure_type(db_host, Union[str,None], "db_host", "string | None")
+    ensure_type(db_type, Union[str,None], "db_type", "string | None")
+    ensure_type(db_user, Union[str,None], "db_user", "string | None")
+    ensure_type(db_name, Union[str,None], "db_name", "string | None")
+    ensure_type(db_port, Union[int,None], "db_port", "int | None")
 
     global config
 
