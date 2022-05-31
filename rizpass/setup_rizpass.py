@@ -24,7 +24,7 @@ CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
 
 def setup_mysql():
-    import mysql.connector
+    import pymysql
     global config
 
     try:
@@ -43,7 +43,7 @@ def setup_mysql():
             print_yellow("Using default port 3306")
             db_port = 3306
 
-        db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
+        db_manager= pymysql.connect(
             host=db_host,
             user=db_root_user,
             password=db_root_pass,

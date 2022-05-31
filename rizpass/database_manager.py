@@ -1,12 +1,6 @@
 from sys import exit, stderr
 from typing import List
-from pymongo.database import Database as MongoDatabase
-from pymongo.collection import Collection as MongoCollection
-from pymongo.mongo_client import MongoClient
-from pymongo import ASCENDING
-import mysql.connector
 from urllib.parse import quote_plus
-from colorama import Fore
 
 
 from .credentials import RawCredential, Credential
@@ -34,14 +28,16 @@ class MysqlManager:
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
 
+        import pymysql
+
         try:
-            self.mysql_db: mysql.connector.MySQLConnection = mysql.connector.connect(
+            self.mysql_db = pymysql.connect(
                 host=db_config.host,
                 user=db_config.user,
                 password=db_config.password,
                 db=db_config.db,
                 port=db_config.port if db_config.port else 3306,
-                connection_timeout=3
+                # connection_timeout=3
             )
             self.mysql_cursor = self.mysql_db.cursor()
         except Exception as e:
@@ -169,9 +165,6 @@ class MysqlManager:
         try:
             if hasattr(self, "mysql_cursor"):
                 self.mysql_cursor.close()
-            if hasattr(self, "mysql_db"):
-                self.mysql_db.close()
-
         except Exception as e:
             print_red("There was an error while closing the connection:", file=stderr)
             print_red(e, file=stderr)
@@ -187,6 +180,8 @@ class MongoManager:
 
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
+        from pymongo.mongo_client import MongoClient
+        from pymongo import ASCENDING
 
         try:
             self.mongo_client = MongoClient(

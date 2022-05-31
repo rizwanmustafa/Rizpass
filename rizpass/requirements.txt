@@ -1,5 +1,5 @@
 cryptography
-mysql-connector-python
+pymysql
 pyperclip
 pymongo[srv]
 cerberus
