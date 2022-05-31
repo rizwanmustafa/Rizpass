@@ -67,7 +67,7 @@ class MysqlManager:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
 
-    def get_all_credentials(self) -> List[RawCredential] | None:
+    def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
             raw_creds: List[RawCredential] = []
 
@@ -238,7 +238,7 @@ class MongoManager:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
 
-    def get_all_credentials(self) -> List[RawCredential] | None:
+    def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
             raw_creds: List[RawCredential] = []
 

@@ -93,7 +93,7 @@ class FileManager:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
 
-    def get_all_credentials(self) -> List[RawCredential] | None:
+    def get_all_credentials(self) -> Union[List[RawCredential],None]:
         return self.credentials
 
     def get_credential(self, id: int) -> Union[RawCredential,None]:
