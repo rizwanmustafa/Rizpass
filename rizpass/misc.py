@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from sys import stderr, stdout
 
 from .validator import ensure_type
@@ -64,7 +64,7 @@ def print_strong_pass_guidelines():
     print(" - Don't use variations of the common passwords e.g 'password' and 'p@$$w0rd'")
 
 
-def get_list_item_safely(array: List[str], index: str) -> str | None:
+def get_list_item_safely(array: List[str], index: str) -> Union[str,None]:
     ensure_type(array, list, "array", "list")
     ensure_type(index, int, "index", "int")
 

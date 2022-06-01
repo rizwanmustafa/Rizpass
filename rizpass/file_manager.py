@@ -1,16 +1,13 @@
 from os import path
 from sys import stderr
 from json import load as load_json, dump as dump_json
-from typing import List
-from colorama import Fore, init as colorama_init
+from typing import List, Union
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
 from .output import print_red
 
 # TODO: Convert credentials from an array to an object with id as key
-
-colorama_init()
 
 
 class FileManager:
@@ -96,10 +93,10 @@ class FileManager:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
 
-    def get_all_credentials(self) -> List[RawCredential] | None:
+    def get_all_credentials(self) -> Union[List[RawCredential],None]:
         return self.credentials
 
-    def get_credential(self, id: int) -> RawCredential | None:
+    def get_credential(self, id: int) -> Union[RawCredential,None]:
         query_result = None
         for i in self.credentials:
             if i.id == id:
