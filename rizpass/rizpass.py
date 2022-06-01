@@ -4,7 +4,6 @@ import json
 from getpass import getpass
 from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple
-from cerberus import Validator as SchemaValidator
 import signal
 
 from .misc import print_license, VERSION_NUMBER
@@ -12,9 +11,6 @@ from .output import print_colored, print_red, set_colored_output, set_verbose_ou
 from .validator import ensure_type
 from .better_input import better_input
 from .schemas import get_config_schema
-from .database_manager import DbConfig, MysqlManager, MongoManager
-from .setup_rizpass import setup_password_manager
-from .file_manager import FileManager
 from .misc import get_list_item_safely, print_help
 from . import user_functions
 
@@ -22,7 +18,7 @@ CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
 
 master_pass:  str = None
 creds_file_path: str = None
-creds_manager:  MysqlManager | MongoManager | FileManager = None
+creds_manager = None
 
 config: Dict[str, str] = {
     "file_path": None,
@@ -35,17 +31,6 @@ config: Dict[str, str] = {
 
 
 # TODO: Add requirements for master password
-
-
-def get_mode() -> str:
-    if isinstance(creds_manager, FileManager):
-        return "file"
-    elif isinstance(creds_manager, MysqlManager):
-        return "mysql"
-    elif isinstance(creds_manager, MongoManager):
-        return "mongo"
-
-
 def perform_tasks() -> None:
     max_limit = len(menu_items.keys())
 
@@ -74,6 +59,7 @@ def load_db_config(
     db_name: str | None = None,
     db_port: int | None = None
 ) -> bool:
+    from cerberus import Validator as SchemaValidator
     ensure_type(db_host, str | None, "db_host", "string | None")
     ensure_type(db_type, str | None, "db_type", "string | None")
     ensure_type(db_user, str | None, "db_user", "string | None")
@@ -248,6 +234,7 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         exit_app(0)
 
     if options.get("init_setup"):
+        from .setup_rizpass import setup_password_manager
         setup_password_manager()
         exit_app(0)
 
@@ -291,9 +278,11 @@ def setup_creds_manager():
     global creds_manager
 
     if config.get("file_path"):
+        from .file_manager import FileManager
         creds_manager = FileManager(config.get("file_path"))
         return
 
+    from .database_manager import DbConfig
     db_config = DbConfig(
         config.get("db_host"),
         config.get("db_user"),
@@ -302,7 +291,12 @@ def setup_creds_manager():
         config.get("db_port")
     )
 
-    creds_manager = MysqlManager(db_config) if config.get("db_type") == "mysql" else MongoManager(db_config)
+    if config.get("db_type") == "mysql":
+        from .database_manager import MysqlManager
+        creds_manager = MysqlManager(db_config)
+    else:
+        from .database_manager import MongoManager
+        creds_manager = MongoManager(db_config)
 
 
 menu_items: Dict[str, Tuple[str, Callable]] = {
@@ -328,7 +322,7 @@ def print_menu():
     clear_console()
     print_colored("{blue}" + "-------------------------------" + "{reset}")
     print_colored("{blue}" + f"Rizpass {VERSION_NUMBER}" + "{reset}")
-    print_colored("{blue}" + "Mode: " + "{reset}" + '{yellow}' + get_mode() + "{reset}")
+    print_colored("{blue}" + "Mode: " + "{reset}" + '{yellow}' + creds_manager.get_mode() + "{reset}")
     print()
 
     for key in menu_items:

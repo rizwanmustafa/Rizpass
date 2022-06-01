@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-from pymongo.mongo_client import MongoClient
 from getpass import getpass
 from os import path
 from sys import stderr
 from json import dump as dump_json
 from urllib.parse import quote_plus
-import mysql.connector
 from rizpass.better_input import confirm
 
 from rizpass.passwords import follows_password_requirements
@@ -26,6 +24,7 @@ CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
 
 def setup_mysql():
+    import pymysql
     global config
 
     try:
@@ -44,7 +43,7 @@ def setup_mysql():
             print_yellow("Using default port 3306")
             db_port = 3306
 
-        db_manager: mysql.connector.MySQLConnection = mysql.connector.connect(
+        db_manager= pymysql.connect(
             host=db_host,
             user=db_root_user,
             password=db_root_pass,
@@ -106,6 +105,7 @@ def setup_mysql():
 
 
 def setup_mongodb():
+    from pymongo import MongoClient
     try:
         if master_pass is None:
             print("You need to setup a master password before setting up the database!")

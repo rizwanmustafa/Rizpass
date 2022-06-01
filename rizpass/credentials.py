@@ -2,7 +2,6 @@ from sys import stderr
 from base64 import b64decode, b64encode
 import pyperclip
 
-from .passwords import decode_and_decrypt, encrypt_and_encode
 from .validator import ensure_type
 from .output import print_red, print_green, format_colors, print_verbose
 
@@ -38,6 +37,7 @@ class RawCredential:
         return format_colors(output)
 
     def get_credential(self, master_password: str):
+        from .passwords import decode_and_decrypt
         print_verbose(f"Decrypting password with id {self.id}...")
         salt = b64decode(self.salt)
         title = decode_and_decrypt(
@@ -78,6 +78,7 @@ class RawCredential:
         }
 
     def copy_pass(self, master_pass: str):
+        from .passwords import decode_and_decrypt
         # TODO: Have a separate try catch block for this
         decrypted_password = decode_and_decrypt(
             master_pass,
@@ -121,6 +122,8 @@ class Credential:
     def get_raw_credential(self, master_pass: str, salt: bytes) -> RawCredential:
         ensure_type(master_pass, str, "master_pass", "string")
         ensure_type(salt, bytes, "salt", "bytes")
+        from .passwords import encrypt_and_encode
+
 
         title = encrypt_and_encode(
             master_pass,

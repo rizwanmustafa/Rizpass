@@ -160,3 +160,6 @@ class FileManager:
                 filtered_creds.append(cred)
 
         return filtered_creds
+
+    def get_mode(self) -> str:
+        return "file"
