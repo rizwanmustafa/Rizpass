@@ -190,6 +190,9 @@ def setup_masterpass():
 
     while master_pass != confirm_master_pass or not follows_password_requirements(master_pass or "")[0]:
         master_pass = getpass("New master password: ")
+        if master_pass.replace(" ", "") == "":
+            print_red("Password cannot be empty!")
+            continue
         confirm_master_pass = getpass("Confirm master password: ")
         print()
 
