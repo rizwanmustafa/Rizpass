@@ -7,7 +7,7 @@ if [ ! -f ~/.rizpass.json ]; then
   read -p "Do you want to setup Rizpass? [Y/n] " -n "1" -e SETUP
 fi
 
-if [ $SETUP == "Y"  ] || [ $SETUP == "y" ]; then
+if [[ "$SETUP" == "Y"  ]] || [[ "$SETUP" == "y" ]]; then
   python3 -m rizpass --setup
 fi
 
