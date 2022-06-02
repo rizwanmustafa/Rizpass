@@ -54,7 +54,10 @@ def generate_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    if confirm("Copy generated password to clipboard? [Y/n] ", True):
+    if not pyperclip.is_available():
+        print_red("The generated password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
+        print_red("Please copy the password manually.", file=stderr)
+    elif confirm("Copy generated password to clipboard? [Y/n] ", True):
         try:
             pyperclip.copy(generated_pass)
         except Exception as e:
@@ -97,7 +100,10 @@ def generate_strong_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    if confirm("Copy generated password to clipboard? [Y/n] ", True):
+    if not pyperclip.is_available():
+        print_red("The generated password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
+        print_red("Please copy the password manually.", file=stderr)
+    elif confirm("Copy generated password to clipboard? [Y/n] ", True):
         try:
             pyperclip.copy(generated_pass)
         except Exception as e:
@@ -181,7 +187,11 @@ def get_credential() -> None:
         return
 
     print(cred)
-    confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
+    if not pyperclip.is_available():
+        print_red("The password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
+        print_red("Please copy the password manually.", file=stderr)
+    else:
+        confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
 
 
 def filter_credentials() -> None:
@@ -598,6 +608,11 @@ def export_credentials() -> None:
 
 
 def copy_password() -> None:
+    if not pyperclip.is_available():
+        print()
+        print_red("Pyperclip is not available on your system. Please install it to use this feature.", file=stderr)
+        return
+
     id = better_input("Credential ID: ")
     if id == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
