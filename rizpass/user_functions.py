@@ -72,7 +72,7 @@ def generate_strong_password() -> None:
 
     MIN_LENGTH = 16
     pass_len = better_input(
-        f"Password length (Min: {MIN_LENGTH}): ",
+        f"Password length (Min: {MIN_LENGTH}, Rec: 32): ",
         validator=lambda x:  True if x.isnumeric() and int(x) >= MIN_LENGTH else f"Password length must be >= {MIN_LENGTH} ",
     )
 
