@@ -405,7 +405,7 @@ def remove_all_credentials() -> None:
 
 def change_masterpass() -> None:
     from .passwords import generate_salt, encrypt_and_encode, follows_password_requirements
-    global creds_manager, master_pass
+    global creds_manager, master_pass, config
 
     if not confirm("Are you sure you want to change your master password [y/N]: "):
         return
@@ -430,7 +430,7 @@ def change_masterpass() -> None:
                 break
 
     # Change database password
-    if creds_manager:
+    if config.get("db_type", None):
         # TODO: Implement input validation
         from .database_manager import DbConfig
         if config["db_type"] == "mysql":
