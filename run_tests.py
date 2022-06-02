@@ -8,3 +8,5 @@ from rizpass.test_file_manager import *
 
 
 unittest.main()
+
+print("I have ran all tests!")

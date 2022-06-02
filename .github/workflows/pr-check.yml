@@ -1,0 +1,16 @@
+name: "Run Rizpass Tests"
+on: [push, pull_request]
+
+jobs:
+  test_rizpass:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.10.4'
+        cache: 'pip'
+    - name: Install Rizpass
+      run: pip install .
+    - name: Run tests
+      run: python run_tests.py
