@@ -23,11 +23,12 @@ def exit_app():
 
 
 def generate_password() -> None:
-    from .passwords import generate_password as generate_random_password
+    from .passwords import generate_password as generate_random_password, follows_password_requirements
 
+    MIN_LENGTH = 1
     pass_len = better_input(
-        "Password length (Min: 4): ",
-        validator=lambda x:  True if x.isnumeric() and int(x) >= 4 else "Password length must be >= 4 ",
+        f"Password length (Min: {MIN_LENGTH}): ",
+        validator=lambda x:  True if x.isnumeric() and int(x) >= MIN_LENGTH else f"Password length must be >= {MIN_LENGTH} ",
     )
 
     if pass_len == None:
@@ -42,6 +43,59 @@ def generate_password() -> None:
     print()
 
     generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
+
+    if not generated_pass:
+        print_red("Could not generate a password! Try again later!", file=stderr)
+        return
+
+    if not follows_password_requirements(generated_pass)[0]:
+        print_red("This password does not follow the strong password requirements!")
+        print_red("If you want to generate a strong password, try out the strong password generation menu item.")
+
+    print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
+
+    if confirm("Copy generated password to clipboard? [Y/n] ", True):
+        try:
+            pyperclip.copy(generated_pass)
+        except Exception as e:
+            print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
+            print_red(e, file=stderr)
+        else:
+            print("The generated password has been copied to your clipboard.")
+
+    if confirm("Do you want to add this password [Y/n]: ", True):
+        add_credential(generated_pass)
+
+
+def generate_strong_password() -> None:
+    from .passwords import generate_password as generate_random_password, follows_password_requirements
+
+    MIN_LENGTH = 16
+    pass_len = better_input(
+        f"Password length (Min: {MIN_LENGTH}): ",
+        validator=lambda x:  True if x.isnumeric() and int(x) >= MIN_LENGTH else f"Password length must be >= {MIN_LENGTH} ",
+    )
+
+    if pass_len == None:
+        return
+    pass_len = int(pass_len)
+
+    # uppercase, lowercase, digits, specials
+    uppercase = confirm("Uppercase letters? [Y/n]: ", True)
+    lowercase = confirm("Lowercase letters? [Y/n]: ", True)
+    digits = confirm("Digits? [Y/n]: ", True)
+    specials = confirm("Special characters? [Y/n]: ", True)
+    print()
+
+    generated_pass = ""
+    for _ in range(10):
+        generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
+        if follows_password_requirements(generated_pass)[0]:
+            break
+        break
+    else:
+        print_red("Could not generate a password! Failed 10 tries! Try again later!", file=stderr)
+        return
 
     if not generated_pass:
         print_red("Could not generate a password! Try again later!", file=stderr)
@@ -370,7 +424,6 @@ def change_masterpass() -> None:
             print_red("Master password does not follow the guidelines!")
             if confirm(format_colors("Are you {red}SURE{reset} you want to continue? [{red}y{reset}/{green}N{reset}] ")):
                 break
-
 
     # Change database password
     if creds_manager:

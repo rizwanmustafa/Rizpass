@@ -53,18 +53,18 @@ def perform_tasks() -> None:
 
 
 def load_db_config(
-    db_host: Union[str,None] = None,
-    db_type: Union[str,None] = None,
-    db_user: Union[str,None] = None,
-    db_name: Union[str,None] = None,
-    db_port: Union[int,None] = None
+    db_host: Union[str, None] = None,
+    db_type: Union[str, None] = None,
+    db_user: Union[str, None] = None,
+    db_name: Union[str, None] = None,
+    db_port: Union[int, None] = None
 ) -> bool:
     from cerberus import Validator as SchemaValidator
-    ensure_type(db_host, Union[str,None], "db_host", "string | None")
-    ensure_type(db_type, Union[str,None], "db_type", "string | None")
-    ensure_type(db_user, Union[str,None], "db_user", "string | None")
-    ensure_type(db_name, Union[str,None], "db_name", "string | None")
-    ensure_type(db_port, Union[int,None], "db_port", "int | None")
+    ensure_type(db_host, Union[str, None], "db_host", "string | None")
+    ensure_type(db_type, Union[str, None], "db_type", "string | None")
+    ensure_type(db_user, Union[str, None], "db_user", "string | None")
+    ensure_type(db_name, Union[str, None], "db_name", "string | None")
+    ensure_type(db_port, Union[int, None], "db_port", "int | None")
 
     global config
 
@@ -183,33 +183,34 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
         elif arg == "--no-color":
             args_dict["color_mode"] = False
-
-        elif arg == "--generate":
+        elif arg == "--generate-strong":
             args_dict["actions"].append(1)
-        elif arg == "--add":
+        elif arg == "--generate":
             args_dict["actions"].append(2)
-        elif arg == "--retrieve":
+        elif arg == "--add":
             args_dict["actions"].append(3)
-        elif arg == "--copy":
+        elif arg == "--retrieve":
             args_dict["actions"].append(4)
-        elif arg == "--filter":
+        elif arg == "--copy":
             args_dict["actions"].append(5)
-        elif arg == "--list-all":
+        elif arg == "--filter":
             args_dict["actions"].append(6)
-        elif arg == "--modify":
+        elif arg == "--list-all":
             args_dict["actions"].append(7)
-        elif arg == "--remove":
+        elif arg == "--modify":
             args_dict["actions"].append(8)
-        elif arg == "--remove-all":
+        elif arg == "--remove":
             args_dict["actions"].append(9)
-        elif arg == "--change-master-pass":
+        elif arg == "--remove-all":
             args_dict["actions"].append(10)
-        elif arg == "--export":
+        elif arg == "--change-master-pass":
             args_dict["actions"].append(11)
-        elif arg == "--import":
+        elif arg == "--export":
             args_dict["actions"].append(12)
-        elif arg == "--list-raw":
+        elif arg == "--import":
             args_dict["actions"].append(13)
+        elif arg == "--list-raw":
+            args_dict["actions"].append(14)
         elif arg == "--clear":
             args_dict["clear_console"] = True
         elif arg == "--verbose":
@@ -300,21 +301,22 @@ def setup_creds_manager():
 
 
 menu_items: Dict[str, Tuple[str, Callable]] = {
-    1: ("Generate a password", user_functions.generate_password),
-    2: ("Add a credential", user_functions.add_credential),
-    3: ("Retrieve credential using id", user_functions.get_credential),
-    4: ("Copy credential to clipboard", user_functions.copy_password),
-    5: ("Filter credentials", user_functions.filter_credentials),
-    6: ("List all credentials", user_functions.get_all_credentials),
-    7: ("Modify credential", user_functions.modify_credential),
-    8: ("Remove credential", user_functions.remove_credential),
-    9: ("Remove all credentials", user_functions.remove_all_credentials),
-    10: ("Change master password", user_functions.change_masterpass),
-    11: ("Export credentials to a JSON file", user_functions.export_credentials),
-    12: ("Import credentials from a JSON file", user_functions.import_credentials),
-    13: ("List all raw credentials", user_functions.get_all_raw_credentials),
-    14: ("Password checkup", user_functions.password_checkup),
-    15: ("Exit", exit_app),
+    1: ("Generate a strong password", user_functions.generate_strong_password),
+    2: ("Generate a password", user_functions.generate_password),
+    3: ("Add a credential", user_functions.add_credential),
+    4: ("Retrieve credential using id", user_functions.get_credential),
+    5: ("Copy credential to clipboard", user_functions.copy_password),
+    6: ("Filter credentials", user_functions.filter_credentials),
+    7: ("List all credentials", user_functions.get_all_credentials),
+    8: ("Modify credential", user_functions.modify_credential),
+    9: ("Remove credential", user_functions.remove_credential),
+    10: ("Remove all credentials", user_functions.remove_all_credentials),
+    11: ("Change master password", user_functions.change_masterpass),
+    12: ("Export credentials to a JSON file", user_functions.export_credentials),
+    13: ("Import credentials from a JSON file", user_functions.import_credentials),
+    14: ("List all raw credentials", user_functions.get_all_raw_credentials),
+    15: ("Password checkup", user_functions.password_checkup),
+    16: ("Exit", exit_app),
 }
 
 
