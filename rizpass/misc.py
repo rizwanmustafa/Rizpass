@@ -33,6 +33,7 @@ def print_help(error: bool = False) -> None:
     print("   --import              Import credentials from a JSON file", file=file)
     print("   --list-raw            List all credentials in their encrypted form", file=file)
     print("   --clear               Clear the console after execution", file=file)
+    print("   --no-clear            Don't clear the console (Rec. for debugging purposes only)", file=file)
 
 
 def print_license():

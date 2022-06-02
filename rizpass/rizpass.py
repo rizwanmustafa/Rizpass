@@ -150,6 +150,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
         "color_mode": True,
         "actions": [],
         "clear_console": False,
+        "no_clear_console": False,
         "verbose": False,
     })
 
@@ -213,6 +214,8 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["actions"].append(14)
         elif arg == "--clear":
             args_dict["clear_console"] = True
+        elif arg == "--no-clear":
+            args_dict["no_clear_console"] = True
         elif arg == "--verbose":
             args_dict["verbose"] = True
         else:
@@ -239,7 +242,14 @@ def handle_processed_args(options: Dict[str, str]) -> None:
         setup_password_manager()
         exit_app(0)
 
-    global config
+    def empty():
+        pass
+
+
+    global config, clear_console
+
+    if options.get("no_clear_console"):
+        clear_console = empty
 
     if options.get("config_file_path"):
         global CONFIG_FILE_PATH
