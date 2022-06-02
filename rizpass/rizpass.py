@@ -169,6 +169,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["file_path"] = get_list_item_safely(args, index + 1)
             if args_dict["file_path"] == None:
                 print_red("Invalid file path!", file=stderr)
+                print_help(True)
                 exit_app(129)
             ignore_args.add(index + 1)
 
