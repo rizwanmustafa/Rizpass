@@ -2,7 +2,7 @@ name: "Run Rizpass Tests"
 on: [push, pull_request]
 
 jobs:
-  install_rizpass:
+  test_rizpass:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
