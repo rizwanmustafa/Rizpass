@@ -5,10 +5,9 @@ from os import path
 from sys import stderr
 from json import dump as dump_json
 from urllib.parse import quote_plus
-from rizpass.better_input import confirm
 
-from rizpass.passwords import follows_password_requirements
-
+from .passwords import follows_password_requirements
+from .better_input import confirm
 from .output import format_colors, print_red, print_colored, print_green, print_yellow
 from .misc import print_license, print_strong_pass_guidelines
 
