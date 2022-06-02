@@ -124,7 +124,6 @@ class Credential:
         ensure_type(salt, bytes, "salt", "bytes")
         from .passwords import encrypt_and_encode
 
-
         title = encrypt_and_encode(
             master_pass,
             self.title,
@@ -160,11 +159,11 @@ class Credential:
             b64encode(salt).decode()
         )
 
-    def copy_pass(self):
+    def copy_pass(self, suppress_output: bool = False) -> None:
         try:
             pyperclip.copy(self.password)
         except Exception as e:
-            print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
-            print_red(e, file=stderr)
+            suppress_output or print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
+            suppress_output or print_red(e, file=stderr)
         else:
-            print_green("This password has been copied to your clipboard!")
+            suppress_output or print_green("This password has been copied to your clipboard!")
