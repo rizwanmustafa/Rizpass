@@ -80,19 +80,13 @@ def generate_strong_password() -> None:
         return
     pass_len = int(pass_len)
 
-    # uppercase, lowercase, digits, specials
-    uppercase = confirm("Uppercase letters? [Y/n]: ", True)
-    lowercase = confirm("Lowercase letters? [Y/n]: ", True)
-    digits = confirm("Digits? [Y/n]: ", True)
-    specials = confirm("Special characters? [Y/n]: ", True)
     print()
 
     generated_pass = ""
     for _ in range(10):
-        generated_pass = generate_random_password(pass_len, uppercase, lowercase, digits, specials)
+        generated_pass = generate_random_password(pass_len, True, True, True, True)
         if follows_password_requirements(generated_pass)[0]:
             break
-        break
     else:
         print_red("Could not generate a password! Failed 10 tries! Try again later!", file=stderr)
         return
