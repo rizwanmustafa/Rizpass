@@ -9,7 +9,7 @@ from typing import Union
 
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
-from .output import print_red, print_colored, print_green, print_yellow, print_magenta
+from .output import print_red, print_colored, print_green, print_yellow, print_magenta, format_colors
 from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
 
@@ -64,7 +64,7 @@ def generate_password() -> None:
 
 def add_credential(user_password: str = None) -> None:
     from . passwords import generate_salt, encrypt_and_encode
-    ensure_type(user_password, Union[str,None], "user_password", "string | None")
+    ensure_type(user_password, Union[str, None], "user_password", "string | None")
 
     title = better_input("Title: ")
     if title == None:
@@ -86,7 +86,6 @@ def add_credential(user_password: str = None) -> None:
 
     if not confirm("Are you sure you want to add this password [Y/n]: ", loose=True):
         return
-
 
     salt = generate_salt(16)
     encrypted_title = encrypt_and_encode(master_pass, title, salt)
@@ -347,18 +346,31 @@ def remove_all_credentials() -> None:
 
 
 def change_masterpass() -> None:
-    from .passwords import generate_salt, encrypt_and_encode
+    from .passwords import generate_salt, encrypt_and_encode, follows_password_requirements
     global creds_manager, master_pass
 
     if not confirm("Are you sure you want to change your master password [y/N]: "):
         return
 
-    new_masterpass = getpass(
-        "Input new master password (Should meet DB Password Requirements): "
-    )
-    if new_masterpass == master_pass:
-        print_red("New master password is the same as the old one!", file=stderr)
-        return
+    print()
+    print_strong_pass_guidelines()
+    print()
+
+    new_masterpass = ""
+    while new_masterpass == "" or new_masterpass == master_pass or not follows_password_requirements(new_masterpass)[0]:
+        new_masterpass = getpass(
+            "Input new master password (Should meet DB Password Requirements): "
+        )
+        if new_masterpass.replace(" ", "") == "":
+            print_red("Master password cannot be empty!", file=stderr)
+            new_masterpass = ""
+        elif new_masterpass == master_pass:
+            print_red("New master password is the same as the old one!", file=stderr)
+        elif not follows_password_requirements(master_pass)[0]:
+            print_red("Master password does not follow the guidelines!")
+            if confirm(format_colors("Are you {red}SURE{reset} you want to continue? [{red}y{reset}/{green}N{reset}] ")):
+                break
+
 
     # Change database password
     if creds_manager:
