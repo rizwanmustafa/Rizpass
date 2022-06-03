@@ -12,7 +12,9 @@ def ensure_type(value: any, expected_type: type, valueName: str, typeName: str):
         raise TypeError(f"Parameter '{valueName}' must be of type '{typeName}'".format(expected_type))
 
 
-def validate_config(config_obj: any) -> Tuple[bool, List[str]]:
+def validate_config(config_obj: any, overrides: List[str] = []) -> Tuple[bool, List[str]]:
+    ensure_type(overrides, list, "overrides", "list")
+
     if not isinstance(config_obj, dict):
         return False, ["Config must be a dictionary / object"]
 
@@ -27,6 +29,8 @@ def validate_config(config_obj: any) -> Tuple[bool, List[str]]:
     }
 
     for key in config_obj.keys():
+        if key in overrides:
+            continue
         if key not in accepted_keys:
             errors.append(f"Unknown field '{key}' in config")
             continue
@@ -40,6 +44,8 @@ def validate_config(config_obj: any) -> Tuple[bool, List[str]]:
             errors.append(f"Field '{key}' must be one of the following: {', '.join(accepted_keys[key]['allowed'])}")
 
     for key in accepted_keys.keys():
+        if key in overrides:
+            continue
         if not accepted_keys[key]["occurred"] and not accepted_keys[key]["optional"]:
             errors.append(f"Missing field '{key}' in config")
 

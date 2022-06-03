@@ -10,7 +10,6 @@ from .misc import print_license, VERSION_NUMBER
 from .output import print_colored, print_red, set_colored_output, set_verbose_output
 from .validator import ensure_type
 from .better_input import better_input
-from .schemas import get_config_schema
 from .misc import get_list_item_safely, print_help
 from . import user_functions
 
@@ -66,37 +65,54 @@ def load_db_config(
     ensure_type(db_name, Union[str, None], "db_name", "string | None")
     ensure_type(db_port, Union[int, None], "db_port", "int | None")
 
+    # Deal with parameter overrides
+    all_overrides_present = db_host and db_type and db_user and db_name
+    overrides = []
+    if db_host:
+        overrides.append("db_host")
+    if db_type:
+        overrides.append("db_type")
+    if db_user:
+        overrides.append("db_user")
+    if db_name:
+        overrides.append("db_name")
+    if db_port:
+        overrides.append("db_port")
+
     global config
+    user_settings = {}
 
-    if not os.path.isfile(CONFIG_FILE_PATH):
-        print_red("It looks like you haven't set Rizpass up.", file=stderr)
-        print_red("You can do so by using the --setup flag", file=stderr)
-        print_red("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
-        return False
+    # TODO: Find a better way to do this
+    if not all_overrides_present:
+        if not os.path.isfile(CONFIG_FILE_PATH):
+            print_red("It looks like you haven't set Rizpass up.", file=stderr)
+            print_red("You can do so by using the --setup flag", file=stderr)
+            print_red("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
+            return False
 
-    try:
-        config_file = open(CONFIG_FILE_PATH, "r+")
-        file_content = config_file.readlines()
-    except Exception as e:
-        print_red("Could not load configuration file due to the following error:", file=stderr)
-        print_red(e, file=stderr)
-        return False
+        try:
+            config_file = open(CONFIG_FILE_PATH, "r+")
+            file_content = config_file.readlines()
+        except Exception as e:
+            print_red("Could not load configuration file due to the following error:", file=stderr)
+            print_red(e, file=stderr)
+            return False
 
-    if not file_content or len(file_content) == 0:
-        print_red("Configuration file is empty!", file=stderr)
-        print_colored(f"Please fix the configuration file located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
-        exit(1)
+        if not file_content or len(file_content) == 0:
+            print_red("Configuration file is empty!", file=stderr)
+            print_colored(f"Please fix the configuration file located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
+            exit(1)
 
-    config_file.seek(0, 0)
-    try:
-        user_settings: Dict[str, str] = json.load(config_file)
-    except Exception as e:
-        print_red("Could not load configuration file due to the following error:", file=stderr)
-        print_red(e, file=stderr)
-        return False
+        config_file.seek(0, 0)
+        try:
+            user_settings: Dict[str, str] = json.load(config_file)
+        except Exception as e:
+            print_red("Could not load configuration file due to the following error:", file=stderr)
+            print_red(e, file=stderr)
+            return False
 
-    config_schema = get_config_schema()
-    config_validation = validate_config(user_settings)
+
+    config_validation = validate_config(user_settings, overrides)
 
     if not config_validation[0]:
         print_red("Configuration file is invalid!", file=stderr)
@@ -141,6 +157,11 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
     args_dict = dict({
         "config_file_path": None,
+        "db_host": None,
+        "db_type": None,
+        "db_user": None,
+        "db_name": None,
+        "db_port": None,
         "print_version": False,
         "print_help": False,
         "init_setup": False,
@@ -181,6 +202,41 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
         elif arg == "--setup" or arg == "-s":
             args_dict["init_setup"] = True
+        elif arg == "--db-host":
+            args_dict["db_host"] = get_list_item_safely(args, index + 1)
+            if args_dict["db_host"] == None:
+                print_red("Invalid database host!", file=stderr)
+                exit_app(129)
+            ignore_args.add(index + 1)
+
+        elif arg == "--db-type":
+            args_dict["db_type"] = get_list_item_safely(args, index + 1)
+            if args_dict["db_type"] == None or args_dict["db_type"] not in ["mysql", "mongo"]:
+                print_red("Invalid database type!", file=stderr)
+                exit_app(129)
+            ignore_args.add(index + 1)
+
+        elif arg == "--db-user":
+            args_dict["db_user"] = get_list_item_safely(args, index + 1)
+            if args_dict["db_user"] == None:
+                print_red("Invalid database user!", file=stderr)
+                exit_app(129)
+            ignore_args.add(index + 1)
+
+        elif arg == "--db-name":
+            args_dict["db_name"] = get_list_item_safely(args, index + 1)
+            if args_dict["db_name"] == None:
+                print_red("Invalid database name!", file=stderr)
+                exit_app(129)
+            ignore_args.add(index + 1)
+
+        elif arg == "--db-port":
+            args_dict["db_port"] = get_list_item_safely(args, index + 1)
+            if args_dict["db_port"] == None or not args_dict["db_port"].isdigit():
+                print_red("Invalid database port!", file=stderr)
+                exit_app(129)
+            args_dict["db_port"] = int(args_dict["db_port"])
+            ignore_args.add(index + 1)
 
         elif arg == "--no-color":
             args_dict["color_mode"] = False
@@ -260,7 +316,13 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     if options.get("file_mode"):
         config["file_path"] = options.get("file_path")
     else:
-        exit(1) if not load_db_config() else None
+        exit(1) if not load_db_config(
+            options.get("db_host"),
+            options.get("db_type"),
+            options.get("db_user"),
+            options.get("db_name"),
+            options.get("db_port"),
+        ) else None
 
     # Print license
     print_license()
