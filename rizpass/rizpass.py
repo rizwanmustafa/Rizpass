@@ -84,8 +84,8 @@ def load_db_config(
 
     if not file_content or len(file_content) == 0:
         print_red("Configuration file is empty!", file=stderr)
-        print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
-        return False
+        print_colored(f"Please fix the configuration file located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
+        exit(1)
 
     config_file.seek(0, 0)
     try:
@@ -103,7 +103,7 @@ def load_db_config(
         for errors in config_validation[1]:
             print(f"{errors}", file=stderr)
         print()
-        print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
+        print_colored(f"Please fix the configuration file located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
         exit(1)
 
     config["db_host"] = db_host or user_settings["db_host"]
