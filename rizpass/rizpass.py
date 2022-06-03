@@ -59,7 +59,7 @@ def load_db_config(
     db_name: Union[str, None] = None,
     db_port: Union[int, None] = None
 ) -> bool:
-    from cerberus import Validator as SchemaValidator
+    from .validator import validate_config
     ensure_type(db_host, Union[str, None], "db_host", "string | None")
     ensure_type(db_type, Union[str, None], "db_type", "string | None")
     ensure_type(db_user, Union[str, None], "db_user", "string | None")
@@ -96,14 +96,13 @@ def load_db_config(
         return False
 
     config_schema = get_config_schema()
-    validator = SchemaValidator(config_schema)
+    config_validation = validate_config(user_settings)
 
-    if not validator.validate(user_settings):
-        print_red("Invalid configuration file!", file=stderr)
-        for key in validator.errors:
-            print(f"- {key}:", file=stderr)
-            for error in validator.errors[key]:
-                print("  ", error, file=stderr)
+    if not config_validation[0]:
+        print_red("Configuration file is invalid!", file=stderr)
+        for errors in config_validation[1]:
+            print(f"{errors}", file=stderr)
+        print()
         print(f"Please fix the configuration file located at {CONFIG_FILE_PATH}", file=stderr)
         exit(1)
 
@@ -245,7 +244,6 @@ def handle_processed_args(options: Dict[str, str]) -> None:
 
     def empty():
         pass
-
 
     global config, clear_console
 
