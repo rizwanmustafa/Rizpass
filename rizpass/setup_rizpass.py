@@ -73,7 +73,7 @@ def setup_mysql():
         print_green("Privileges granted to the new database user!")
 
         # Create Table
-        db_manager.database = db_name
+        db_manager.select_db(db_name)
         createTableQuery = """CREATE TABLE credentials(
             id INT NOT NULL AUTO_INCREMENT,
             title VARCHAR(300) NOT NULL,
