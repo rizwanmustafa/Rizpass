@@ -1,5 +1,5 @@
 #!/bin/bash
-tail
+tail -f /dev/null
 # cd /app
 # source venv/bin/activate
 
