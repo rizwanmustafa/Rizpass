@@ -48,7 +48,7 @@ def setup_mysql():
             user=db_root_user,
             password=db_root_pass,
             port=db_port,
-            connection_timeout=3
+            # connection_timeout=3
         )
 
         db_cursor = db_manager.cursor()
