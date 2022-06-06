@@ -86,9 +86,8 @@ class TestCredentail(unittest.TestCase):
         global copied
         copied = True
 
-    @patch("pyperclip.is_available", return_value=True)
     @patch("pyperclip.copy", new=copy_pass)
-    def test_copy_pass(self, mock_pyperclip):
+    def test_copy_pass(self):
         global copied
 
         cred = Credential(1, "check_title", "check_username", "check_email", "check_password")
