@@ -613,7 +613,7 @@ def copy_password() -> None:
         print_red("Pyperclip is not available on your system. Please install it to use this feature.", file=stderr)
         return
 
-    id = better_input("Credential ID: ")
+    id = pos_int_input("Credential ID: ")
     if id == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
