@@ -54,12 +54,12 @@ def generate_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    if not pyperclip.is_available():
-        print_red("The generated password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
-        print_red("Please copy the password manually.", file=stderr)
-    elif confirm("Copy generated password to clipboard? [Y/n] ", True):
+    if confirm("Copy generated password to clipboard? [Y/n] ", True):
         try:
             pyperclip.copy(generated_pass)
+        except NotImplementedError:
+            print_red("Pyperclip is not available for your system!",  file=stderr)
+            print_red("Please copy the password manually.", file=stderr)
         except Exception as e:
             print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
             print_red(e, file=stderr)
@@ -100,12 +100,12 @@ def generate_strong_password() -> None:
 
     print_colored(f"Generated Password: {{blue}}{generated_pass}{{reset}}")
 
-    if not pyperclip.is_available():
-        print_red("The generated password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
-        print_red("Please copy the password manually.", file=stderr)
-    elif confirm("Copy generated password to clipboard? [Y/n] ", True):
+    if confirm("Copy generated password to clipboard? [Y/n] ", True):
         try:
             pyperclip.copy(generated_pass)
+        except NotImplementedError:
+            print_red("Pyperclip is not available for your system!", file=stderr)
+            print_red("Please copy the password manually.", file=stderr)
         except Exception as e:
             print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
             print_red(e, file=stderr)
@@ -187,11 +187,7 @@ def get_credential() -> None:
         return
 
     print(cred)
-    if not pyperclip.is_available():
-        print_red("The password can not be copied to your clipboard because pyperclip is not available!", file=stderr)
-        print_red("Please copy the password manually.", file=stderr)
-    else:
-        confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
+    confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
 
 
 def filter_credentials() -> None:
@@ -608,12 +604,7 @@ def export_credentials() -> None:
 
 
 def copy_password() -> None:
-    if not pyperclip.is_available():
-        print()
-        print_red("Pyperclip is not available on your system. Please install it to use this feature.", file=stderr)
-        return
-
-    id = better_input("Credential ID: ")
+    id = pos_int_input("Credential ID: ")
     if id == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return

@@ -160,11 +160,10 @@ class Credential:
         )
 
     def copy_pass(self, suppress_output: bool = False) -> None:
-        if not pyperclip.is_available():
-            print_red("Pyperclip is not available on your system. Please install it to use this feature.")
-            return
         try:
             pyperclip.copy(self.password)
+        except NotImplementedError:
+            suppress_output or print_red("Pyperclip is not available on your system. Please install it to use this feature.")
         except Exception as e:
             suppress_output or print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
             suppress_output or print_red(e, file=stderr)
