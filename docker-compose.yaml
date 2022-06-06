@@ -1,0 +1,17 @@
+services:
+  rizpass:
+    build: ./
+    tty: true
+    networks:
+      - rizpass
+    entrypoint: bash
+
+  mariadb:
+    image: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: rizpass
+    networks:
+      - rizpass
+
+networks:
+  rizpass: 
