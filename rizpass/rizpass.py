@@ -10,7 +10,6 @@ from .misc import print_license, VERSION_NUMBER
 from .output import print_colored, print_red, set_colored_output, set_verbose_output
 from .validator import ensure_type
 from .better_input import better_input
-from .schemas import get_config_schema
 from .misc import get_list_item_safely, print_help
 from . import user_functions
 
@@ -95,7 +94,6 @@ def load_db_config(
         print_red(e, file=stderr)
         return False
 
-    config_schema = get_config_schema()
     config_validation = validate_config(user_settings)
 
     if not config_validation[0]:
