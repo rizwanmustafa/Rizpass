@@ -20,7 +20,7 @@ def print_help(error: bool = False) -> None:
     print("   --no-color              Disable color output", file=file)
     print("   --config-file           Specify alternative config file to use", file=file)
     print()
-    print("   Overrides:", file=file)
+    print("   Config Overrides:", file=file)
     print("   --db-host <host>        Database host", file=file)
     print("   --db-type <type>        Database type (mongo, mysql)", file=file)
     print("   --db-user <user>        Database user", file=file)

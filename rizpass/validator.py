@@ -20,7 +20,7 @@ def validate_config(config_obj: any, overrides: List[str] = []) -> Tuple[bool, L
 
     errors: List[str] = []
 
-    accepted_keys = {
+    config_fields = {
         "db_type": {"data_type": str, "data_type_name": "string",  "occurred": False, "optional": False, "allowed": ["mongo", "mysql"]},
         "db_host": {"data_type": str, "data_type_name": "string",  "occurred": False, "optional": False},
         "db_user": {"data_type": str, "data_type_name": "string",  "occurred": False, "optional": False},
@@ -31,22 +31,22 @@ def validate_config(config_obj: any, overrides: List[str] = []) -> Tuple[bool, L
     for key in config_obj.keys():
         if key in overrides:
             continue
-        if key not in accepted_keys:
+        if key not in config_fields:
             errors.append(f"Unknown field '{key}' in config")
             continue
         else:
-            accepted_keys[key]["occurred"] = True
+            config_fields[key]["occurred"] = True
 
-        if not isinstance(config_obj[key], accepted_keys[key]["data_type"]):
-            errors.append(f"Field '{key}' must be of type '{accepted_keys[key]['data_type_name']}'")
+        if not isinstance(config_obj[key], config_fields[key]["data_type"]):
+            errors.append(f"Field '{key}' must be of type '{config_fields[key]['data_type_name']}'")
 
-        if "allowed" in accepted_keys[key] and config_obj[key] not in accepted_keys[key]["allowed"]:
-            errors.append(f"Field '{key}' must be one of the following: {', '.join(accepted_keys[key]['allowed'])}")
+        if "allowed" in config_fields[key] and config_obj[key] not in config_fields[key]["allowed"]:
+            errors.append(f"Field '{key}' must be one of the following: {', '.join(config_fields[key]['allowed'])}")
 
-    for key in accepted_keys.keys():
+    for key in config_fields.keys():
         if key in overrides:
             continue
-        if not accepted_keys[key]["occurred"] and not accepted_keys[key]["optional"]:
+        if not config_fields[key]["occurred"] and not config_fields[key]["optional"]:
             errors.append(f"Missing field '{key}' in config")
 
     return (len(errors) == 0, errors)

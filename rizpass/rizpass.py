@@ -63,7 +63,7 @@ def load_db_config(
     ensure_type(db_port, Union[int, None], "db_port", "int | None")
 
     # Deal with parameter overrides
-    all_overrides_present = db_host and db_type and db_user and db_name
+    required_overrides_present = db_host and db_type and db_user and db_name
     overrides = []
     if db_host:
         overrides.append("db_host")
@@ -80,7 +80,7 @@ def load_db_config(
     user_settings = {}
 
     # TODO: Find a better way to do this
-    if not all_overrides_present:
+    if not required_overrides_present:
         if not os.path.isfile(CONFIG_FILE_PATH):
             print_red("It looks like you haven't set Rizpass up.", file=stderr)
             print_red("You can do so by using the --setup flag", file=stderr)
