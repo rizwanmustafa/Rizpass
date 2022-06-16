@@ -627,8 +627,10 @@ def copy_password() -> None:
 
 def password_checkup() -> None:
     from .passwords import follows_password_requirements
+    from .credentials import decode_decrypt_with_exception_handling, RawCredential
+
     try:
-        raw_creds = creds_manager.get_all_credentials()
+        raw_creds: List[RawCredential] = creds_manager.get_all_credentials()
     except Exception as e:
         print_red("Could not get all credentials due to the following error:", file=stderr)
         print_red(e, file=stderr)
@@ -638,25 +640,32 @@ def password_checkup() -> None:
         print("No credentials to check.")
         return
 
-    duplicate_passwords = dict()
-    weak_passwords = dict()
+    duplicate_passwords = dict()  # Key is a password, value is a list of credentials with that password
+    weak_passwords = dict()  # Key is a credential id, value is the password
 
     print_strong_pass_guidelines()
     print()
 
-    duplicate_num = weak_num = 0
+    duplicate_num = weak_num = undecryptable_num = 0
 
     for raw_cred in raw_creds:
-        cred = raw_cred.get_credential(master_pass)
-        if cred.password in duplicate_passwords:
-            duplicate_num += 1
-            duplicate_passwords[cred.password].append(cred.id)
-        else:
-            duplicate_passwords[cred.password] = [cred.id]
+        cred_id = raw_cred.id
+        cred_password = decode_decrypt_with_exception_handling("password", master_pass, raw_cred.password, raw_cred.salt)
 
-        if not follows_password_requirements(cred.password)[0]:
+        if not cred_password[0]:
+            print_colored(f"Credential {{red}}{cred_id}{{reset}} cannot be checked!")
+            undecryptable_num += 1
+            continue
+
+        if cred_password[1] in duplicate_passwords:
+            duplicate_num += 1
+            duplicate_passwords[cred_password[1]].append(cred_id)
+        else:
+            duplicate_passwords[cred_password[1]] = [cred_id]
+
+        if not follows_password_requirements(cred_password[1])[0]:
             weak_num += 1
-            weak_passwords[cred.id] = cred.password
+            weak_passwords[cred_id] = cred_password[1]
 
     print()
 
@@ -670,11 +679,14 @@ def password_checkup() -> None:
     for id in weak_passwords:
         print_colored(f"Password {{red}}{weak_passwords[id]}{{reset}} for credential {{red}}{id}{{reset}} does not follow password guidelines.")
 
-    if weak_num == 0 and duplicate_num == 0:
-        print_green("Password checkup successful!")
+    if weak_num == 0 and duplicate_num == 0 and undecryptable_num == 0:
+        print_green("All decryptable passwords were unique and followed the password requirements!")
         return
 
     print()
+
+    if undecryptable_num != 0:
+        print_colored(f"{{red}}{undecryptable_num} credential(s) could not be checked due to an error.{{reset}}")
 
     if duplicate_num == 0:
         print_green("No duplicate passwords found!")
@@ -686,7 +698,8 @@ def password_checkup() -> None:
     else:
         print_colored(f"{{red}}{weak_num}{{reset}} weak passwords found!")
 
-    print("Please address these issues ASAP!")
+    if weak_num != 0 and duplicate_num != 0:
+        print("Please address these issues ASAP!")
 
 
 def init(master_pass_param: str, exit_app_param: Callable, config_param: dict, creds_manager_param) -> None:

@@ -8,13 +8,13 @@ from .validator import ensure_type
 from .output import print_colored, print_red, print_green, format_colors, print_verbose
 
 
-def get_raw(field_name: str, master_password: str,  encrypted_value: str, salt: bytes) -> Tuple[bool, str]:
+def decode_decrypt_with_exception_handling(field_name: str, master_password: str,  encrypted_value: str, salt: str) -> Tuple[bool, str]:
     from .passwords import decode_and_decrypt
     try:
         ret_val = decode_and_decrypt(
             master_password,
             encrypted_value,
-            salt
+            b64decode(salt)
         )
     except InvalidToken:
         ret_val = format_colors(f"{{red}}DECRYPTION ERROR{{reset}}")
@@ -22,17 +22,16 @@ def get_raw(field_name: str, master_password: str,  encrypted_value: str, salt: 
         print_red(f"This is probably because the {field_name} is not encrypted with the master password.", file=stderr)
         print_colored(f"{{red}}Encrypted and encoded {field_name}:{{reset}} {encrypted_value}", file=stderr)
         print()
+        return False, ret_val
     except Exception as e:
         ret_val = f"Error while decrypting the {field_name}"
         print_red(f"Error while decrypting the {field_name}:", file=stderr)
         print_red(e, file=stderr)
         print_colored(f"{{red}}Encrypted and encoded {field_name}:{{reset}} {encrypted_value}", file=stderr)
         print()
-    else:
-        print_verbose(format_colors(f"{{green}}Successfully decrypted {field_name}!{{reset}}"))
-        return True, ret_val
-    finally:
         return False, ret_val
+    print_verbose(format_colors(f"{{green}}Successfully decrypted {field_name}!{{reset}}"))
+    return True, ret_val
 
 
 class RawCredential:
@@ -66,14 +65,12 @@ class RawCredential:
         return format_colors(output)
 
     def get_credential(self, master_password: str):
-        from .passwords import decode_and_decrypt
         print_verbose(f"Decrypting credential with id {self.id}...")
-        salt = b64decode(self.salt)
 
-        title = get_raw("title", master_password, self.title, salt)[1]
-        username = get_raw("username", master_password, self.username, salt)[1]
-        email = get_raw("email", master_password, self.email, salt)[1]
-        password = get_raw("password", master_password, self.password, salt)[1]
+        title = decode_decrypt_with_exception_handling("title", master_password, self.title, self.salt)[1]
+        username = decode_decrypt_with_exception_handling("username", master_password, self.username, self.salt)[1]
+        email = decode_decrypt_with_exception_handling("email", master_password, self.email, self.salt)[1]
+        password = decode_decrypt_with_exception_handling("password", master_password, self.password, self.salt)[1]
 
         if title != None and username != None and email != None and password != None:
             print_verbose("{green}Credential decryption successful!{reset}")
@@ -93,7 +90,7 @@ class RawCredential:
         }
 
     def copy_pass(self, master_pass: str):
-        decrypted_password = get_raw("password", master_pass, self.password, b64decode(self.salt))
+        decrypted_password = decode_decrypt_with_exception_handling("password", master_pass, self.password, b64decode(self.salt))
 
         if not decrypted_password[0]:
             return
