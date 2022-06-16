@@ -1,9 +1,38 @@
 from sys import stderr
 from base64 import b64decode, b64encode
+from typing import Tuple
+from cryptography.fernet import InvalidToken
 import pyperclip
 
 from .validator import ensure_type
-from .output import print_red, print_green, format_colors, print_verbose
+from .output import print_colored, print_red, print_green, format_colors, print_verbose
+
+
+def get_raw(field_name: str, master_password: str,  encrypted_value: str, salt: bytes) -> Tuple[bool, str]:
+    from .passwords import decode_and_decrypt
+    try:
+        ret_val = decode_and_decrypt(
+            master_password,
+            encrypted_value,
+            salt
+        )
+    except InvalidToken:
+        ret_val = format_colors(f"{{red}}DECRYPTION ERROR{{reset}}")
+        print_red(f"Error while decrypting the {field_name}!", file=stderr)
+        print_red(f"This is probably because the {field_name} is not encrypted with the master password.", file=stderr)
+        print_colored(f"{{red}}Encrypted and encoded {field_name}:{{reset}} {encrypted_value}", file=stderr)
+        print()
+    except Exception as e:
+        ret_val = f"Error while decrypting the {field_name}"
+        print_red(f"Error while decrypting the {field_name}:", file=stderr)
+        print_red(e, file=stderr)
+        print_colored(f"{{red}}Encrypted and encoded {field_name}:{{reset}} {encrypted_value}", file=stderr)
+        print()
+    else:
+        print_verbose(format_colors(f"{{green}}Successfully decrypted {field_name}!{{reset}}"))
+        return True, ret_val
+    finally:
+        return False, ret_val
 
 
 class RawCredential:
@@ -38,32 +67,18 @@ class RawCredential:
 
     def get_credential(self, master_password: str):
         from .passwords import decode_and_decrypt
-        print_verbose(f"Decrypting password with id {self.id}...")
+        print_verbose(f"Decrypting credential with id {self.id}...")
         salt = b64decode(self.salt)
-        title = decode_and_decrypt(
-            master_password,
-            self.title,
-            salt
-        )
-        username = decode_and_decrypt(
-            master_password,
-            self.username,
-            salt
-        )
-        email = decode_and_decrypt(
-            master_password,
-            self.email,
-            salt
-        )
-        password = decode_and_decrypt(
-            master_password,
-            self.password,
-            salt
-        )
+
+        title = get_raw("title", master_password, self.title, salt)[1]
+        username = get_raw("username", master_password, self.username, salt)[1]
+        email = get_raw("email", master_password, self.email, salt)[1]
+        password = get_raw("password", master_password, self.password, salt)[1]
+
         if title != None and username != None and email != None and password != None:
-            print_verbose("{green}Decryption successful!{reset}")
+            print_verbose("{green}Credential decryption successful!{reset}")
         else:
-            print_verbose("{red}Decryption failed!{reset}", file=stderr)
+            print_verbose("{red}Credential decryption failed!{reset}", file=stderr)
 
         return Credential(self.id, title, username, email, password)
 
@@ -78,13 +93,11 @@ class RawCredential:
         }
 
     def copy_pass(self, master_pass: str):
-        from .passwords import decode_and_decrypt
-        # TODO: Have a separate try catch block for this
-        decrypted_password = decode_and_decrypt(
-            master_pass,
-            self.password,
-            b64decode(self.salt)
-        )
+        decrypted_password = get_raw("password", master_pass, self.password, b64decode(self.salt))
+
+        if not decrypted_password[0]:
+            return
+
         try:
             pyperclip.copy(decrypted_password)
         except Exception as e:

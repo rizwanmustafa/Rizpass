@@ -119,7 +119,6 @@ def encrypt_string(master_pass: str, raw_password: str, salt: bytes) -> Union[by
 
 
 def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> Union[str,None]:
-    try:
         ensure_type(master_pass, str, "master_pass", "str")
         ensure_type(encrypted_password, bytes, "encrypted_password", "bytes")
         ensure_type(salt, bytes, "salt", "bytes")
@@ -137,10 +136,6 @@ def decrypt_string(master_pass: str, encrypted_password: bytes, salt: bytes) -> 
         raw_password: str = str(password_bytes, "utf-8")
 
         return raw_password
-    except Exception as e:
-        print_red("There was an error decrypting the password:", file=stderr)
-        print_red(e, file=stderr)
-        return None
 
 
 def encrypt_and_encode(master_pass: str, data: str, salt: bytes) -> Union[str,None]:

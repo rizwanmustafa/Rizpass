@@ -8,9 +8,6 @@ import signal
 
 from .misc import print_license, VERSION_NUMBER
 from .output import print_colored, print_red, set_colored_output, set_verbose_output
-from .validator import ensure_type
-from .better_input import better_input
-from .misc import get_list_item_safely, print_help
 from . import user_functions
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
@@ -31,6 +28,7 @@ config: Dict[str, str] = {
 
 # TODO: Add requirements for master password
 def perform_tasks() -> None:
+    from .better_input import better_input
     max_limit = len(menu_items.keys())
 
     user_choice = better_input(
@@ -58,7 +56,7 @@ def load_db_config(
     db_name: Union[str, None] = None,
     db_port: Union[int, None] = None
 ) -> bool:
-    from .validator import validate_config
+    from .validator import validate_config, ensure_type
     ensure_type(db_host, Union[str, None], "db_host", "string | None")
     ensure_type(db_type, Union[str, None], "db_type", "string | None")
     ensure_type(db_user, Union[str, None], "db_user", "string | None")
@@ -111,7 +109,6 @@ def load_db_config(
             print_red(e, file=stderr)
             return False
 
-
     config_validation = validate_config(user_settings, overrides)
 
     if not config_validation[0]:
@@ -151,6 +148,8 @@ def exit_app(exit_code=0) -> NoReturn:
 
 def process_args(args: List[str]) -> Dict[str, str]:
     """Processes command line arguments and returns a dictionary of the arguments with their values if possible."""
+    from .misc import get_list_item_safely, print_help
+    from .validator import ensure_type
     ensure_type(args, list, "args", "list")
 
     ignore_args = {0}
@@ -283,7 +282,8 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
 
 def handle_processed_args(options: Dict[str, str]) -> None:
-    # Load config from arguments
+    """Load config from arguments"""
+    from .misc import print_help
     set_colored_output(options.get("color_mode"))
 
     if options.get("print_help"):
