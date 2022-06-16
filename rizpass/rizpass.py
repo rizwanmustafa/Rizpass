@@ -307,7 +307,7 @@ def handle_processed_args(options: Dict[str, str]) -> None:
 
     if options.get("config_file_path"):
         global CONFIG_FILE_PATH
-        CONFIG_FILE_PATH = options.get("config_file_path")
+        CONFIG_FILE_PATH = os.path.expanduser(options.get("config_file_path"))
 
     if options.get("verbose"):
         set_verbose_output(True)
