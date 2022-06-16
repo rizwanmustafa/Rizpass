@@ -56,6 +56,8 @@ def load_db_config(
     db_port: Union[int, None] = None
 ) -> bool:
     from .validator import validate_config, ensure_type
+    from .output import print_yellow
+
     ensure_type(db_host, Union[str, None], "db_host", "string | None")
     ensure_type(db_type, Union[str, None], "db_type", "string | None")
     ensure_type(db_user, Union[str, None], "db_user", "string | None")
@@ -63,30 +65,31 @@ def load_db_config(
     ensure_type(db_port, Union[int, None], "db_port", "int | None")
 
     # Deal with parameter overrides
-    required_overrides_present = db_host and db_type and db_user and db_name
-    overrides = []
-    if db_host:
-        overrides.append("db_host")
-    if db_type:
-        overrides.append("db_type")
-    if db_user:
-        overrides.append("db_user")
-    if db_name:
-        overrides.append("db_name")
-    if db_port:
-        overrides.append("db_port")
+    required_overrides_present = db_host != None and db_type != None and db_user != None and db_name != None
+    # overrides = []
+    # if db_host:
+    #     overrides.append("db_host")
+    # if db_type:
+    #     overrides.append("db_type")
+    # if db_user:
+    #     overrides.append("db_user")
+    # if db_name:
+    #     overrides.append("db_name")
+    # if db_port:
+    #     overrides.append("db_port")
 
     global config
     user_settings = {}
 
-    # TODO: Find a better way to do this
+    if required_overrides_present and db_port == None:
+        print_yellow("Using default value for db_port depending on database")
+
     if not required_overrides_present:
         if not os.path.isfile(CONFIG_FILE_PATH):
             print_red("It looks like you haven't set Rizpass up.", file=stderr)
             print_red("You can do so by using the --setup flag", file=stderr)
             print_red("If you want to use Rizpass in file mode, you can use the --file flag", file=stderr)
             return False
-
         try:
             config_file = open(CONFIG_FILE_PATH, "r+")
             file_content = config_file.readlines()
@@ -102,27 +105,44 @@ def load_db_config(
 
         config_file.seek(0, 0)
         try:
-            user_settings: Dict[str, str] = json.load(config_file)
+            user_settings = json.load(config_file)
         except Exception as e:
             print_red("Could not load configuration file due to the following error:", file=stderr)
             print_red(e, file=stderr)
             return False
 
-    config_validation = validate_config(user_settings, overrides)
+        config_file.close()
+
+        if type(user_settings) != dict:
+            print_red("Invalid configuration file!", file=stderr)
+
+    db_host = db_host or user_settings.get("db_host", None)
+    db_user = db_user or user_settings.get("db_user", None)
+    db_name = db_name or user_settings.get("db_name", None)
+    db_type = db_type or user_settings.get("db_type", None)
+    db_port = db_port or user_settings.get("db_port", None) or (3306 if db_type == "mysql" else 27017)
+
+    config_validation = validate_config({
+        "db_host":  db_host,
+        "db_user":  db_user,
+        "db_name":  db_name,
+        "db_type":  db_type,
+        "db_port":  db_port,
+    })
 
     if not config_validation[0]:
-        print_red("Configuration file is invalid!", file=stderr)
+        print_red("Configuration is invalid!", file=stderr)
         for errors in config_validation[1]:
             print(f"{errors}", file=stderr)
         print()
-        print_colored(f"Please fix the configuration file located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
+        print_colored(f"Reminder: Configuration file is located at {{yellow}}{CONFIG_FILE_PATH}{{reset}}", file=stderr)
         exit(1)
 
-    config["db_host"] = db_host or user_settings["db_host"]
-    config["db_user"] = db_user or user_settings["db_user"]
-    config["db_name"] = db_name or user_settings["db_name"]
-    config["db_port"] = db_port or user_settings["db_port"]
-    config["db_type"] = db_type or user_settings["db_type"]
+    config["db_host"] = db_host
+    config["db_user"] = db_user
+    config["db_name"] = db_name
+    config["db_type"] = db_type
+    config["db_port"] = db_port
 
     return True
 
