@@ -482,6 +482,7 @@ def change_masterpass() -> None:
     # Decrypt passwords and encrypt them with new salt and master password
     raw_creds = creds_manager.get_all_credentials()
     for raw_cred in raw_creds:
+        # TODO: Deal with stuff if the decryption fails
         old_cred = raw_cred.get_credential(master_pass)
         salt = generate_salt(16)
         new_pass = encrypt_and_encode(

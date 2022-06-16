@@ -12,7 +12,6 @@ from .output import format_colors, print_red, print_colored, print_green, print_
 from .misc import print_license, print_strong_pass_guidelines
 
 
-# TODO: Flag all errror output to stderr
 # TODO: Create a class with all the config variables to be used throughout the program
 
 config = dict()
@@ -191,16 +190,16 @@ def setup_masterpass():
     while master_pass != confirm_master_pass or not follows_password_requirements(master_pass or "")[0]:
         master_pass = getpass("New master password: ")
         if master_pass.replace(" ", "") == "":
-            print_red("Password cannot be empty!")
+            print_red("Password cannot be empty!", file=stderr)
             continue
         confirm_master_pass = getpass("Confirm master password: ")
         print()
 
         if master_pass != confirm_master_pass:
-            print_red("Passwords do not match!")
+            print_red("Passwords do not match!", file=stderr)
 
         elif not follows_password_requirements(master_pass)[0]:
-            print_red("Master password does not follow the guidelines!")
+            print_red("Master password does not follow the guidelines!", file=stderr)
             if confirm(format_colors("Are you {red}SURE{reset} you want to continue? [{red}y{reset}/{green}N{reset}] ")):
                 break
 

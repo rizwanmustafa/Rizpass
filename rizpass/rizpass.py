@@ -25,7 +25,6 @@ config: Dict[str, str] = {
 }
 
 
-# TODO: Add requirements for master password
 def perform_tasks() -> None:
     from .better_input import better_input
     max_limit = len(menu_items.keys())
