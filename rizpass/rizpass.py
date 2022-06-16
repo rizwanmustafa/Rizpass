@@ -6,7 +6,6 @@ from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple, Union
 import signal
 
-from .misc import print_license, VERSION_NUMBER
 from .output import print_colored, print_red, set_colored_output, set_verbose_output
 from . import user_functions
 
@@ -283,7 +282,7 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
 def handle_processed_args(options: Dict[str, str]) -> None:
     """Load config from arguments"""
-    from .misc import print_help
+    from .misc import print_help, print_license
     set_colored_output(options.get("color_mode"))
 
     if options.get("print_help"):
@@ -392,6 +391,7 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
 
 
 def print_menu():
+    from .misc import VERSION_NUMBER
     clear_console()
     print_colored("{blue}" + "-------------------------------" + "{reset}")
     print_colored("{blue}" + f"Rizpass {VERSION_NUMBER}" + "{reset}")
