@@ -171,7 +171,7 @@ class MysqlManager:
             print_red(e, file=stderr)
 
     def get_mode(self) -> str:
-        return "mongo"
+        return "mysql"
 
     def __del__(self):
         self.close()
