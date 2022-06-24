@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
-from .output import print_red
+from .output import format_colors, print_red
 
 
 class DbConfig:
@@ -27,10 +27,12 @@ class DbConfig:
 class MysqlManager:
 
     def __init__(self,  db_config: DbConfig):
+        from .output import print_verbose, format_colors
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
 
         import pymysql
 
+        print_verbose("Begin connecting to mysql!")
         try:
             self.mysql_db = pymysql.connect(
                 host=db_config.host,
@@ -48,8 +50,11 @@ class MysqlManager:
             print()
             print_red("Exiting with code 1!", file=stderr)
             exit(1)
+        else:
+            print_verbose(format_colors("{green}Connection established successfully!{reset}"))
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+        from .output import print_verbose, format_colors
         """This method takes in the encrypted and encoded credentials and adds them to the database."""
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
@@ -58,6 +63,7 @@ class MysqlManager:
         ensure_type(salt, str, "salt", "string")
 
         # Add the password to the database
+        print_verbose("Begin execution of query!")
         try:
             self.mysql_cursor.execute(
                 "INSERT INTO credentials(title, username, email, password, salt) VALUES(%s, %s, %s, %s, %s);",
@@ -67,6 +73,8 @@ class MysqlManager:
         except Exception as e:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
+        else:
+            print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
     def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
