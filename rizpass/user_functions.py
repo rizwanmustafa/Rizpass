@@ -571,8 +571,8 @@ def import_credentials() -> None:
 
 def export_credentials() -> None:
     from .passwords import generate_salt
-    file_path = better_input("File Path: ")
-    file_master_pass = getpass("File Master Password (Optional): ")
+    file_path = os.path.expanduser( better_input("File Path: "))
+    file_master_pass = getpass("(Optional) File Master Password: ") or master_pass
 
     if file_path == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
