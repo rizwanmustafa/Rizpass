@@ -401,6 +401,11 @@ def change_masterpass() -> None:
     if not confirm("Are you sure you want to change your master password [y/N]: "):
         return
 
+    if getpass("Re-enter master password: ") != master_pass:
+        print("Incorrect password!")
+        print("Exiting...")
+        exit_app()
+
     print()
     print_strong_pass_guidelines()
     print()
