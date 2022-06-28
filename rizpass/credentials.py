@@ -171,7 +171,8 @@ class Credential:
         try:
             pyperclip.copy(self.password)
         except NotImplementedError:
-            suppress_output or print_red("Pyperclip is not available on your system. Please install it to use this feature.")
+            suppress_output or print_red("Pyperclip could not find a copy/paste mechanism for your system.")
+            suppress_output or print_red("Please see potential fixes for this error here: https://pyperclip.readthedocs.io/en/latest/#not-implemented-error")
         except Exception as e:
             suppress_output or print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
             suppress_output or print_red(e, file=stderr)

@@ -62,7 +62,9 @@ def generate_password() -> None:
         try:
             pyperclip.copy(generated_pass)
         except NotImplementedError:
-            print_red("Pyperclip is not available for your system!",  file=stderr)
+            print_red("Pyperclip could not find a copy/paste mechanism for your system.",  file=stderr)
+            print_red("Please see potential fixes for this error here: https://pyperclip.readthedocs.io/en/latest/#not-implemented-error")
+            print()
             print_red("Please copy the password manually.", file=stderr)
         except Exception as e:
             print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
@@ -112,7 +114,9 @@ def generate_strong_password() -> None:
         try:
             pyperclip.copy(generated_pass)
         except NotImplementedError:
-            print_red("Pyperclip is not available for your system!", file=stderr)
+            print_red("Pyperclip could not find a copy/paste mechanism for your system.", file=stderr)
+            print_red("Please see potential fixes for this error here: https://pyperclip.readthedocs.io/en/latest/#not-implemented-error")
+            print()
             print_red("Please copy the password manually.", file=stderr)
         except Exception as e:
             print_red("The generated password could not be copied to your clipboard due to the following error:", file=stderr)
