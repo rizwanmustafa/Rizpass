@@ -165,8 +165,7 @@ def add_credential(user_password: str = None) -> None:
 
 
 def get_credential() -> None:
-    # id = int(input("ID: "))
-    id = pos_int_input("ID: ")
+    id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
@@ -265,11 +264,8 @@ def get_all_raw_credentials() -> None:
 
 
 def modify_credential() -> None:
-    # Later add functionality for changing the password itself
-    # id = int(input("ID: "))
-
     from .passwords import generate_salt,  encrypt_and_encode
-    id = pos_int_input("ID: ")
+    id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
@@ -350,8 +346,7 @@ def modify_credential() -> None:
 
 
 def remove_credential() -> None:
-    # id = int(input("ID: "))
-    id = pos_int_input("ID: ")
+    id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
