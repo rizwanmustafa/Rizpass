@@ -9,7 +9,7 @@ from typing import Union
 
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
-from .output import print_red, print_colored, print_green, print_yellow, print_magenta, format_colors
+from .output import print_red, print_colored, print_green, print_yellow, print_magenta
 from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
 
@@ -118,6 +118,7 @@ def generate_strong_password() -> None:
 
 def add_credential(user_password: str = None) -> None:
     from . passwords import generate_salt, encrypt_and_encode
+    from . output import format_colors
     ensure_type(user_password, Union[str, None], "user_password", "string | None")
 
     title = better_input("Title: ")
@@ -138,7 +139,7 @@ def add_credential(user_password: str = None) -> None:
         print_red("Aborting operation due to invalid input!", file=stderr)
         return
 
-    if not confirm("Are you sure you want to add this password [Y/n]: ", loose=True):
+    if not confirm(format_colors("Are you {red}SURE{reset} you want to add this password [Y/n]: "), loose=True):
         return
 
     salt = generate_salt(16)
@@ -265,6 +266,8 @@ def get_all_raw_credentials() -> None:
 
 def modify_credential() -> None:
     from .passwords import generate_salt,  encrypt_and_encode
+    from . output import format_colors
+
     id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -298,7 +301,7 @@ def modify_credential() -> None:
     if new_password == None or not new_password.strip():
         new_password = ""
 
-    if not confirm("Are you sure you want to modify this password [Y/n]: ", True):
+    if not confirm(format_colors("Are you {red}SURE{reset} you want to modify this password [Y/n]: "), True):
         return
 
     if new_title == new_username == new_email == new_password == "":
@@ -374,8 +377,10 @@ def remove_credential() -> None:
 
 
 def remove_all_credentials() -> None:
+    from . output import format_colors
+
     for _ in range(2):
-        if not confirm("Are you sure you want to remove all stored passwords [y/N]: "):
+        if not confirm(format_colors("Are you {red}SURE{reset} you want to remove all stored passwords [y/N]: ")):
             return
 
     if getpass("Re-enter master password: ") != master_pass:
@@ -396,9 +401,11 @@ def remove_all_credentials() -> None:
 
 def change_masterpass() -> None:
     from .passwords import generate_salt, encrypt_and_encode, follows_password_requirements
+    from .output import format_colors
+
     global creds_manager, master_pass, config
 
-    if not confirm("Are you sure you want to change your master password [y/N]: "):
+    if not confirm(format_colors("Are you {red}SURE{reset} you want to change your master password [y/N]: ")):
         return
 
     if getpass("Re-enter master password: ") != master_pass:
