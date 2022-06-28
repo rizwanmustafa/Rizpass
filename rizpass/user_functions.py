@@ -33,7 +33,11 @@ def generate_password() -> None:
 
     if pass_len == None:
         return
+
     pass_len = int(pass_len)
+
+    if pass_len > 10000000:
+        print_yellow("Good luck trying to generate that!")
 
     # uppercase, lowercase, digits, specials
     uppercase = confirm("Uppercase letters? [Y/n]: ", True)
@@ -81,7 +85,11 @@ def generate_strong_password() -> None:
 
     if pass_len == None:
         return
+
     pass_len = int(pass_len)
+
+    if pass_len > 10000000:
+        print_yellow("Good luck trying to generate that!")
 
     print()
 
