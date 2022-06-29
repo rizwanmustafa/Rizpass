@@ -11,6 +11,10 @@
 - [Configuration](#configuration)
   * [Configuration File](#configuration-file)
       - [Sample Configuration File](#sample-configuration-file)
+- [Usage](#usage)
+  * [Execution](#execution)
+  * [File Mode](#file-mode)
+  * [Other](#other)
 
 # Motivation
 
@@ -122,4 +126,34 @@ db_port (integer, Optional): Port number for communication with the database. De
 
 ```json
 {"db_type": "mongo", "db_host": "localhost", "db_user": "passMan", "db_name": "rizpass", "db_port": 7000}
+```
+
+# Usage
+
+## Execution
+
+You can execute Rizpass through the following commmand:
+```bash
+python3 -m rizpass
+```
+
+## File Mode
+
+A major reason behind the creation of Rizpass was to have ease of use and to prevent confusion among the users. Rizpass supports file mode whereby all operations are performed on a JSON file instead of a database. This can help those who don't want to go through the process of setting up a database and those who want portability
+
+You can access the file mode using the following command:
+```bash
+python3 -m rizpass <file_name>
+```
+
+## Other
+
+You can print the help menu through the following command:
+```bash
+python3 -m rizpass --help
+```
+
+You can print the version of Rizpass you are using through the following command:
+```bash
+python3 -m rizpass --version
 ```
