@@ -143,7 +143,7 @@ A major reason behind the creation of Rizpass was to have ease of use and to pre
 
 You can access the file mode using the following command:
 ```bash
-python3 -m rizpass <file_name>
+python3 -m rizpass --file <file_name>
 ```
 
 ## Other
