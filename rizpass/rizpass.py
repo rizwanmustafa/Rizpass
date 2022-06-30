@@ -285,6 +285,8 @@ def process_args(args: List[str]) -> Dict[str, str]:
             args_dict["actions"].append(13)
         elif arg == "--list-raw":
             args_dict["actions"].append(14)
+        elif arg == "--pass-checkup":
+            args_dict["actions"].append(15)
         elif arg == "--clear":
             args_dict["clear_console"] = True
         elif arg == "--no-clear":

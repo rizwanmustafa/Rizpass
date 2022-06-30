@@ -26,7 +26,6 @@ def print_help(error: bool = False) -> None:
     print("   --db-user <user>        Database user", file=file)
     print("   --db-name <name>        Database name", file=file)
     print("   --db-port <port>        Database port", file=file)
-
     print()
     print("   Functionality:", file=file)
     print("   --generate-strong       Generate a strong password", file=file)
@@ -43,6 +42,8 @@ def print_help(error: bool = False) -> None:
     print("   --export                Export credentials to a JSON file", file=file)
     print("   --import                Import credentials from a JSON file", file=file)
     print("   --list-raw              List all credentials in their encrypted form", file=file)
+    print("   --pass-checkup          Perform a check for duplicate and weak passwords", file=file)
+    print()
     print("   --clear                 Clear the console after execution", file=file)
     print("   --no-clear              Don't clear the console (Rec. for debugging purposes only)", file=file)
 
