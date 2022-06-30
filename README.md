@@ -157,3 +157,8 @@ You can print the version of Rizpass you are using through the following command
 ```bash
 python3 -m rizpass --version
 ```
+
+You can have verbose output through the following command:
+```bash
+python3 -m rizpass --verbose
+```
