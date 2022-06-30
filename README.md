@@ -129,6 +129,18 @@ db_port (integer, Optional): Port number for communication with the database. De
 {"db_type": "mongo", "db_host": "localhost", "db_user": "passMan", "db_name": "rizpass", "db_port": 7000}
 ```
 
+## Overriding configuration at runtime
+You can override the configurations stored in a file on runtime using the following cli options:
+```
+--db-host <host>        Database host
+--db-type <type>        Database type (mongo, mysql)
+--db-user <user>        Database user
+--db-name <name>        Database name
+--db-port <port>        Database port
+```
+
+You can also use all these options together to use Rizpass without a configuration file.
+
 # Usage
 
 ## Execution
