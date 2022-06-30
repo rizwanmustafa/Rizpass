@@ -13,6 +13,7 @@
       - [Sample Configuration File](#sample-configuration-file)
 - [Usage](#usage)
   * [Execution](#execution)
+  * [Menu Items](#menu-items)
   * [File Mode](#file-mode)
   * [Other](#other)
 
@@ -135,6 +136,130 @@ db_port (integer, Optional): Port number for communication with the database. De
 You can execute Rizpass through the following commmand:
 ```bash
 python3 -m rizpass
+```
+
+## Menu Items
+
+#### Generate a strong password
+This menu item allows one to generate a strong password that contains all kinds of characters (uppercase, lowercase, special, digit) to enhance security. The generated passwords stand strong against dictionary attacks as they are truly random and not easy to guess. In this option the minimum length of a generated password can be 16 characters
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --generate-strong
+```
+
+#### Generate a password
+This menu item allows one to generate a password with the traits of their choice. The user can choose the length and the type of characters they want to include in the generated password. This option is less secure than the option mentioned above but allows for greater customizability.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --generate
+```
+
+#### Add a credential
+This menu items allows one to store a new credential. Users can store the credential data in the following fields: 'title', 'username', 'email' and 'password'. Rizpass automatically adds a unique 'id' field to the credential for use in other menu items
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --add
+```
+
+#### Retrieve credential using id
+This menu item takes the 'id' of a credential as an input from the user and prints the credential if it exists.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --retrieve
+```
+
+#### Copy credential to clipboard
+This menu item takes the 'id' of a credential as an input from the user and copies the password to the clipboard if it exists. For this menu item to work, pyperclip must be able to find a copy mechanism for your system.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --copy
+```
+
+#### Filter credentials
+This menu item allows the users to provide 'filters' for the following fields: 'title', 'username', 'email'. A 'filter' for a field is just character(s) that each credential's matching field must contain. If no 'filter' is provided for a particular field, all values for that field will be considered valid. If no 'filters' are provided at all, all stored credentials will be returned.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --filter
+```
+
+#### List all credentials
+This menu item prints all the stored credentials to the screen.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --list-all
+```
+
+#### Modify credential
+This menu item takes the credential 'id' as an input. It then takes in replacement values for each field for that credential. If a replacement value for a field is empty, the field value will not be modified.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --modify
+```
+
+#### Remove credential
+This menu item takes the credential 'id' as an input and removes the stored credential if it exists.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --remove
+```
+
+#### Remove all credentials
+This menu item first confirms if you are sure about what you intend to do. It then prompts you to re enter the master password, if the master password is incorrect, it exits, else it removes all stored credentials. Remember this is a permanent change.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --remove-all
+```
+
+#### Change master password
+This menu item changes the master password you use to log in to Rizpass. It first confirms your intentions and then prompts you for the current master password. If incorrect, it exits, else it continues with the process. It then asks you for the new master password. If you are using the database option, it will ask for the root credentials to change the password of the database user. It then re-encrypts the stored credentials using the new master password. Remember this is a permanent change.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --change-master-pass
+```
+
+#### Export credentials to a JSON file
+This menu item allows you to export your encrypted credentials to a JSON file to allow for portability. It will ask you for the file path and the master password for this file. You can choose a separate master password for the exported credentials but if you do not provide a separate master password, it will encrypt the credentials with your current master password. You can then use this file with the file mode of Rizpass to access your credentials on the go.
+
+We recommend you use this feature to backup your credentials regularly. It is also recommended to store this file in a safe place.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --export
+```
+
+#### Import credentials from a JSON file
+This menu item allows you to import your encrypted credentials from a JSON file that was exported using the export menu item of Rizpass. Rizpass will prompt you to provide the path of the file and the master password for this file when you try to import it. It will then try to re-encrypt all credentials in the file and store them.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --import
+```
+
+#### List all raw credentials
+This menu item is similar to the "List all credentials" menu item but there is one key difference. It prints the encrypted version of the stored credentials on the screen rather than the usual decrypted version of the credentials.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --list-raw
+```
+
+#### Password checkup
+This menu item goes over your stored credentials and scans for passwords that are either weak or duplicate. For detecting weak passwords, it jsut checks if a password follows the guidlines that this item prints before beginning the checkup. It is completely possible for this item to miss weak passwords like "p@$$w0rdp@$$w0rd123". Hence this is why it is recommended to use passwords generated from the "Genearate a strong password" menu item.
+
+You can access this feature through the commandline by the following command:
+```bash
+python3 -m rizpass --pass-checkup
 ```
 
 ## File Mode
