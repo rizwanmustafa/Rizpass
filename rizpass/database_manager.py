@@ -7,6 +7,7 @@ from urllib.parse import quote_plus
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
 from .output import format_colors, print_red
+from .cred_manager import CredManager
 
 
 class DbConfig:
@@ -24,7 +25,7 @@ class DbConfig:
         self.port = port
 
 
-class MysqlManager:
+class MysqlManager(CredManager):
 
     def __init__(self,  db_config: DbConfig):
         from .output import print_verbose, format_colors
@@ -169,7 +170,7 @@ class MysqlManager:
         self.close()
 
 
-class MongoManager:
+class MongoManager(CredManager):
 
     def __init__(self,  db_config: DbConfig):
         ensure_type(db_config, DbConfig, "db_config", "DbConfig")
