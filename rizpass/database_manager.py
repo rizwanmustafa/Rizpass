@@ -152,24 +152,6 @@ class MysqlManager:
 
         return filtered_creds
 
-    def execute_raw_query(self, query: str) -> None:
-        ensure_type(query, str, "query", "string")
-
-        # Exception Handling
-        if not query:
-            raise ValueError("Parameter 'query' cannot be empty")
-
-        try:
-            self.mysql_cursor.execute(query)
-            self.mysql_db.commit()
-            return self.mysql_cursor.fetchall()
-        except Exception as e:
-            print_red("There was an error while executing a query: ")
-            print_red("Query: ", query)
-            print_red("Error: ", e)
-            print_red("Exiting!")
-            exit(1)
-
     def close(self):
         try:
             if hasattr(self, "mysql_cursor"):
