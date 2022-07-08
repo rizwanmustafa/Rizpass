@@ -7,6 +7,8 @@ import os
 import json
 from typing import Union
 
+from rizpass.cred_manager import CredManager
+
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
 from .output import print_red, print_colored, print_green, print_yellow, print_magenta
@@ -14,15 +16,13 @@ from .credentials import Credential, RawCredential
 from .misc import print_strong_pass_guidelines
 
 config: dict = dict()
-master_pass = ""
-creds_manager = None
 
 
 def exit_app():
     pass
 
 
-def generate_password() -> None:
+def generate_password(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_password as generate_random_password, follows_password_requirements
 
     MIN_LENGTH = 1
@@ -73,10 +73,10 @@ def generate_password() -> None:
             print("The generated password has been copied to your clipboard.")
 
     if confirm("Do you want to add this password [Y/n]: ", True):
-        add_credential(generated_pass)
+        add_credential(master_pass, creds_manager, generated_pass)
 
 
-def generate_strong_password() -> None:
+def generate_strong_password(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_password as generate_random_password, follows_password_requirements
 
     MIN_LENGTH = 16
@@ -125,10 +125,10 @@ def generate_strong_password() -> None:
             print("The generated password has been copied to your clipboard.")
 
     if confirm("Do you want to add this password [Y/n]: ", True):
-        add_credential(generated_pass)
+        add_credential(master_pass, creds_manager, generated_pass)
 
 
-def add_credential(user_password: str = None) -> None:
+def add_credential(master_pass: str, creds_manager: CredManager, user_password: str = None) -> None:
     from . passwords import generate_salt, encrypt_and_encode
     from . output import format_colors
     ensure_type(user_password, Union[str, None], "user_password", "string | None")
@@ -177,7 +177,7 @@ def add_credential(user_password: str = None) -> None:
         print_green(f"Password successfully added with id {cred_id}!")
 
 
-def get_credential() -> None:
+def get_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -202,7 +202,7 @@ def get_credential() -> None:
     confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
 
 
-def filter_credentials() -> None:
+def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     title_filter = better_input("(Optional) Title should contain: ", optional=True)
     if title_filter == None:
         title_filter = ""
@@ -233,7 +233,7 @@ def filter_credentials() -> None:
         print(credential)
 
 
-def get_all_credentials() -> None:
+def get_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     raw_creds: List[RawCredential] = []
     try:
         raw_creds.extend(creds_manager.get_all_credentials())
@@ -259,7 +259,7 @@ def get_all_credentials() -> None:
         print()
 
 
-def get_all_raw_credentials() -> None:
+def get_all_raw_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     try:
         raw_creds = creds_manager.get_all_credentials()
     except Exception as e:
@@ -276,7 +276,7 @@ def get_all_raw_credentials() -> None:
         print(raw_cred)
 
 
-def modify_credential() -> None:
+def modify_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_salt,  encrypt_and_encode
     from . output import format_colors
 
@@ -360,7 +360,7 @@ def modify_credential() -> None:
     print_green("Modified credential successfully!")
 
 
-def remove_credential() -> None:
+def remove_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -388,7 +388,7 @@ def remove_credential() -> None:
     print_green("Removed password successfully!")
 
 
-def remove_all_credentials() -> None:
+def remove_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     from . output import format_colors
 
     for _ in range(2):
@@ -411,11 +411,11 @@ def remove_all_credentials() -> None:
     print_green("Removed all passwords successfully!")
 
 
-def change_masterpass() -> None:
+def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_salt, encrypt_and_encode, follows_password_requirements
     from .output import format_colors
 
-    global creds_manager, master_pass, config
+    global config
 
     if not confirm(format_colors("Are you {red}SURE{reset} you want to change your master password [y/N]: ")):
         return
@@ -539,7 +539,7 @@ def change_masterpass() -> None:
     master_pass = new_masterpass
 
 
-def import_credentials() -> None:
+def import_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_salt
     filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
@@ -588,7 +588,7 @@ def import_credentials() -> None:
     print_green("Imported credentials successfully!")
 
 
-def export_credentials() -> None:
+def export_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import generate_salt
     file_path = os.path.expanduser(better_input("File Name and Path: "))
     file_master_pass = getpass("(Optional) File Master Password: ") or master_pass
@@ -623,7 +623,7 @@ def export_credentials() -> None:
     print_green("Exported credentials successfully!")
 
 
-def copy_password() -> None:
+def copy_password(master_pass: str, creds_manager: CredManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if id == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -645,7 +645,7 @@ def copy_password() -> None:
     raw_cred.copy_pass(master_pass)
 
 
-def password_checkup() -> None:
+def password_checkup(master_pass: str, creds_manager: CredManager, ) -> None:
     from .passwords import follows_password_requirements
     from .credentials import decode_decrypt_with_exception_handling, RawCredential
 
@@ -722,10 +722,8 @@ def password_checkup() -> None:
         print("Please address these issues ASAP!")
 
 
-def init(master_pass_param: str, exit_app_param: Callable, config_param: dict, creds_manager_param) -> None:
-    global master_pass, exit_app, config, creds_manager
+def init(exit_app_param: Callable, config_param: dict) -> None:
+    global exit_app, config
 
-    master_pass = master_pass_param
     exit_app = exit_app_param
     config = config_param
-    creds_manager = creds_manager_param

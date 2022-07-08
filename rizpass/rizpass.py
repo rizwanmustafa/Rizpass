@@ -41,7 +41,7 @@ def perform_tasks() -> None:
 
     clear_console()
 
-    menu_items[user_choice][1]()
+    menu_items[user_choice][1](master_pass, creds_manager)
 
     print()
     input("Press enter to continue...")
@@ -355,11 +355,11 @@ def handle_processed_args(options: Dict[str, str]) -> None:
 
     setup_creds_manager()
 
-    user_functions.init(master_pass, exit_app, config, creds_manager)
+    user_functions.init(exit_app, config)
 
     if options.get("actions"):
         for action in options.get("actions"):
-            menu_items[action][1]()
+            menu_items[action][1](master_pass, creds_manager)
 
         if options.get("clear_console"):
             clear_console()
