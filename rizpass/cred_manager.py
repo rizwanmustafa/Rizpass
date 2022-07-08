@@ -29,9 +29,6 @@ class CredManager:
     def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         pass
 
-    def execute_raw_query(self, query: str) -> None:
-        pass
-
     def close(self):
         pass
 
