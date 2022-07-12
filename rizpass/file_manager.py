@@ -68,7 +68,7 @@ class FileManager:
     def close(self):
         self.file.close()
 
-    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         """This method takes in the encrypted and encoded credentials and adds them to the file."""
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
@@ -92,6 +92,8 @@ class FileManager:
         except Exception as e:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
+
+        return id
 
     def get_all_credentials(self) -> Union[List[RawCredential],None]:
         return self.credentials

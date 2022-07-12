@@ -53,7 +53,7 @@ class MysqlManager:
         else:
             print_verbose(format_colors("{green}Connection established successfully!{reset}"))
 
-    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         from .output import print_verbose, format_colors
         """This method takes in the encrypted and encoded credentials and adds them to the database."""
         ensure_type(title, str, "title", "string")
@@ -75,6 +75,8 @@ class MysqlManager:
             print_red(e, file=stderr)
         else:
             print_verbose(format_colors("{green}Query executed successfully!{reset}"))
+
+        return self.mysql_cursor.lastrowid
 
     def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
@@ -205,7 +207,7 @@ class MongoManager:
             id += 1
         return id
 
-    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         """This method takes in the encrypted and encoded credentials and adds them to the database."""
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
@@ -218,7 +220,7 @@ class MongoManager:
 
         # Add the password to the database
         try:
-            self.mongo_collection.insert_one({
+            inserted_obj = self.mongo_collection.insert_one({
                 "id": id,
                 "title": title,
                 "username": username,
@@ -229,6 +231,8 @@ class MongoManager:
         except Exception as e:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
+
+        return inserted_obj.inserted_id
 
     def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
