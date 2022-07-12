@@ -163,7 +163,7 @@ def add_credential(user_password: str = None) -> None:
 
     print()
     try:
-        creds_manager.add_credential(
+        cred_id = creds_manager.add_credential(
             encrypted_title,
             encrypted_username,
             encrypted_email,
@@ -174,7 +174,7 @@ def add_credential(user_password: str = None) -> None:
         print_red("Could not add credential due to the following error:", file=stderr)
         print_red(e, file=stderr)
     else:
-        print_green("Password added successfully!")
+        print_green(f"Password successfully added with id {cred_id}!")
 
 
 def get_credential() -> None:
