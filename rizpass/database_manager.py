@@ -216,12 +216,12 @@ class MongoManager:
         ensure_type(salt, str, "salt", "string")
 
         # Encode to b64
-        id = self.__gen_id()
+        cred_id = self.__gen_id()
 
         # Add the password to the database
         try:
-            inserted_obj = self.mongo_collection.insert_one({
-                "id": id,
+            self.mongo_collection.insert_one({
+                "id": cred_id,
                 "title": title,
                 "username": username,
                 "email": email,
@@ -232,7 +232,7 @@ class MongoManager:
             print_red("There was an error while adding the credential:", file=stderr)
             print_red(e, file=stderr)
 
-        return inserted_obj.inserted_id
+        return cred_id
 
     def get_all_credentials(self) -> Union[List[RawCredential],None]:
         try:
