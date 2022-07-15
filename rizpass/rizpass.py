@@ -407,7 +407,7 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
     13: ("Import credentials from a JSON file", user_functions.import_credentials),
     14: ("List all raw credentials", user_functions.get_all_raw_credentials),
     15: ("Password checkup", user_functions.password_checkup),
-    16: ("Exit", exit_app),
+    16: ("Exit", lambda x, y: exit_app()),
 }
 
 
