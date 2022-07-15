@@ -15,7 +15,7 @@ from .misc import print_license, print_strong_pass_guidelines
 # TODO: Create a class with all the config variables to be used throughout the program
 
 config = dict()
-master_pass: Union[str,None] = None
+master_pass: Union[str, None] = None
 
 CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
@@ -24,6 +24,10 @@ CONFIG_FILE_PATH = path.expanduser("~/.rizpass.json")
 
 def setup_mysql():
     import pymysql
+    from .better_input import better_input
+    from .output import print_verbose, print_colored
+    from .passwords import encrypt_and_encode, generate_salt
+
     global config
 
     try:
@@ -42,7 +46,7 @@ def setup_mysql():
             print_yellow("Using default port 3306")
             db_port = 3306
 
-        db_manager= pymysql.connect(
+        db_manager = pymysql.connect(
             host=db_host,
             user=db_root_user,
             password=db_root_pass,
@@ -71,14 +75,32 @@ def setup_mysql():
         db_cursor.execute("FLUSH PRIVILEGES;")
         print_green("Privileges granted to the new database user!")
 
+        max_field_len = int(better_input(
+            prompt="Max length for data you might store in any field (Optional, Default: 64): ",
+            optional=True,
+            attempts=1,
+            validator=lambda x: True if (x.isnumeric() and int(x) > 0) else "Length input must be numeric and >0"
+        ) or 64)
+
+        print_verbose("Encrypting and encoding sample password to estimate field length")
+        sample_encrypted_pass = encrypt_and_encode(master_pass, "*" * max_field_len, generate_salt(12))
+        if not sample_encrypted_pass:
+            print_red("Encryption of sample password failed!")
+            field_len = 300
+            print_colored(f"Using default value of {{blue}}{field_len}{{reset}} for MySQL field lengths")
+        else:
+            print_green("Encryption of sample password successful!")
+            field_len = len(sample_encrypted_pass)
+            print_colored(f"Using {{blue}}{field_len}{{reset}} for MySQL field lengths")
+
         # Create Table
         db_manager.select_db(db_name)
-        createTableQuery = """CREATE TABLE credentials(
+        createTableQuery = f"""CREATE TABLE credentials(
             id INT NOT NULL AUTO_INCREMENT,
-            title VARCHAR(300) NOT NULL,
-            username VARCHAR(300),
-            email VARCHAR(300),
-            password VARCHAR(300) NOT NULL,
+            title VARCHAR({field_len}) NOT NULL,
+            username VARCHAR({field_len}),
+            email VARCHAR({field_len}),
+            password VARCHAR({field_len}) NOT NULL,
             salt VARCHAR(25) NOT NULL,
             PRIMARY KEY( id ));"""
         db_cursor.execute(createTableQuery)
