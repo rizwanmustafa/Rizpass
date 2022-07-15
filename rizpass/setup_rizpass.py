@@ -246,7 +246,7 @@ def setup_password_manager():
 
     setup_masterpass()
 
-    db_type = input("Database type (Mongo/MySQL): ").lower()
+    db_type = input("Database type (MySQL/Mongo): ").lower()
     if db_type == "mongo":
         setup_mongodb()
     else:
