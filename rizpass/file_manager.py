@@ -3,9 +3,9 @@ from sys import stderr
 from json import load as load_json, dump as dump_json
 from typing import List, Union
 
-from .credentials import RawCredential, Credential
+from .credentials import RawCredential
 from .validator import ensure_type
-from .output import print_red
+from .output import format_colors, print_red, print_verbose
 from .cred_manager import CredManager
 
 # TODO: Convert credentials from an array to an object with id as key
@@ -22,6 +22,7 @@ class FileManager(CredManager):
         self.close()
 
     def open_file(self):
+        print_verbose(f"Opening file located at: '{self.file_path}'", file=stderr)
         if not hasattr(self, "file_path"):
             print_red("No file path specified", file=stderr)
             exit(1)
@@ -43,9 +44,12 @@ class FileManager(CredManager):
             print_red(f"There was an error while creating/modifying the file \"{self.file_path}\":", file=stderr)
             print_red(e, file=stderr)
             exit(1)
+        else:
+            print_verbose(format_colors("{green}File opened successfully{reset}"))
 
     def load_creds(self):
         self.open_file()
+        print_verbose("Loading credentials from file")
         self.credentials: List[RawCredential] = []
         self.file.seek(0, 0)
         import_creds = load_json(self.file)
@@ -59,10 +63,12 @@ class FileManager(CredManager):
                 import_cred["salt"]
             ))
         self.credentials.sort(key=lambda x: x.id)
-        self.close()
+        self.close_file()
+        print_verbose(format_colors("{green}Credentials loaded successfully{reset}"))
 
     def dump_creds(self):
         self.open_file()
+        print_verbose("Dumping credentials to file")
         self.file.truncate(0)
         export_creds = []
 
@@ -70,7 +76,8 @@ class FileManager(CredManager):
             export_creds.append(cred.get_obj())
 
         dump_json(export_creds, self.file)
-        self.close()
+        self.close_file()
+        print_verbose(format_colors("{green}Credentials dumped successfully{reset}"))
 
     def __gen_id(self) -> int:
         id = len(self.credentials) + 1
@@ -96,20 +103,16 @@ class FileManager(CredManager):
 
         id = self.__gen_id()
 
-        try:
-            self.credentials.append(RawCredential(
-                id,
-                title,
-                username,
-                email,
-                password,
-                salt
-            ))
+        self.credentials.append(RawCredential(
+            id,
+            title,
+            username,
+            email,
+            password,
+            salt
+        ))
 
-            self.dump_creds()
-        except Exception as e:
-            print_red("There was an error while adding the credential:", file=stderr)
-            print_red(e, file=stderr)
+        self.dump_creds()
 
         return id
 
