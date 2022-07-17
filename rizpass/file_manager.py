@@ -24,6 +24,9 @@ class FileManager(CredManager):
                 self.file.write("[]")
 
             self.__load_creds()
+        except PermissionError:
+            print_red(f"Permission denied to create/modify file: \'{file_path}\'", file=stderr)
+            exit(1)
 
         except Exception as e:
             print_red(f"There was an error while opening the file \"{file_path}\":", file=stderr)
@@ -67,7 +70,10 @@ class FileManager(CredManager):
         return id
 
     def close(self):
-        self.file.close()
+        if hasattr(self, "file"):
+            self.file.close()
+            del self.file
+
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         """This method takes in the encrypted and encoded credentials and adds them to the file."""
