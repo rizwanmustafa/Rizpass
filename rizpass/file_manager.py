@@ -158,22 +158,5 @@ class FileManager(CredManager):
 
         self.dump_creds()
 
-    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
-        raw_creds: List[RawCredential] = self.get_all_credentials()
-        if raw_creds == []:
-            return raw_creds
-
-        filtered_creds: List[Credential] = []
-        for raw_cred in raw_creds:
-            cred = raw_cred.get_credential(master_pass)
-            title_match = title.lower() in cred.title.lower()
-            username_match = username.lower() in cred.username.lower()
-            email_match = email.lower() in cred.email.lower()
-
-            if title_match and username_match and email_match:
-                filtered_creds.append(cred)
-
-        return filtered_creds
-
     def get_mode(self) -> str:
         return "file"

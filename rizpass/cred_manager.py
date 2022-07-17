@@ -26,9 +26,6 @@ class CredManager:
     def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
         pass
 
-    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
-        pass
-
     def close_file(self):
         pass
 

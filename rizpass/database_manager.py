@@ -156,28 +156,6 @@ class MysqlManager(CredManager):
 
         print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
-    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
-        ensure_type(title, str, "title", "string")
-        ensure_type(username, str, "username", "string")
-        ensure_type(email, str, "email", "string")
-        ensure_type(master_pass, str, "master_pass", "string")
-
-        raw_creds: List[RawCredential] = self.get_all_credentials()
-        if raw_creds == []:
-            return raw_creds
-
-        filtered_creds: List[Credential] = []
-        for raw_cred in raw_creds:
-            cred = raw_cred.get_credential(master_pass)
-            title_match = title.lower() in cred.title.lower()
-            username_match = username.lower() in cred.username.lower()
-            email_match = email.lower() in cred.email.lower()
-
-            if title_match and username_match and email_match:
-                filtered_creds.append(cred)
-
-        return filtered_creds
-
     def close_file(self):
         try:
             if hasattr(self, "mysql_cursor"):
@@ -301,28 +279,6 @@ class MongoManager(CredManager):
             "password": password,
             "salt": salt
         }})
-
-    def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
-        ensure_type(title, str, "title", "string")
-        ensure_type(username, str, "username", "string")
-        ensure_type(email, str, "email", "string")
-        ensure_type(master_pass, str, "master_pass", "string")
-
-        raw_creds: List[RawCredential] = self.get_all_credentials()
-        if raw_creds == []:
-            return raw_creds
-
-        filtered_creds: List[Credential] = []
-        for raw_cred in raw_creds:
-            cred = raw_cred.get_credential(master_pass)
-            title_match = title.lower() in cred.title.lower()
-            username_match = username.lower() in cred.username.lower()
-            email_match = email.lower() in cred.email.lower()
-
-            if title_match and username_match and email_match:
-                filtered_creds.append(cred)
-
-        return filtered_creds
 
     def close_file(self):
         try:
