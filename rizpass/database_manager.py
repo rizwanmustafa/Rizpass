@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 from .credentials import RawCredential, Credential
 from .validator import ensure_type
-from .output import format_colors, print_red
+from .output import format_colors, print_red, print_verbose
 from .cred_manager import CredManager
 
 
@@ -64,9 +64,11 @@ class MysqlManager(CredManager):
         ensure_type(salt, str, "salt", "string")
 
         # Add the credential to the database
-        query = "INSERT INTO credentials(title, username, email, password, salt) VALUES('%s', '%s', '%s', '%s', '%s');" % (title, username, email, password, salt)
+        query = "INSERT INTO credentials(title, username, email, password, salt) VALUES('%s', '%s', '%s', '%s', '%s');" % (
+            title, username, email, password, salt)
         print_verbose("Begin execution of query: ")
         print_verbose(query)
+
         self.mysql_cursor.execute(query)
         self.mysql_db.commit()
 
@@ -74,19 +76,21 @@ class MysqlManager(CredManager):
 
         return self.mysql_cursor.lastrowid
 
-    def get_all_credentials(self) -> Union[List[RawCredential], None]:
-        try:
-            raw_creds: List[RawCredential] = []
+    def get_all_credentials(self) -> List[RawCredential]:
+        raw_creds: List[RawCredential] = []
 
-            self.mysql_cursor.execute("SELECT * FROM credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'")
-            for i in self.mysql_cursor.fetchall():
-                raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4], i[5]))
+        query = "SELECT * FROM credentials WHERE title LIKE '%' AND username LIKE '%' AND email LIKE '%'"
+        print_verbose("Begin execution of query: ")
+        print_verbose(query)
 
-            return raw_creds
-        except Exception as e:
-            print_red("There was an error while getting the credentials:", file=stderr)
-            print_red(e)
-            return None
+        self.mysql_cursor.execute(query)
+
+        print_verbose(format_colors("{green}Query executed successfully!{reset}"))
+
+        for i in self.mysql_cursor.fetchall():
+            raw_creds.append(RawCredential(i[0], i[1], i[2], i[3], i[4], i[5]))
+
+        return raw_creds
 
     def get_credential(self, id: int) -> Union[RawCredential, None]:
         ensure_type(id, int, "id", "int")
