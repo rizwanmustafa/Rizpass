@@ -492,7 +492,7 @@ def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
 
             print_green("Changed database user's password successfully!")
 
-        creds_manager.close_file()
+        creds_manager.close()
 
         db_config = DbConfig(
             config["db_host"],

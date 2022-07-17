@@ -160,7 +160,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def exit_app(exit_code=0) -> NoReturn:
-    creds_manager.close_file() if creds_manager else None
+    creds_manager.close() if creds_manager else None
     exit(exit_code)
 
 

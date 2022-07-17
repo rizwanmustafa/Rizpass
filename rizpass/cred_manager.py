@@ -26,7 +26,7 @@ class CredManager:
     def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
         pass
 
-    def close_file(self):
+    def close(self):
         pass
 
     def get_mode(self) -> str:

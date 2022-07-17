@@ -156,7 +156,7 @@ class MysqlManager(CredManager):
 
         print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
-    def close_file(self):
+    def close(self):
         try:
             if hasattr(self, "mysql_cursor"):
                 self.mysql_cursor.close()
@@ -168,7 +168,7 @@ class MysqlManager(CredManager):
         return "mysql"
 
     def __del__(self):
-        self.close_file()
+        self.close()
 
 
 class MongoManager(CredManager):
@@ -280,7 +280,7 @@ class MongoManager(CredManager):
             "salt": salt
         }})
 
-    def close_file(self):
+    def close(self):
         try:
             if hasattr(self, "mongo_client"):
                 self.mongo_client.close()
@@ -292,4 +292,4 @@ class MongoManager(CredManager):
         return "mongo"
 
     def __del__(self):
-        self.close_file()
+        self.close()

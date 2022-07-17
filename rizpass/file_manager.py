@@ -19,7 +19,7 @@ class FileManager(CredManager):
         self.load_creds()
 
     def __del__(self):
-        self.close_file()
+        self.close()
 
     def open_file(self):
         if not hasattr(self, "file_path"):
@@ -59,7 +59,7 @@ class FileManager(CredManager):
                 import_cred["salt"]
             ))
         self.credentials.sort(key=lambda x: x.id)
-        self.close_file()
+        self.close()
 
     def dump_creds(self):
         self.open_file()
@@ -70,7 +70,7 @@ class FileManager(CredManager):
             export_creds.append(cred.get_obj())
 
         dump_json(export_creds, self.file)
-        self.close_file()
+        self.close()
 
     def __gen_id(self) -> int:
         id = len(self.credentials) + 1
@@ -82,6 +82,9 @@ class FileManager(CredManager):
         if hasattr(self, "file"):
             self.file.close()
             del self.file
+
+    def close(self):
+        self.close_file()
 
     def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         """This method takes in the encrypted and encoded credentials and adds them to the file."""
