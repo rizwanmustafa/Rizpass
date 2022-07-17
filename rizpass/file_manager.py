@@ -33,12 +33,14 @@ class FileManager(CredManager):
             else:
                 self.file = open(self.file_path, "w+")
                 self.file.write("[]")
+
+            self.file.seek(0, 0)
         except PermissionError:
             print_red(f"Permission denied to create/modify file: \'{self.file_path}\'", file=stderr)
             exit(1)
 
         except Exception as e:
-            print_red(f"There was an error while opening the file \"{self.file_path}\":", file=stderr)
+            print_red(f"There was an error while creating/modifying the file \"{self.file_path}\":", file=stderr)
             print_red(e, file=stderr)
             exit(1)
 
