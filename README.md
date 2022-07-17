@@ -31,6 +31,7 @@
       - [List all raw credentials](#list-all-raw-credentials)
       - [Password checkup](#password-checkup)
   * [File Mode](#file-mode)
+  * [Actions](#actions)
   * [Other](#other)
 
 # Motivation
