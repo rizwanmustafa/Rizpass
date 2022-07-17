@@ -385,7 +385,7 @@ def remove_credential(master_pass: str, creds_manager: CredManager, ) -> None:
         return
 
     print()
-    print_green("Removed password successfully!")
+    print_green("Removed credential successfully!")
 
 
 def remove_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
