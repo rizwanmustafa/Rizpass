@@ -6,7 +6,7 @@ from sys import exit, argv, stderr
 from typing import Callable, List, Dict, NoReturn, Tuple, Union
 import signal
 
-from .output import print_colored, print_red, set_colored_output, set_verbose_output
+from .output import print_blue, print_colored, print_red, set_colored_output, set_verbose_output
 from . import user_functions
 
 CONFIG_FILE_PATH = os.path.expanduser("~/.rizpass.json")
@@ -257,42 +257,43 @@ def process_args(args: List[str]) -> Dict[str, str]:
 
         elif arg == "--no-color":
             args_dict["color_mode"] = False
-        elif arg == "--generate-strong":
-            args_dict["actions"].append(1)
-        elif arg == "--generate":
-            args_dict["actions"].append(2)
-        elif arg == "--add":
-            args_dict["actions"].append(3)
-        elif arg == "--retrieve":
-            args_dict["actions"].append(4)
-        elif arg == "--copy":
-            args_dict["actions"].append(5)
-        elif arg == "--filter":
-            args_dict["actions"].append(6)
-        elif arg == "--list-all":
-            args_dict["actions"].append(7)
-        elif arg == "--modify":
-            args_dict["actions"].append(8)
-        elif arg == "--remove":
-            args_dict["actions"].append(9)
-        elif arg == "--remove-all":
-            args_dict["actions"].append(10)
-        elif arg == "--change-master-pass":
-            args_dict["actions"].append(11)
-        elif arg == "--export":
-            args_dict["actions"].append(12)
-        elif arg == "--import":
-            args_dict["actions"].append(13)
-        elif arg == "--list-raw":
-            args_dict["actions"].append(14)
-        elif arg == "--pass-checkup":
-            args_dict["actions"].append(15)
         elif arg == "--clear":
             args_dict["clear_console"] = True
         elif arg == "--no-clear":
             args_dict["no_clear_console"] = True
         elif arg == "--verbose":
             args_dict["verbose"] = True
+
+        elif arg == "generate-strong":
+            args_dict["actions"].append(1)
+        elif arg == "generate":
+            args_dict["actions"].append(2)
+        elif arg == "add":
+            args_dict["actions"].append(3)
+        elif arg == "retrieve":
+            args_dict["actions"].append(4)
+        elif arg == "copy":
+            args_dict["actions"].append(5)
+        elif arg == "filter":
+            args_dict["actions"].append(6)
+        elif arg == "list-all":
+            args_dict["actions"].append(7)
+        elif arg == "modify":
+            args_dict["actions"].append(8)
+        elif arg == "remove":
+            args_dict["actions"].append(9)
+        elif arg == "remove-all":
+            args_dict["actions"].append(10)
+        elif arg == "change-master-pass":
+            args_dict["actions"].append(11)
+        elif arg == "export":
+            args_dict["actions"].append(12)
+        elif arg == "import":
+            args_dict["actions"].append(13)
+        elif arg == "list-raw":
+            args_dict["actions"].append(14)
+        elif arg == "pass-checkup":
+            args_dict["actions"].append(15)
         else:
             print_red(f"Invalid argument: {arg}", file=stderr)
             print_help(True)
@@ -351,14 +352,18 @@ def handle_processed_args(options: Dict[str, str]) -> None:
     # Login
     global master_pass, creds_manager
 
+    options.get("actions") and print_blue("Running in action mode...\n")
     master_pass = getpass("Master Password: ")
 
     setup_creds_manager()
 
     user_functions.init(exit_app, config)
 
+    action_len = len(options.get("actions", []))
+
     if options.get("actions"):
-        for action in options.get("actions"):
+        for index, action in enumerate(options.get("actions")):
+            print_blue(f"\nBegin action no: {index + 1} Remaining actions: {action_len - index - 1}\n")
             menu_items[action][1](master_pass, creds_manager)
 
         if options.get("clear_console"):
@@ -408,6 +413,8 @@ menu_items: Dict[str, Tuple[str, Callable]] = {
     14: ("List all raw credentials", user_functions.get_all_raw_credentials),
     15: ("Password checkup", user_functions.password_checkup),
     16: ("Exit", lambda x, y: exit_app()),
+
+
 }
 
 

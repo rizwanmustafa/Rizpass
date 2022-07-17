@@ -173,7 +173,7 @@ This menu item allows one to generate a strong password that contains all kinds 
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --generate-strong
+python3 -m rizpass generate-strong
 ```
 
 #### Generate a password
@@ -181,7 +181,7 @@ This menu item allows one to generate a password with the traits of their choice
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --generate
+python3 -m rizpass generate
 ```
 
 #### Add a credential
@@ -189,7 +189,7 @@ This menu items allows one to store a new credential. Users can store the creden
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --add
+python3 -m rizpass add
 ```
 
 #### Retrieve credential using id
@@ -197,7 +197,7 @@ This menu item takes the 'id' of a credential as an input from the user and prin
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --retrieve
+python3 -m rizpass retrieve
 ```
 
 #### Copy credential to clipboard
@@ -205,7 +205,7 @@ This menu item takes the 'id' of a credential as an input from the user and copi
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --copy
+python3 -m rizpass copy
 ```
 
 #### Filter credentials
@@ -213,7 +213,7 @@ This menu item allows the users to provide 'filters' for the following fields: '
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --filter
+python3 -m rizpass filter
 ```
 
 #### List all credentials
@@ -221,7 +221,7 @@ This menu item prints all the stored credentials to the screen.
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --list-all
+python3 -m rizpass list-all
 ```
 
 #### Modify credential
@@ -229,7 +229,7 @@ This menu item takes the credential 'id' as an input. It then takes in replaceme
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --modify
+python3 -m rizpass modify
 ```
 
 #### Remove credential
@@ -237,7 +237,7 @@ This menu item takes the credential 'id' as an input and removes the stored cred
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --remove
+python3 -m rizpass remove
 ```
 
 #### Remove all credentials
@@ -245,7 +245,7 @@ This menu item first confirms if you are sure about what you intend to do. It th
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --remove-all
+python3 -m rizpass remove-all
 ```
 
 #### Change master password
@@ -253,7 +253,7 @@ This menu item changes the master password you use to log in to Rizpass. It firs
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --change-master-pass
+python3 -m rizpass change-master-pass
 ```
 
 #### Export credentials to a JSON file
@@ -263,7 +263,7 @@ We recommend you use this feature to backup your credentials regularly. It is al
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --export
+python3 -m rizpass export
 ```
 
 #### Import credentials from a JSON file
@@ -271,7 +271,7 @@ This menu item allows you to import your encrypted credentials from a JSON file 
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --import
+python3 -m rizpass import
 ```
 
 #### List all raw credentials
@@ -279,7 +279,7 @@ This menu item is similar to the "List all credentials" menu item but there is o
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --list-raw
+python3 -m rizpass list-raw
 ```
 
 #### Password checkup
@@ -287,7 +287,7 @@ This menu item goes over your stored credentials and scans for passwords that ar
 
 You can access this feature through the commandline by the following command:
 ```bash
-python3 -m rizpass --pass-checkup
+python3 -m rizpass pass-checkup
 ```
 
 ## File Mode
