@@ -8,7 +8,7 @@ class CredManager:
     def __init__(self):
         pass
 
-    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> None:
+    def add_credential(self, title: str, username: str, email: str, password: str, salt: str) -> int:
         pass
 
     def get_all_credentials(self) -> Union[List[RawCredential], None]:
