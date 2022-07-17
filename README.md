@@ -299,6 +299,17 @@ You can access the file mode using the following command:
 python3 -m rizpass --file <file_name>
 ```
 
+## Actions
+Since Rizpass is a CLI tool, it is designed to be as cli-friendly as possible. Hence, if you don't like the extensive menu and know exactly what you want to do, you can use actions. For example if you want to add a credential, you can do so through the terminal:
+```
+python3 -m rizpass add
+```
+Plus you can use this feature to perform multiple tasks in one go without touching the menu:
+```
+python3 -m rizpass add list-all generate-strong pass-checkup
+```
+However with great power comes great responsibility.
+
 ## Other
 
 You can print the help menu through the following command:
