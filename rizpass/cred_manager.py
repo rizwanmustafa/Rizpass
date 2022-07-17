@@ -29,7 +29,7 @@ class CredManager:
     def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         pass
 
-    def close(self):
+    def close_file(self):
         pass
 
     def get_mode(self) -> str:

@@ -26,7 +26,7 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(manager.credentials[0].password, "Test Password")
         self.assertEqual(manager.credentials[0].salt, "Test Salt")
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(
             self.read_from_file(),
             '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}]'
@@ -54,7 +54,7 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(all_creds[1].password, "Test Password 2")
         self.assertEqual(all_creds[1].salt, "Test Salt 2")
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(
             self.read_from_file(),
             '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}, {"id": 2, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'
@@ -70,7 +70,7 @@ class TestFileManager(unittest.TestCase):
 
         self.assertEqual(cred.title, "Test Title 2")
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(
             self.read_from_file(),
             '[{"id": 1, "title": "Test Title", "username": "Test Username", "email": "Test Email", "password": "Test Password", "salt": "Test Salt"}, {"id": 2, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'
@@ -84,7 +84,7 @@ class TestFileManager(unittest.TestCase):
 
         self.assertEqual(len(manager.credentials), 0)
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(self.read_from_file(), "[]")
         os.remove(TEMP_FILE_PATH)
 
@@ -96,7 +96,7 @@ class TestFileManager(unittest.TestCase):
 
         self.assertEqual(len(manager.credentials), 0)
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(self.read_from_file(), "[]")
         os.remove(TEMP_FILE_PATH)
 
@@ -111,7 +111,7 @@ class TestFileManager(unittest.TestCase):
         self.assertEqual(manager.credentials[0].email, "Test Email 2")
         self.assertEqual(manager.credentials[0].password, "Test Password 2")
 
-        manager.close()
+        manager.close_file()
         self.assertEqual(
             self.read_from_file(),
             '[{"id": 1, "title": "Test Title 2", "username": "Test Username 2", "email": "Test Email 2", "password": "Test Password 2", "salt": "Test Salt 2"}]'

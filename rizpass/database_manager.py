@@ -154,7 +154,7 @@ class MysqlManager(CredManager):
 
         return filtered_creds
 
-    def close(self):
+    def close_file(self):
         try:
             if hasattr(self, "mysql_cursor"):
                 self.mysql_cursor.close()
@@ -166,7 +166,7 @@ class MysqlManager(CredManager):
         return "mysql"
 
     def __del__(self):
-        self.close()
+        self.close_file()
 
 
 class MongoManager(CredManager):
@@ -308,7 +308,7 @@ class MongoManager(CredManager):
 
         return filtered_creds
 
-    def close(self):
+    def close_file(self):
         try:
             if hasattr(self, "mongo_client"):
                 self.mongo_client.close()
@@ -320,4 +320,4 @@ class MongoManager(CredManager):
         return "mongo"
 
     def __del__(self):
-        self.close()
+        self.close_file()
