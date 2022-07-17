@@ -95,10 +95,17 @@ class MysqlManager(CredManager):
     def get_credential(self, id: int) -> Union[RawCredential, None]:
         ensure_type(id, int, "id", "int")
 
-        self.mysql_cursor.execute("SELECT * FROM credentials WHERE id = %s", (id, ))
+        query = "SELECT * FROM credentials WHERE id = %s" % (id, )
+        print_verbose("Begin execution of query: ")
+        print_verbose(query)
+
+        self.mysql_cursor.execute(query)
+        print_verbose(format_colors("{green}Query executed successfully!{reset}"))
+
         query_result = self.mysql_cursor.fetchone()
         if not query_result:
             return None
+
         return RawCredential(
             query_result[0],
             query_result[1],
@@ -113,12 +120,23 @@ class MysqlManager(CredManager):
         if not id:
             raise ValueError("Invalid value provided for parameter 'id'")
 
-        self.mysql_cursor.execute("DELETE FROM credentials WHERE id=%s", (id, ))
+        query = "DELETE FROM credentials WHERE id=%s" % (id, )
+        print_verbose("Begin execution of query: ")
+        print_verbose(query)
+
+        self.mysql_cursor.execute(query)
         self.mysql_db.commit()
+        print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
     def remove_all_credentials(self) -> None:
-        self.mysql_cursor.execute("DELETE FROM credentials")
+        query = "DELETE FROM credentials"
+        print_verbose("Begin execution of query: ")
+        print_verbose(query)
+
+        self.mysql_cursor.execute(query)
         self.mysql_db.commit()
+
+        print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
     def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
         ensure_type(id, int, "id", "int")
@@ -128,9 +146,15 @@ class MysqlManager(CredManager):
         ensure_type(password, str, "password", "string")
         ensure_type(salt, str, "salt", "string")
 
-        self.mysql_cursor.execute("UPDATE credentials SET title = %s, username = %s, email = %s, password = %s, salt = %s WHERE id = %s", (
-            title, username, email, password, salt, id))
+        query = "UPDATE credentials SET title = '%s', username = '%s', email = '%s', password = '%s', salt = '%s' WHERE id = %s" % (
+            title, username, email, password, salt, id)
+        print_verbose("Begin execution of query: ")
+        print_verbose(query)
+
+        self.mysql_cursor.execute(query)
         self.mysql_db.commit()
+
+        print_verbose(format_colors("{green}Query executed successfully!{reset}"))
 
     def filter_credentials(self, title: str, username: str, email: str, master_pass: str) -> List[Credential]:
         ensure_type(title, str, "title", "string")
