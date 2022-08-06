@@ -61,6 +61,9 @@ def pos_int_input(
     attempts: int = 3,
     suppress_output: bool = False
 ) -> Union[int,None]:
+    """
+    Returns a positive integer input from the user. If the user fails to provide one, it will return None.
+    """
     ret_val = better_input(
         prompt,
         optional,

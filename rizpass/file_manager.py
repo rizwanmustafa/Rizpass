@@ -22,6 +22,9 @@ class FileManager(CredManager):
         self.close()
 
     def open_file(self):
+        """
+        Opens the credential file for reading and writing and assigns it to self.file.
+        """
         print_verbose(f"Opening file located at: '{self.file_path}'", file=stderr)
         if not hasattr(self, "file_path"):
             print_red("No file path specified", file=stderr)
@@ -48,6 +51,9 @@ class FileManager(CredManager):
             print_verbose(format_colors("{green}File opened successfully{reset}"))
 
     def load_creds(self):
+        """
+        Opens the file and loads the credentials from it.
+        """
         self.open_file()
         print_verbose("Loading credentials from file")
         self.credentials: List[RawCredential] = []
@@ -67,6 +73,9 @@ class FileManager(CredManager):
         print_verbose(format_colors("{green}Credentials loaded successfully{reset}"))
 
     def dump_creds(self):
+        """
+        Dumps the credentials in the memory to the file.
+        """
         self.open_file()
         print_verbose("Dumping credentials to file")
         self.file.truncate(0)
@@ -80,12 +89,18 @@ class FileManager(CredManager):
         print_verbose(format_colors("{green}Credentials dumped successfully{reset}"))
 
     def __gen_id(self) -> int:
+        """
+        Generates a unique id for a new credential.
+        """
         id = len(self.credentials) + 1
         while self.get_credential(id):
             id += 1
         return id
 
     def close_file(self):
+        """
+        Closes the credential file if opened
+        """
         if hasattr(self, "file"):
             self.file.close()
             del self.file
@@ -117,9 +132,15 @@ class FileManager(CredManager):
         return id
 
     def get_all_credentials(self) -> Union[List[RawCredential], None]:
+        """
+        Returns the credentials stored in memory.
+        """
         return self.credentials
 
     def get_credential(self, id: int) -> Union[RawCredential, None]:
+        """
+        Returns a credential with the given id if it exists. Otherwise, returns None.
+        """
         query_result = None
         for i in self.credentials:
             if i.id == id:
@@ -129,6 +150,9 @@ class FileManager(CredManager):
         return query_result
 
     def remove_credential(self, id: int) -> None:
+        """
+        Removes a credential with the given id if it exists.
+        """
 
         for index, cred in enumerate(self.credentials):
             if cred.id == id:
@@ -140,10 +164,16 @@ class FileManager(CredManager):
         self.dump_creds()
 
     def remove_all_credentials(self) -> None:
+        """
+        Removes all credentials that may be present in the file.
+        """
         self.credentials = []
         self.dump_creds()
 
     def modify_credential(self, id: int, title: str, username: str, email: str, password: str, salt: str) -> None:
+        """
+        Modifies a credential with the given id if it exists.
+        """
         ensure_type(title, str, "title", "string")
         ensure_type(username, str, "username", "string")
         ensure_type(email, str, "email", "string")
@@ -165,4 +195,7 @@ class FileManager(CredManager):
         self.dump_creds()
 
     def get_mode(self) -> str:
+        """
+        Returns the mode of credential storage.
+        """
         return "file"
