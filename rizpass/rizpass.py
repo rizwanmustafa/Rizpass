@@ -147,7 +147,7 @@ def load_db_config(
 
 
 def clear_console() -> None:
-    print("\033c", end="")
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def signal_handler(signum, frame):
