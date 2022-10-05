@@ -77,6 +77,18 @@ class RawCredential:
 
         return Credential(self.id, title, username, email, password)
 
+    def get_title(self, master_password: str):
+        return decode_decrypt_with_exception_handling("title", master_password, self.title, self.salt)[1]
+
+    def get_username(self, master_password: str):
+        return decode_decrypt_with_exception_handling("username", master_password, self.username, self.salt)[1]
+
+    def get_email(self, master_password: str):
+        return decode_decrypt_with_exception_handling("email", master_password, self.email, self.salt)[1]
+
+    def get_password(self, master_password: str):
+        return decode_decrypt_with_exception_handling("password", master_password, self.password, self.salt)[1]
+
     def get_obj(self):
         return {
             "id": self.id,

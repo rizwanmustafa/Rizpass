@@ -228,13 +228,24 @@ def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
 
     filtered_creds: List[Credential] = []
     for raw_cred in raw_creds:
-        cred = raw_cred.get_credential(master_pass)
-        title_match = title_filter.lower() in cred.title.lower()
-        username_match = username_filter.lower() in cred.username.lower()
-        email_match = email_filter.lower() in cred.email.lower()
+        title = raw_cred.get_title(master_pass)
+        title_match = title_filter.lower() in title.lower()
+        if not title_match:
+            continue
 
-        if title_match and username_match and email_match:
-            filtered_creds.append(cred)
+        email = raw_cred.get_email(master_pass)
+        email_match = email_filter.lower() in email.lower()
+        if not email_match:
+            continue
+
+        username = raw_cred.get_username(master_pass)
+        username_match = username_filter.lower() in username.lower()
+        if not username_match:
+            continue
+
+        cred = Credential(raw_cred.id, title, username, email, raw_cred.get_password(master_pass))
+
+        filtered_creds.append(cred)
 
     print("Following credentials meet your given filters:")
     for credential in filtered_creds:
