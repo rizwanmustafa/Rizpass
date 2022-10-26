@@ -3,7 +3,7 @@ from sys import stderr, stdout
 
 from .validator import ensure_type
 
-VERSION_NUMBER = 'v0.0.4-alpha'
+VERSION_NUMBER = 'v0.0.5'
 
 
 def print_help(error: bool = False) -> None:
