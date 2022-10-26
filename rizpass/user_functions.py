@@ -215,6 +215,8 @@ def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     if email_filter == None:
         email_filter = ""
 
+    print()
+
     try:
         raw_creds: List[RawCredential] = creds_manager.get_all_credentials()
     except Exception as e:
@@ -223,7 +225,7 @@ def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
         return
 
     if not raw_creds:
-        print_yellow("No credentials meet your given filter.")
+        print_yellow("No credentials to filter from!")
         return
 
     filtered_creds: List[Credential] = []
@@ -246,6 +248,10 @@ def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
         cred = Credential(raw_cred.id, title, username, email, raw_cred.get_password(master_pass))
 
         filtered_creds.append(cred)
+
+    if not filtered_creds:
+        print_yellow("No credentials meet your given filter.")
+        return
 
     print("Following credentials meet your given filters:")
     for credential in filtered_creds:
