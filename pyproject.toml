@@ -1,3 +1,29 @@
 [build-system]
-requires = ["setuptools>=42"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rizpass"
+version = "0.0.5"
+authors = [
+  { name="Rizwan Mustafa", email="rizwanmustafa0000@gmail.com" },
+]
+description = "A simple and opensource password manager"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "cryptography",
+    "pymysql",
+    "pyperclip",
+    "pymongo[srv]",
+    "colorama"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/rizwanmustafa/Rizpass"
+"Bug Tracker" = "https://github.com/rizwanmustafa/Rizpass/issues"
