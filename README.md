@@ -1,5 +1,3 @@
-**This project is still under construction**
-
 # Table of Contents
 - [Motivation](#motivation)
 - [Requirements](#requirements)
