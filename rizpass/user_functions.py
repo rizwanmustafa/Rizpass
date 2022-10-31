@@ -479,7 +479,7 @@ def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
             root_pass = better_input("Input mysql root password: ", password=True)
             temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
             temp_db_manager.mysql_cursor.execute(
-                "ALTER USER %s@'%' IDENTIFIED BY %s;",
+                "ALTER USER %s@'%%' IDENTIFIED BY %s;",
                 (config["db_user"],  new_masterpass, )
             )
 
