@@ -1,9 +1,25 @@
 from typing import List, Union
 
 from .credentials import RawCredential
+from .validator import ensure_type
 
+from .credentials import RawCredential
 
-class CredManager:
+class DbConfig:
+    def __init__(self, host: str, user: str, password: str, db: str, port: Union[int, None] = None):
+        ensure_type(host, str, "host", "string")
+        ensure_type(user, str, "user", "string")
+        ensure_type(password, str, "password", "string")
+        ensure_type(db, str, "db", "string")
+        ensure_type(port, Union[int, None], "port", "int | None")
+
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db = db
+        self.port = port
+
+class DbManager:
 
     def __init__(self):
         pass

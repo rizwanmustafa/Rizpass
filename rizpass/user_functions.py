@@ -7,7 +7,7 @@ import os
 import json
 from typing import Union
 
-from rizpass.cred_manager import CredManager
+from rizpass.db_manager import DbManager
 
 from .better_input import better_input, confirm, pos_int_input
 from .validator import ensure_type
@@ -22,7 +22,7 @@ def exit_app():
     pass
 
 
-def generate_password(master_pass: str, creds_manager: CredManager, ) -> None:
+def generate_password(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_password as generate_random_password, follows_password_requirements
 
     MIN_LENGTH = 1
@@ -76,7 +76,7 @@ def generate_password(master_pass: str, creds_manager: CredManager, ) -> None:
         add_credential(master_pass, creds_manager, generated_pass)
 
 
-def generate_strong_password(master_pass: str, creds_manager: CredManager, ) -> None:
+def generate_strong_password(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_password as generate_random_password, follows_password_requirements
 
     MIN_LENGTH = 16
@@ -128,7 +128,7 @@ def generate_strong_password(master_pass: str, creds_manager: CredManager, ) -> 
         add_credential(master_pass, creds_manager, generated_pass)
 
 
-def add_credential(master_pass: str, creds_manager: CredManager, user_password: str = None) -> None:
+def add_credential(master_pass: str, creds_manager: DbManager, user_password: str = None) -> None:
     from . passwords import generate_salt, encrypt_and_encode
     from . output import format_colors
     ensure_type(user_password, Union[str, None], "user_password", "string | None")
@@ -177,7 +177,7 @@ def add_credential(master_pass: str, creds_manager: CredManager, user_password: 
         print_green(f"Password successfully added with id {cred_id}!")
 
 
-def get_credential(master_pass: str, creds_manager: CredManager, ) -> None:
+def get_credential(master_pass: str, creds_manager: DbManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -202,7 +202,7 @@ def get_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     confirm("Copy password to clipboard? [Y/n]: ", True) and cred.copy_pass()
 
 
-def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def filter_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     title_filter = better_input("(Optional) Title should contain: ", optional=True)
     if title_filter == None:
         title_filter = ""
@@ -258,7 +258,7 @@ def filter_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
         print(credential)
 
 
-def get_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def get_all_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     raw_creds: List[RawCredential] = []
     try:
         raw_creds.extend(creds_manager.get_all_credentials())
@@ -284,7 +284,7 @@ def get_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
         print()
 
 
-def get_all_raw_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def get_all_raw_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     try:
         raw_creds = creds_manager.get_all_credentials()
     except Exception as e:
@@ -301,7 +301,7 @@ def get_all_raw_credentials(master_pass: str, creds_manager: CredManager, ) -> N
         print(raw_cred)
 
 
-def modify_credential(master_pass: str, creds_manager: CredManager, ) -> None:
+def modify_credential(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_salt,  encrypt_and_encode
     from . output import format_colors
 
@@ -385,7 +385,7 @@ def modify_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     print_green("Modified credential successfully!")
 
 
-def remove_credential(master_pass: str, creds_manager: CredManager, ) -> None:
+def remove_credential(master_pass: str, creds_manager: DbManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if not id:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -413,7 +413,7 @@ def remove_credential(master_pass: str, creds_manager: CredManager, ) -> None:
     print_green("Removed credential successfully!")
 
 
-def remove_all_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def remove_all_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     from . output import format_colors
 
     for _ in range(2):
@@ -436,7 +436,7 @@ def remove_all_credentials(master_pass: str, creds_manager: CredManager, ) -> No
     print_green("Removed all passwords successfully!")
 
 
-def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
+def change_masterpass(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_salt, encrypt_and_encode, follows_password_requirements
     from .output import format_colors
 
@@ -472,9 +472,9 @@ def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
     # Change database password
     if config.get("db_type", None):
         # TODO: Implement input validation
-        from .database_manager import DbConfig
+        from .db_manager import DbConfig
         if config["db_type"] == "mysql":
-            from .database_manager import MysqlManager
+            from .mysql_manager import MysqlManager
             root_user = better_input("Input mysql root username: ")
             root_pass = better_input("Input mysql root password: ", password=True)
             temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
@@ -484,7 +484,7 @@ def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
             )
 
         elif config["db_type"] == "mongo":
-            from .database_manager import MongoManager
+            from .mongo_manager import MongoManager
             from pymongo.mongo_client import MongoClient
 
             root_user = better_input("Input MongoDB root username: ")
@@ -564,7 +564,7 @@ def change_masterpass(master_pass: str, creds_manager: CredManager, ) -> None:
     master_pass = new_masterpass
 
 
-def import_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def import_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_salt
     filename = better_input("Filename: ", validator=lambda x: True if os.path.isfile(x) else "File not found!")
     if filename == None:
@@ -613,7 +613,7 @@ def import_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     print_green("Imported credentials successfully!")
 
 
-def export_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
+def export_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import generate_salt
     file_path = os.path.expanduser(better_input("File Name and Path: "))
     file_master_pass = getpass("(Optional) File Master Password: ") or master_pass
@@ -648,7 +648,7 @@ def export_credentials(master_pass: str, creds_manager: CredManager, ) -> None:
     print_green("Exported credentials successfully!")
 
 
-def copy_password(master_pass: str, creds_manager: CredManager, ) -> None:
+def copy_password(master_pass: str, creds_manager: DbManager, ) -> None:
     id = pos_int_input("Credential ID: ")
     if id == None:
         print_red("Aborting operation due to invalid input!", file=stderr)
@@ -670,7 +670,7 @@ def copy_password(master_pass: str, creds_manager: CredManager, ) -> None:
     raw_cred.copy_pass(master_pass)
 
 
-def password_checkup(master_pass: str, creds_manager: CredManager, ) -> None:
+def password_checkup(master_pass: str, creds_manager: DbManager, ) -> None:
     from .passwords import follows_password_requirements
     from .credentials import decode_decrypt_with_exception_handling, RawCredential
 

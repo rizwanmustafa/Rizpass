@@ -379,7 +379,7 @@ def setup_creds_manager():
         creds_manager = FileManager(config.get("file_path"))
         return
 
-    from .database_manager import DbConfig
+    from .db_manager import DbConfig
     db_config = DbConfig(
         config.get("db_host"),
         config.get("db_user"),
@@ -389,10 +389,10 @@ def setup_creds_manager():
     )
 
     if config.get("db_type") == "mysql":
-        from .database_manager import MysqlManager
+        from .mysql_manager import MysqlManager
         creds_manager = MysqlManager(db_config)
     else:
-        from .database_manager import MongoManager
+        from .mongo_manager import MongoManager
         creds_manager = MongoManager(db_config)
 
 

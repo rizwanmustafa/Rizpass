@@ -6,12 +6,12 @@ from typing import List, Union
 from .credentials import RawCredential
 from .validator import ensure_type
 from .output import format_colors, print_red, print_verbose
-from .cred_manager import CredManager
+from .db_manager import DbManager
 
 # TODO: Convert credentials from an array to an object with id as key
 
 
-class FileManager(CredManager):
+class FileManager(DbManager):
     credentials: List[RawCredential]
 
     def __init__(self, file_path: str):
