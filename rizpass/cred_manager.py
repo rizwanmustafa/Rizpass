@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from .credentials import RawCredential, Credential
+from .credentials import RawCredential
 
 
 class CredManager:
