@@ -4,7 +4,7 @@ from typing import List, Union
 from urllib.parse import quote_plus
 
 
-from .credentials import RawCredential, Credential
+from .credentials import RawCredential
 from .validator import ensure_type
 from .output import format_colors, print_red, print_verbose
 from .cred_manager import CredManager
