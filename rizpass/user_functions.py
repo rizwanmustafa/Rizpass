@@ -473,10 +473,13 @@ def change_masterpass(master_pass: str, creds_manager: DbManager, ) -> None:
     if config.get("db_type", None):
         # TODO: Implement input validation
         from .db_manager import DbConfig
+
+        db_name = 'MongoDB' if config['db_type'] == 'mongo' else 'MySQL'
+        root_user = better_input(f"Input {db_name} root username: ")
+        root_pass = better_input(f"Input {db_name} root password: ", password=True)
+
         if config["db_type"] == "mysql":
             from .mysql_manager import MysqlManager
-            root_user = better_input("Input mysql root username: ")
-            root_pass = better_input("Input mysql root password: ", password=True)
             temp_db_manager = MysqlManager(DbConfig(config["db_host"], root_user, root_pass, "", config.get("db_port", None)))
             temp_db_manager.mysql_cursor.execute(
                 "ALTER USER %s@'%%' IDENTIFIED BY %s;",
@@ -486,9 +489,6 @@ def change_masterpass(master_pass: str, creds_manager: DbManager, ) -> None:
         elif config["db_type"] == "mongo":
             from .mongo_manager import MongoManager
             from pymongo.mongo_client import MongoClient
-
-            root_user = better_input("Input MongoDB root username: ")
-            root_pass = better_input("Input MongoDB root password: ", password=True)
 
             db_client = MongoClient(
                 config["db_host"],
