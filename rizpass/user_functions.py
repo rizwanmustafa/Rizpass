@@ -562,6 +562,7 @@ def change_masterpass(master_pass: str, creds_manager: DbManager, ) -> None:
     print_green("Changed credential's master password successfully!")
 
     master_pass = new_masterpass
+    return master_pass, creds_manager
 
 
 def import_credentials(master_pass: str, creds_manager: DbManager, ) -> None:

@@ -27,6 +27,9 @@ config: Dict[str, str] = {
 
 def perform_tasks() -> None:
     from .better_input import better_input
+
+    global master_pass, creds_manager
+
     max_limit = len(menu_items.keys())
 
     user_choice = better_input(
@@ -41,7 +44,10 @@ def perform_tasks() -> None:
 
     clear_console()
 
-    menu_items[user_choice][1](master_pass, creds_manager)
+    ret_val = menu_items[user_choice][1](master_pass, creds_manager)
+
+    if ret_val != None:
+        master_pass, creds_manager = ret_val
 
     print()
     input("Press enter to continue...")
