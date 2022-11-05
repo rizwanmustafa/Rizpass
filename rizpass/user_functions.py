@@ -416,9 +416,8 @@ def remove_credential(master_pass: str, creds_manager: DbManager, ) -> None:
 def remove_all_credentials(master_pass: str, creds_manager: DbManager, ) -> None:
     from . output import format_colors
 
-    for _ in range(2):
-        if not confirm(format_colors("Are you {red}SURE{reset} you want to remove all stored passwords [y/N]: ")):
-            return
+    if not confirm(format_colors("Are you {red}SURE{reset} you want to remove all stored passwords [y/N]: ")):
+        return
 
     if getpass("Re-enter master password: ") != master_pass:
         print("Incorrect password!")
