@@ -100,13 +100,13 @@ class RawCredential:
         }
 
     def copy_pass(self, master_pass: str):
-        decrypted_password = decode_decrypt_with_exception_handling("password", master_pass, self.password, b64decode(self.salt))
+        decrypted_password = decode_decrypt_with_exception_handling("password", master_pass, self.password, self.salt)
 
         if not decrypted_password[0]:
             return
 
         try:
-            pyperclip.copy(decrypted_password)
+            pyperclip.copy(decrypted_password[1])
         except Exception as e:
             print_red("This password could not be copied to your clipboard due to the following error:", file=stderr)
             print_red(e, file=stderr)
