@@ -55,7 +55,7 @@ pip install --upgrade rizpass
 ## Installing the Github version
 If you want to install the master branch of Rizpass repo, run the following command:
 ```
-pip install git+https://github.com/rizwanmustafa/Rizpass.git
+pip install --upgrade git+https://github.com/rizwanmustafa/Rizpass.git
 ```
 
 ## Cloning the Github repo 
