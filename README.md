@@ -3,7 +3,8 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
   * [Installation through PyPi (Recommended)](#installation-through-pypi-recommended)
-  * [Installation through Github](#installation-through-github)
+  * [Installing the Github version](#installing-the-github-version)
+  * [Cloning the Github Repo](#cloning-the-github-repo)
   * [But I really really need a binary](#but-i-really-really-need-a-binary)
   * [Running Tests](#running-tests)
 - [Configuration](#configuration)
@@ -51,14 +52,19 @@ The following command will upgrade an existing installation of Rizpass if it is 
 pip install --upgrade rizpass
 ```
 
-## Installation through Github
+## Installing the Github version
+If you want to install the master branch of Rizpass repo, run the following command:
+```
+pip install git+https://github.com/rizwanmustafa/Rizpass.git
+```
+
+## Cloning the Github repo 
 
 1. Clone this repository
 ```bash
 git clone https://github.com/rizwanmustafa/Rizpass.git
 cd Rizpass
 ```
-
 
 2. Create a new virtual environment in a folder called 'venv' for this project (This will prevent your binary size and compilation time from being too long).
 ```bash
@@ -70,25 +76,8 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-4. Install the package
+4. Run rizpass
 ```bash
-pip install .
-```
-
-5. Start Rizpass
-```bash
-python3 -m rizpass
-```
-Note: You can also start rizpass by executing `rizpass` in the terminal directly however this may require modification to the `$PATH` variable
-
-
-Bonus - If you want to do it all in one step:
-```bash
-git clone https://github.com/rizwanmustafa/Rizpass.git
-cd Rizpass
-python3 -m venv venv
-source venv/bin/activate
-pip install .
 python3 -m rizpass
 ```
 
