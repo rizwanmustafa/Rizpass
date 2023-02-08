@@ -12,3 +12,6 @@ venv/
 *.spec
 
 *egg-info/
+
+# Plans
+plans.txt
