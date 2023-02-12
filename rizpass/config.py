@@ -1,38 +1,52 @@
 from typing import Union
 
-CONFIG_KEYS = {"file_path", "db_type", "db_host", "db_user", "db_name", "db_port"}
+# TODO: Later return error messages for each validation
 
-def validate_db_port(db_port: str):
+def validate_db_port(value: Union[str, None]):
+    if value == None:
+        return False
     # Validate the db_port
     try:
-        db_port = int(db_port)
+        value = int(value)
     except ValueError:
         return False
-    if db_port < 1 or db_port > 65535:
+    if value < 1 or value > 65535:
         return False
     return True
 
-def validate_db_type(db_type: str):
+
+def validate_db_type(value: Union[str, None]):
+    if value == None:
+        return False
     # Validate the db_type
-    if db_type not in {"mysql", "mongo"}:
+    if value not in {"mysql", "mongo"}:
         return False
     return True
 
-def validate_db_host(db_host: str):
+
+def validate_db_host(value: Union[str, None]):
+    if value == None:
+        return False
     # Validate the db_host
-    if db_host == "":
+    if value == "":
         return False
     return True
 
-def validate_db_user(db_user: str):
+
+def validate_db_user(value: Union[str, None]):
+    if value == None:
+        return False
     # Validate the db_user
-    if db_user == "":
+    if value == "":
         return False
     return True
 
-def validate_db_name(db_name: str):
+
+def validate_db_name(value: Union[str, None]):
+    if value == None:
+        return False
     # Validate the db_name
-    if db_name == "":
+    if value == "":
         return False
     return True
 
@@ -42,14 +56,16 @@ def validate_file_path(file_path: str):
         return False
     return True
 
+CONFIG_KEYS = {"file_path", "db_type", "db_host", "db_user", "db_name", "db_port"}
+
 
 CONFIG_KEY_VALIDATORS = {
-    "file_path": lambda x: isinstance(x, str),
-    "db_type": lambda x: isinstance(x, str),
-    "db_host": lambda x: isinstance(x, str),
-    "db_user": lambda x: isinstance(x, str),
-    "db_name": lambda x: isinstance(x, str),
-    "db_port": lambda x: isinstance(x, str),
+    "file_path": validate_file_path,
+    "db_type": validate_db_type,
+    "db_host": validate_db_host,
+    "db_user": validate_db_user,
+    "db_name": validate_db_name,
+    "db_port": validate_db_port,
 }
 
 
@@ -92,18 +108,18 @@ class Configuration:
                 return False
             if not CONFIG_KEY_VALIDATORS[key](getattr(self, key)):
                 return False
-        if not validate_db_port(self.db_port):
-            return False
-        if not validate_db_type(self.db_type):
-            return False
-        if not validate_db_host(self.db_host):
-            return False
-        if not validate_db_user(self.db_user):
-            return False
-        if not validate_db_name(self.db_name):
-            return False
+
         return True
 
     def __str__(self):
         # Return the config as a string
         return str(self.get_dict())
+
+    def merge_config(self, config: "Configuration", overwrite: bool = False):
+        # Merge the config with another config
+        for key in CONFIG_KEYS:
+            config_val = getattr(config, key)
+            config_val_valid = CONFIG_KEY_VALIDATORS[key](config_val)
+
+            if config_val_valid and (overwrite or getattr(self, key) is None):
+                setattr(self, key, getattr(config, key))
